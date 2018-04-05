@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target":"es5",
+        "module":"none",
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": "compiled",
+        "lib": [
+            "es2015"
+        ]
+    },
+    "files": [
+        "src/servicenow_mock.ts",
+        "src/x_44813_util/types.ts",
+        "src/x_44813_sec_clsif/ClassificationValidator.ts",
+        "src/x_44813_sec_clsif/ClassificationUtil.ts",
+        "src/x_44813_sec_clsif/test.ts"
+    ]
+}
