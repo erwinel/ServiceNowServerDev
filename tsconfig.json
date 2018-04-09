@@ -5,8 +5,8 @@
         "noImplicitAny": true,
         "removeComments": false,
         "preserveConstEnums": true,
-        "sourceMap": true,
-        "declaration": true,
+        "sourceMap": false,
+        "declaration": false,
         "outDir": "compiled",
         "lib": [
             "es2015"
