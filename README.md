@@ -1,42 +1,62 @@
 ServiceNow Code
 ===============
-This contains files, scripts and documentation for customizing and maintaining ServiceNow.
 
-See doc/index.html for more information.
+This contains files, scripts and documentation for customizing and maintaining ServiceNow.
 
 Dev Environment Setup
 ---------------------
+
 This solution was developed using Visual Studio Code.
 
-The following npm packages were used and installed globally:
-eslint@4.18.2
-jshint@2.9.5
-gulp@3.9.1
+The npm package manager (https://npmjs.com) and (VS Code extension eg2.vscode-npm-script) is required for building and package maintenance.
 
-The following packages were installed locally:
-jquery@3.3.1
-popper.js@1.12.9
-bootstrap@4.0.0
-angular@1.6.9
-@types/angular@1.6.43
-@angular/cli@1.7.3
-gulp-webserver@0.9.1
+Microsoft PowerShell 5.0 or better may be required for development.
 
-The following Visual Studio Code extensions are recommended:
-eg2.vscode-npm-script
-dbaeumer.vscode-eslint
-dbaeumer.jshint
-mkaufman.htmlhint
-ecmel.vscode-html-css
-Zignd.html-css-class-completion
-abusaidm.html-snippets
-ms-vscode.powershell
-DotJoshJohnson.xml
-fknop.vscode-npm
-christian-kohler.npm-intellisense
-lolkush.quickstart
-HookyQR.jsdoctagcomplete
-sidthesloth.html5-boilerplate
-xabikos.javascriptsnippets
-johnpapa.angular2
-johnpapa.angular-essentials
+Additionally, the following npm packages most likely need to be installed globally:
+
+- eslint
+- tslint
+- jshint
+- typescript
+
+Use the command "npm update" to install required local packages.
+
+Following is an example PowerShell script that will install other recommended Visual Studio Code extensions:
+
+$RecommendedExtensions = @(
+        'abusaidm.html-snippets',
+        'Angular.ng-template',
+        'christian-kohler.npm-intellisense',
+        'christian-kohler.path-intellisense',
+        'DavidAnson.vscode-markdownlint',
+        'dbaeumer.jshint',
+        'dbaeumer.vscode-eslint',
+        'DotJoshJohnson.xml',
+        'ecmel.vscode-html-css',
+        'EditorConfig.EditorConfig',
+        'eg2.tslint',
+        'eg2.vscode-npm-script',
+        'esbenp.prettier-vscode',
+        'fknop.vscode-npm',
+        'formulahendry.auto-close-tag',
+        'HookyQR.JSDocTagComplete',
+        'johnpapa.Angular2',
+        'johnpapa.angular-essentials',
+        'johnpapa.winteriscoming',
+        'lolkush.quickstart',
+        'Mikael.angular-beastcode',
+        'mkaufman.HTMLHint',
+        'ms-vscode.powershell',
+        'natewallace.angular2-inline',
+        'sidthesloth.html5-boilerplate',
+        'xabikos.JavaScriptSnippets',
+        'Zignd.html-css-class-completion'
+)
+$InstalledExtensions = (code --list-extensions) -split '\r\n?|\n';
+$RecommendedExtensions | ForEach-Object {
+    if ($InstalledExtensions -contains $_) {
+        "$_ is already installed." | Write-Host;
+    } else {
+        code --install-extension $_;
+    }
+}

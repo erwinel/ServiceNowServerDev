@@ -1,7 +1,7 @@
 {
-  "name": "servicenowcode",
+  "name": "servicenowserverdev",
   "version": "1.0.0",
-  "description": "Code repository for ServiceNow development",
+  "description": "TypeScript sources for ServiceNow Server development",
   "main": "compiled/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,5 +16,12 @@
     "url": "https://github.com/erwinel/ServiceNowServerDev/issues"
   },
   "homepage": "https://github.com/erwinel/ServiceNowServerDev#readme",
-  "dependencies": { }
+  "dependencies": {},
+  "devDependencies": {
+    "@types/core-js": "^0.9.46",
+    "eslint": "^4.19.1",
+    "jshint": "^2.9.5",
+    "tslint": "^5.9.1",
+    "typescript": "^2.8.1"
+  }
 }
