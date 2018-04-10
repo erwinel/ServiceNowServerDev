@@ -15,6 +15,10 @@
     "files": [
         "src/servicenow_mock.ts",
         "src/util/types.ts",
+        "src/asserttest/AssertionError.ts",
+        "src/asserttest/Assert.ts",
+        "src/asserttest/TestDefinition.ts",
+        "src/asserttest/DefaultScript.ts",
         "src/sec_clsif/ClassificationValidator.ts",
         "src/sec_clsif/ClassificationUtil.ts",
         "src/sec_clsif/test.ts"

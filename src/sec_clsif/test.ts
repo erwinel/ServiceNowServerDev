@@ -1,98 +1,133 @@
-var types = new x_44813_util.types();
-let cu = new x_44813_sec_clsif.ClassificationUtil();
-let allClassifications = cu.getAllClassifications();
-let expectedClassifications = [
-    { pm: 'U', name: 'UNCLASSIFIED' },
-    { pm: 'C', name: 'CONFIDENTIAL' },
-    { pm: 'R', name: 'RESTRICTED' },
-    { pm: 'S', name: 'SECRET' },
-    { pm: 'TS', name: 'TOP SECRET' }
-];
-if (allClassifications.length < expectedClassifications.length) {
-    gs.error("x_44813_sec_clsif.ClassificationUtil.getAllClassifications() failed: Only {0} of expected minimum  {1} results returned.",
-        allClassifications.length, expectedClassifications.length);
-} else if (expectedClassifications.filter(function(c) {
-        let arr = allClassifications.filter(function(a) { return a.portion_marking == c.pm; });
-        if (arr.length != 1)
-            gs.error("x_44813_sec_clsif.ClassificationUtil.getAllClassifications() failed: Expected 1 item matching {0}; Actual: {1}.", types.serializeToString(c.pm), arr.length);
-        else if (arr[0].name != c.name)
-            gs.error("x_44813_sec_clsif.ClassificationUtil.getAllClassifications() failed: Expected name for Portion Marking {0}: {1}; Actual: {2}.", types.serializeToString(c.pm),
-                types.serializeToString(c.name), types.serializeToString(arr[0].name));
-        else
-            return false;
-        return true;
-    }).length == 0)
-        gs.info("x_44813_sec_clsif.ClassificationUtil.getAllClassifications() passed.");
-
-let actual = cu.getDefaultPortionMarking();
-if (actual === expectedClassifications[0].pm)
-    gs.info("cu.getDefaultPortionMarking() passed.");
-else
-    gs.error("cu.getDefaultPortionMarking() failed: Expected: {0}; Actual: {1}.", types.serializeToString(expectedClassifications[0].pm), actual);
-let cv = new x_44813_sec_clsif.ClassificationValidator();
-if (cv.isValid !== false)
-    gs.error("new x_44813_sec_clsif.ClassificationValidator().isValid failed. Expected: false; Actual: {0}", types.serializeToString(cv.isValid));
-else 
-    gs.info("new x_44813_sec_clsif.ClassificationValidator().isValid passed.");
-if (cv.errorMessages.length != 2)
-    gs.error("new x_44813_sec_clsif.ClassificationValidator().errorMessages.length failed. Expected: 2; Actual: {0}", cv.errorMessages.length);
-else {
-    let expectedStr: string = "Classification Name cannot be empty.";
-    if (cv.errorMessages[0] !== expectedStr)
-        gs.error("new x_44813_sec_clsif.ClassificationValidator().errorMessages[0] failed. Expected: {0}; Actual: {1}", types.serializeToString(expectedStr),
-            types.serializeToString(cv.errorMessages[0]));
-    else 
-        gs.info("update x_44813_sec_clsif.ClassificationValidator().errorMessages[0] passed.");
-    expectedStr = "Portion Marking cannot be empty.";
-    if (cv.errorMessages[1] !== expectedStr)
-        gs.error("new x_44813_sec_clsif.ClassificationValidator().errorMessages[1] failed. Expected: {0}; Actual: {1}", types.serializeToString(expectedStr),
-            types.serializeToString(cv.errorMessages[1]));
-    else 
-        gs.info("update x_44813_sec_clsif.ClassificationValidator().errorMessages[0] passed.");
+function getAllClassificationsTest(): x_44813_asserttest.TestCallbackResult {
+    return {
+        handler: function(assert: x_44813_asserttest.Assert, data?:any, lastResult?:x_44813_asserttest.TestResultInfo) {
+            if (typeof(this.allClassifications) == "undefined") {
+                let cu = new x_44813_sec_clsif.ClassificationUtil();
+                this.allClassifications = cu.getAllClassifications();
+            }
+            if (this.allClassifications.length <= assert.dataIndex)
+                assert.fail("Only " + this.allClassifications.length + " of expected minimum " +  (assert.dataIndex + 1) + " results returned.")
+            
+            let arr = this.allClassifications.filter(function(a: x_44813_sec_clsif.IClassificationCacheItem) { return a.portion_marking == data; });
+            if (arr.length != 1)
+                assert.fail("Expected 1 item matching " + data + "; Actual: " + arr.length);
+            
+            if (arr[0].name !== assert.dataTitle)
+                assert.fail("Expected name: " + assert.dataTitle + "; Actual " + assert.types.serializeToString(arr[0].name));
+        },
+        data: [
+            { title: "UNCLASSIFIED", data: 'U', metaData: { expected: false } },
+            { title: "CONFIDENTIAL", data: 'C', metaData: { expected: false } },
+            { title: "RESTRICTED", data: 'R', metaData: { expected: false } },
+            { title: "SECRET", data: 'S', metaData: { expected: false } },
+            { title: "TS", data: 'TS', metaData: { expected: false } }
+        ],
+        thisObj: { }
+    };
 }
-cv.portionMarking.sourceValue = " U ";
-cv.name.sourceValue = " UNCLASSIFIED";
-if (cv.isValid !== true)
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().isValid failed. Expected: true; Actual: {0}", types.serializeToString(cv.isValid));
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().isValid passed.");
-if (cv.portionMarking.sourceValue !== " U ")
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().portionMarking.sourceValue. Expected: {0}; Actual: {1}", types.serializeToString(" U "),
-        types.serializeToString(cv.portionMarking.sourceValue));
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().portionMarking.sourceValue passed.");
-if (cv.name.sourceValue !== " UNCLASSIFIED")
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().name.sourceValue. Expected: {0}; Actual: {1}", types.serializeToString(" UNCLASSIFIED"),
-        types.serializeToString(cv.name.sourceValue));
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().name.sourceValue passed.");
-if (cv.portionMarking.normalizedValue !== "U")
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().portionMarking.normalizedValue. Expected: {0}; Actual: {1}", types.serializeToString("U"),
-        types.serializeToString(cv.portionMarking.normalizedValue));
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().portionMarking.normalizedValue passed.");
-if (cv.name.normalizedValue !== "UNCLASSIFIED")
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().name.normalizedValue. Expected: {0}; Actual: {1}", types.serializeToString("UNCLASSIFIED"),
-        types.serializeToString(cv.name.normalizedValue));
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().name.normalizedValue passed.");
-if (cv.errorMessages.length != 0)
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().errorMessages.length failed. Expected: 0; Actual: {0}", cv.errorMessages.length);
-else 
-    gs.info("update x_44813_sec_clsif.ClassificationValidator().errorMessages.length passed.");
-if (cv.infoMessages.length != 2)
-    gs.error("update x_44813_sec_clsif.ClassificationValidator().infoMessages.length failed. Expected: 2; Actual: {0}", cv.infoMessages.length);
-else {
-    let expectedStr: string = "Portion Marking has been normalized.";
-    if (cv.infoMessages[0] !== expectedStr)
-        gs.error("update x_44813_sec_clsif.ClassificationValidator().infoMessages[0] failed. Expected: {0}; Actual: {1}", types.serializeToString(expectedStr),
-            types.serializeToString(cv.infoMessages[0]));
-    else 
-        gs.info("update x_44813_sec_clsif.ClassificationValidator().infoMessages[0] passed.");
-    expectedStr = "Classification Name has been normalized.";
-    if (cv.infoMessages[1] !== expectedStr)
-        gs.error("update x_44813_sec_clsif.ClassificationValidator().infoMessages[1] failed. Expected: {0}; Actual: {1}", types.serializeToString(expectedStr),
-            types.serializeToString(cv.infoMessages[1]));
-    else 
-        gs.info("update x_44813_sec_clsif.ClassificationValidator().infoMessages[0] passed.");
+function getDefaultPortionMarkingTest(): x_44813_asserttest.TestCallbackResult {
+    return {
+        handler: function(assert: x_44813_asserttest.Assert, data?:any, lastResult?:x_44813_asserttest.TestResultInfo) {
+            let cu = new x_44813_sec_clsif.ClassificationUtil();
+            let actual = cu.getDefaultPortionMarking();
+            if (actual !== 'U')
+                assert.fail("Expected: \"U\"; Actual " + assert.types.serializeToString(actual));
+        }
+    };
+}
+
+function classificationValidatorTest(): x_44813_asserttest.TestCallbackResult {
+    return {
+        handler: function(assert: x_44813_asserttest.Assert, data?:any, lastResult?:x_44813_asserttest.TestResultInfo) {
+            if (assert.types.isNil(data))
+                this.cv = new x_44813_sec_clsif.ClassificationValidator();
+            assert.areEqual(assert.metaData.IsValid, this.cv.isValid, "IsValid");
+            assert.areEqual(assert.metaData.portionMarking.sourceValue, this.cv.portionMarking.sourceValue, "portionMarking.sourceValue");
+            assert.areEqual(assert.metaData.name.sourceValue, this.cv.name.sourceValue, "name.sourceValue");
+            assert.areEqual(assert.metaData.portionMarking.normalizedValue, this.cv.portionMarking.normalizedValue, "portionMarking.normalizedValue");
+            assert.areEqual(assert.metaData.name.normalizedValue, this.cv.name.normalizedValue, "name.normalizedValue");
+            assert.areEqual(assert.metaData.errorMessages.length, this.cv.errorMessages.length, "errorMessages.length");
+            assert.areEqual(assert.metaData.infoMessages.length, this.cv.infoMessages.length, "infoMessages.length");
+            for (var i = 0; i < assert.metaData.infoMessages.length; i++)
+                assert.areEqual(assert.metaData.errorMessages[i], this.cv.errorMessages[i], "errorMessages[" + i + "]");
+            for (var i = 0; i < assert.metaData.infoMessages.length; i++)
+                assert.areEqual(assert.metaData.infoMessages[i], this.cv.infoMessages[i], "infoMessages[" + i + "]");
+        },
+        data: [
+            {
+                title: "Constructor",
+                metaData: {
+                    isValid: false,
+                    portionMarking: {
+                        sourceValue: "",
+                        normalizedValue: ""
+                    },
+                    name: {
+                        sourceValue: "",
+                        normalizedValue: ""
+                    },
+                    errorMessages: [
+                        "Classification Name cannot be empty.",
+                        "Portion Marking cannot be empty."
+                    ],
+                    infoMessages: []
+                }
+            }, {
+                title: "UnNormalized U",
+                data: { name: ' UNCLASSIFIED', portionMarking: ' U ' },
+                metaData: {
+                    isValid: false,
+                    portionMarking: {
+                        sourceValue: " U ",
+                        normalizedValue: "U"
+                    },
+                    name: {
+                        sourceValue: " UNCLASSIFIED",
+                        normalizedValue: "UNCLASSIFIED"
+                    },
+                    errorMessages: [],
+                    infoMessages: [
+                        "Classification Name has been normalized.",
+                        "Portion Marking has been normalized."
+                    ]
+                }
+            }, {
+                title: "Normalized C",
+                data: { name: 'CONFIDENTIAL', portionMarking: 'C' },
+                metaData: {
+                    isValid: false,
+                    portionMarking: {
+                        sourceValue: "C",
+                        normalizedValue: "C"
+                    },
+                    name: {
+                        sourceValue: "CONFIDENTIAL",
+                        normalizedValue: "CONFIDENTIAL"
+                    },
+                    errorMessages: [],
+                    infoMessages: []
+                }
+            }, {
+                title: "Whitespace",
+                data: { name: '  ', portionMarking: '      ' },
+                metaData: {
+                    isValid: false,
+                    portionMarking: {
+                        sourceValue: "      ",
+                        normalizedValue: ""
+                    },
+                    name: {
+                        sourceValue: "  ",
+                        normalizedValue: ""
+                    },
+                    errorMessages: [
+                        "Classification Name cannot be empty.",
+                        "Portion Marking cannot be empty."
+                    ],
+                    infoMessages: []
+                }
+            }
+        ],
+        thisObj: { }
+    };
 }

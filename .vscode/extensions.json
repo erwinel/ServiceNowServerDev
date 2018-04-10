@@ -1,0 +1,39 @@
+{
+	// See http://go.microsoft.com/fwlink/?LinkId=827846
+	// for the documentation about the extensions.json format
+	"recommendations": [
+		"abusaidm.html-snippets",
+		"Angular.ng-template",
+		"christian-kohler.npm-intellisense",
+		"christian-kohler.path-intellisense",
+		"danwahlin.angular2-snippets",
+		"DavidAnson.vscode-markdownlint",
+		"dbaeumer.jshint",
+		"dbaeumer.vscode-eslint",
+		"DotJoshJohnson.xml",
+		"ecmel.vscode-html-css",
+		"EditorConfig.EditorConfig",
+		"eg2.tslint",
+		"eg2.vscode-npm-script",
+		"esbenp.prettier-vscode",
+		"felipecaputo.git-project-manager",
+		"fknop.vscode-npm",
+		"formulahendry.auto-close-tag",
+		"formulahendry.dotnet",
+		"HookyQR.beautify",
+		"HookyQR.JSDocTagComplete",
+		"johnpapa.Angular2",
+		"johnpapa.angular-essentials",
+		"johnpapa.winteriscoming",
+		"k--kato.docomment",
+		"lolkush.quickstart",
+		"Mikael.Angular-BeastCode",
+		"mkaufman.HTMLHint",
+		"msjsdiag.debugger-for-chrome",
+		"ms-vscode.PowerShell",
+		"natewallace.angular2-inline",
+		"sidthesloth.html5-boilerplate",
+		"xabikos.JavaScriptSnippets",
+		"Zignd.html-css-class-completion"
+	]
+}
