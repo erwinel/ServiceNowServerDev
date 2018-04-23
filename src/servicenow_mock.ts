@@ -1,4 +1,4 @@
-declare interface GlideSystem {
+declare interface GlideSystem_old {
     /**
      * Adds an error message for the current session.
      * @param {*} message The message to add.
@@ -492,7 +492,96 @@ declare interface GlideSystem {
      */
     yesterday(): string;
 }
-
+declare class NativeObject  {
+	constructor();
+	static hasOwnProperty(thisObj: any, args: Array<any>): any;
+	static isPrototypeOf(cx: any, thisObj: any, args: Array<any>): any;
+	static propertyIsEnumerable(cx: any, thisObj: any, args: Array<any>): any;
+	static toLocaleString(cx: any, thisObj: any): string;
+	static toString(cx: any, thisObj: any): string;
+	static valueOf(thisObj: any): any;
+}
+declare class GlideSystem  {
+	OLAPBuildTimeDimension(): void;
+	breaker(obj: any): void;
+	static cacheFlush(catalog?: any, invalidateMetaData?: any): void;
+	constructor();
+	dumpProperties(): void;
+	escaper(string_1: string): string;
+	eventQueue(name: string, instance: any, parm1: string, parm2: string, queue: string): void;
+	eventQueueScheduled(name: string, instance: any, parm1: string, parm2: string, expiration: any): void;
+	eventsProcess(): void;
+	static executeCondition(condition: string): boolean;
+	executeNow(current: any): string;
+	static fileExists(fileName: string): boolean;
+	generateGUID(o: any): string;
+	generateURL(table: string, key: string, view: any): string;
+	static getBooleanPreference(key: string, defaultValue: boolean): boolean;
+	static getCallerScopeName(): string;
+	static getCannotConfigureScopeReason(scopeID: string): string;
+	static getCssCacheVersionString(): string;
+	static getCurrentScopeName(): string;
+	static getCustomerPrefix(): string;
+	getDisplayColumn(tableName: string): string;
+	getEscapedMessage(id: string, args: any): string;
+	getEscapedProperty(key: string, alt: any): string;
+	static getGlideHome(): string;
+	getInstanceIP(): string;
+	getJavaVersion(): string;
+	static getMaxSchemaNameLength(): number;
+	getMessage(id: string, args: any): string;
+	getMessageLang(id: string, language: string, args: any): string;
+	getMessageS(id: string, args: any): string;
+	static getNewAppScopeCompanyPrefix(): string;
+	getNodeID(): string;
+	static getNumericPreference(key: string, defaultValue: number): number;
+	static getPreference(key: string, defaultValue: any): string;
+	getProperty(key: string, alt: any): string;
+	static getScopeIdByElementName(tableName: string, elementName: string): string;
+	static getScopeIdByRecordId(sysId: string): string;
+	static getScopeLabelByElementName(tableName: string, elementName: string): string;
+	static getScopeLabelByRecordId(sysId: string): string;
+	static getScopeNameByElementName(tableName: string, elementName: string): string;
+	static getScopeNameByRecordId(sysId: string): string;
+	static getSession(): any;
+	getSessionID(): string;
+	getStyle(tableName: string, fieldName: string, fieldValue: string): string;
+	getSystemID(): string;
+	getTempDir(): string;
+	static getVendorPrefixPrefix(): string;
+	globalPut(name: string, g: any): void;
+	static hasRightsTo(resourcePath: string, context: any): boolean;
+	static hasRole(role: string): boolean;
+	static include(name: string): boolean;
+	installationSetting(spec: string, ref: string): string;
+	invalidateCache(): void;
+	isDatabaseView(table: string): boolean;
+	isEdgeEncryptedSession(): boolean;
+	isInteractiveSession(): boolean;
+	isMobile(): boolean;
+	isPaused(): boolean;
+	static log(message: string, source: string): void;
+	logError(message: string, source: string): void;
+	logWarning(message: string, source: string): void;
+	mergeAttribute(tableName: string, parm1: string, parm2: string): void;
+	nil(o: any): boolean;
+	static pause(): void;
+	static print(toPrint: string): void;
+	processDelegatedEvents(): void;
+	static publish(channel: string, data: any): void;
+	static publishToUser(channel: string, data: any, toUser: string): void;
+	resolveIcon(className: string): string;
+	resume(): void;
+	setCannotCancel(b: boolean): boolean;
+	setProperty(key: string, value: string, description: string): void;
+	sleep(i: number): void;
+	tableExists(name: string): boolean;
+	templateExists(templateName: string): boolean;
+	templateOrMacroExists(templateName: string): boolean;
+	unWrap(url: string): string;
+	workflowFlush(o: any): void;
+	xmlToJSON(xmlString: string): NativeObject;
+}
 declare interface GlideUser {
     /**
      * Returns the current user's company sys_id.
@@ -607,8 +696,24 @@ declare interface GlideUri {
      */
     toString(path: string): string;
 }
-
-declare interface GlideQueryCondition {
+interface GlideIQueryCondition  {
+	addOrCondition(name: string, value: any): GlideIQueryCondition;
+}
+declare class GlideQueryCondition  {
+	// addCondition(name: string, value: any): GlideIQueryCondition;
+	// addCondition(name: string, oper: string, value: any): GlideIQueryCondition;
+	// addCondition(and: GlideIQueryCondition): void;
+	addCondition(name_OR_and: string|GlideIQueryCondition, value_OR_oper?: any|string, value?: any): GlideIQueryCondition;
+	// addOrCondition(name: string, value: any): GlideIQueryCondition;
+	// addOrCondition(name: string, oper: string, value: any): GlideIQueryCondition;
+	// addOrCondition(or: GlideIQueryCondition): void;
+	addOrCondition(name_OR_or: string|GlideIQueryCondition, value_OR_oper?: any|string, value?: any): GlideIQueryCondition;
+	// constructor();
+	// constructor(name: string, operator: string);
+	// constructor(name: string, operator: string, value: string);
+	constructor(name?: string, operator?: string, value?: string);
+}
+declare interface GlideQueryCondition_old {
     /**
      * Adds an AND condition to the current condition. Assumes the equals operator.
      * @param {string} name The name of a field.
@@ -641,7 +746,218 @@ declare interface GlideQueryCondition {
     addOrCondition(name: string, oper: string, value: any) : GlideQueryCondition;
 }
 
-declare class GlideRecord {
+declare interface IServerClass {
+    intialize(...args: (any|null|undefined)[]): void;
+    type: string;
+}
+declare interface IBackgroundProgressWorkerHandler extends IServerClass {
+    process(...args: (any|null|undefined)[]): void;
+}
+declare class GlideProgressWorker  {
+	constructor();
+	getProgressID(): string;
+	setOutputSummary(msg: string): void;
+	setProgressErrorState(): void;
+	setProgressMessage(m: string): void;
+	setProgressName(name: string): void;
+	setProgressState(status: string): void;
+	setProgressStateCode(stateCode: string): void;
+}
+declare class GlideScriptedProgressWorker extends GlideProgressWorker {
+	addMessage(message: string): void;
+	addNonEscapedParameter(parm: string): void;
+	addParameter(parm: string): void;
+	constructor();
+	setName(name: string): void;
+}
+declare class GlideScriptedProgressWorker_old {
+    setProgressName(displayName: string): any|null|undefined;
+    setName(name: string): any|null|undefined;
+    addParameter(value: any): any|null|undefined;
+    setBackground(isBackground: boolean): any|null|undefined;
+    getProgressID(): any|null|undefined;
+    start(): any|null|undefined;
+    setProgressMessage(message: string): any|null|undefined;
+
+    registerChild(...args: any[]): any|null|undefined;
+    initProgressFields(...args: any[]): any|null|undefined;
+    setCannotCancel(...args: any[]): any|null|undefined;
+    setProgressState(...args: any[]): any|null|undefined;
+    wait(...args: any[]): any|null|undefined;
+    cancel(...args: any[]): any|null|undefined;
+    getClass(...args: any[]): any|null|undefined;
+    setProgressStateCode(...args: any[]): any|null|undefined;
+    hashCode(...args: any[]): any|null|undefined;
+    stage(...args: any[]): any|null|undefined;
+    fail(...args: any[]): any|null|undefined;
+    notify(...args: any[]): any|null|undefined;
+    setParentController(...args: any[]): any|null|undefined;
+    setProgressErrorState(...args: any[]): any|null|undefined;
+    getParentController(...args: any[]): any|null|undefined;
+    isCancelled(...args: any[]): any|null|undefined;
+    getOutputSummary(...args: any[]): any|null|undefined;
+    updateDetailMessage(...args: any[]): any|null|undefined;
+    run(...args: any[]): any|null|undefined;
+    getProgressMessage(...args: any[]): any|null|undefined;
+    isUncancelable(...args: any[]): any|null|undefined;
+    setProgressTable(...args: any[]): any|null|undefined;
+    equals(...args: any[]): any|null|undefined;
+    getProgressState(...args: any[]): any|null|undefined;
+    runScript(...args: any[]): any|null|undefined;
+    updateMessage(...args: any[]): any|null|undefined;
+    setProgressError(...args: any[]): any|null|undefined;
+    addNonEscapedParameter(...args: any[]): any|null|undefined;
+    isFailed(...args: any[]): any|null|undefined;
+    addMessage(...args: any[]): any|null|undefined;
+    setProgressMessage(...args: any[]): any|null|undefined;
+    success(...args: any[]): any|null|undefined;
+    notifyAll(...args: any[]): any|null|undefined;
+    isBackground(...args: any[]): any|null|undefined;
+    isPending(...args: any[]): any|null|undefined;
+    getWorkerThreadID(...args: any[]): any|null|undefined;
+    isError(...args: any[]): any|null|undefined;
+    setOutputSummary(...args: any[]): any|null|undefined;
+    isStarting(...args: any[]): any|null|undefined;
+    loadProgressWorker(...args: any[]): any|null|undefined;
+    getProgressTable(...args: any[]): any|null|undefined;
+}
+declare class GlideRecord  {
+	_next(): boolean;
+	_operation(): string;
+	_query(field: any, value: any): void;
+	addActiveQuery(): GlideQueryCondition;
+	addDomainQuery(o: any): void;
+	addEncodedQuery(query: string): void;
+	addFunction(function_1: string): void;
+	addInactiveQuery(): GlideQueryCondition;
+	addJoinQuery(joinTable: string, primaryField: any, joinTableField: any): GlideIQueryCondition;
+	addNotNullQuery(fieldName: string): GlideQueryCondition;
+	addNullQuery(fieldName: string): GlideQueryCondition;
+	addQuery(name: string, operator: any, value: any): GlideIQueryCondition;
+	appendOrQuery(condition: any, name: string, operator: any, value: any): void;
+	applyEncodedQuery(queryString: string): void;
+	applyRowSecurity(): void;
+	applyTemplate(template: string): void;
+	attachGlideListener(className: string, insert: boolean, update: boolean, delete_1: boolean, fields: string, foreign: any, foreign2: any, details: string): void;
+	autoSysFields(b: boolean): void;
+	canCreate(): boolean;
+	canDelete(): boolean;
+	canRead(): boolean;
+	canWrite(): boolean;
+	changes(): boolean;
+	chooseWindow(f: number, l: number, forceCount: boolean): void;
+	close(): void;
+	// constructor();
+	// constructor(tableName: string);
+	constructor(tableName?: string);
+	createElement(): boolean;
+	createIndex(): boolean;
+	deleteMultiple(): void;
+	deleteRecord(): boolean;
+	dropIndex(): boolean;
+	evaluateAsDefault(fieldName: string): string;
+	find(columnName: string, value: string): boolean;
+	findForeignKey(collection: string): string;
+	get(name: any, value: any): boolean;
+	getAttribute(attribute: string): string;
+	getBooleanAttribute(attribute: string): boolean;
+	getCategory(): string;
+	getClassDisplayValue(): string;
+	getDisplayName(): string;
+	getDisplayValue(name: string): string;
+	getED(): GlideElementDescriptor;
+	getElement(columnName: string): GlideElement;
+	getElements(): Array<any>;
+	getEncodedQuery(): string;
+	getEngineParameter(name: string): string;
+	getEscapedDisplayValue(): string;
+	getFields(): Array<any>;
+	getLabel(): string;
+	getLastErrorMessage(): string;
+	getLink(noStack: boolean): string;
+	getLocation(): number;
+	getPlural(): string;
+	getRecordClassName(): string;
+	getRelatedLists(): { [key: string]: any; };
+	getRelatedRecords(foreignKey: string, collectionID: string): void;
+	getRelatedTables(): { [key: string]: string; };
+	getRowCount(): number;
+	getRowNumber(): number;
+	getSetRowCount(): number;
+	getTableName(): string;
+	getTableScope(): string;
+	getTableScopeId(): string;
+	getTableScopeName(): string;
+	getUniqueValue(): string;
+	getValue(name: string): string;
+	hasAttachments(): boolean;
+	hasNext(): boolean;
+	hasRightsTo(operation: string): boolean;
+	incrementViewCount(): void;
+	initialize(): void;
+	insert(): string;
+	insertLazy(): string;
+	insertOrUpdate(keyField: string): string;
+	insertWithReferences(): string;
+	instanceOf(className: string): boolean;
+	isActionAborted(): boolean;
+	isFiltrationByACLEnabled(): boolean;
+	isForeignTable(): boolean;
+	isInGlobalScope(): boolean;
+	isInSelectedScope(): boolean;
+	isInStoreScope(): boolean;
+	isMetadata(): boolean;
+	isNewRecord(): boolean;
+	isReadonly(): boolean;
+	isValid(): boolean;
+	isValidField(columnName: string): boolean;
+	isValidMetadataRecord(): boolean;
+	isValidRecord(): boolean;
+	isView(): boolean;
+	isWorkflow(): boolean;
+	largeResultExpected(): void;
+	makeReadonly(): void;
+	moreEncodedQuery(query: string): void;
+	static newGlideRecordNamedFromScript(tableName: string): GlideRecord;
+	newRecord(): void;
+	next(): boolean;
+	nextRecord(): boolean;
+	notifyUser(): void;
+	onePassQuery(): void;
+	operation(): string;
+	orderBy(name: string): void;
+	orderByDesc(name: string): void;
+	popCurrent(): void;
+	putCurrent(): void;
+	putOptimizers(o: any): void;
+	query(field: any, value: any): void;
+	queryNoDomain(): void;
+	restoreLocation(): void;
+	saveLocation(): void;
+	scheduleScript(name: string): void;
+	setAbortAction(b: boolean): void;
+	setCategory(category: string): void;
+	setDisplayValue(name: string, value: any): void;
+	setEngineParameter(name: string, value: string): void;
+	setFiltrationByACLEnabled(b: boolean): void;
+	setForceUpdate(e: boolean): void;
+	setLimit(limit: number): void;
+	setLocation(rowNumber: number): void;
+	setNewGuid(): string;
+	setNewGuidValue(guid: string): void;
+	setQueryReferences(queryReferences: boolean): void;
+	setSystem(isSystem: boolean): void;
+	setUseEngines(e: boolean): void;
+	setValue(name: string, value: any): void;
+	setWorkflow(e: boolean): void;
+	targetExtension(tableName: string): void;
+	update(reason: any): string;
+	updateLazy(): boolean;
+	updateMultiple(): void;
+	updateNoDomain(reason: any): string;
+	updateWithReferences(reason: any): string;
+}
+declare class GlideRecord_old {
     constructor(tableName: string);
 
     sys_id: GlideElement;
@@ -967,8 +1283,124 @@ declare class GlideRecord {
      */
     updateMultiple(): void;
 }
-
-declare interface GlideElement {
+declare interface GlidePlugin  {
+	getDescription(): any;
+	getDisplayName(): string;
+	getName(): string;
+	getPath(): string;
+	refreshArtifacts(): void;
+}
+declare class GlideExtensionPoint  {
+	// constructor(plugin: string, el: any);
+	// constructor(plugin: string, el: any, namespace: string);
+	// constructor(extension: any);
+	constructor(plugin_OR_extension: string|any, el?: any, namespace?: string);
+	getAttribute(name: string): string;
+}
+declare class GlidePluginManager  {
+	constructor();
+	static getActivePlugin(pluginName: string): GlidePlugin;
+	static getActivePlugins(): { [key: string]: GlidePlugin; };
+	static getExtensionMap(): { [key: string]: { [key: string]: GlideExtensionPoint; }; };
+	static getInstalledCorePlugins(): { [key: string]: GlidePlugin; };
+	static getInstalledPlugin(pluginName: string): GlidePlugin;
+	static getInstalledPlugins(): { [key: string]: GlidePlugin; };
+	static getPluginPath(pluginName: string): string;
+	static getUninstalledConditionalPlugins(pluginName: string): GlideRecord;
+	init(haveDB: boolean): void;
+	static isActive(plugin_id: string): boolean;
+	static isRegistered(pluginId: string): boolean;
+	isSkipDependentUpdate(): boolean;
+	static isUpgradeSystemBusy(): boolean;
+	static isZboot(): boolean;
+	static loadAllDemo(): void;
+	static loadDemoData(pluginName: string): void;
+	// static loadPluginData(pluginName: string): void;
+	// static loadPluginData(pluginName: string, dir: string): void;
+	static loadPluginData(pluginName: string, dir?: string): void;
+	registerPlugin(pluginName: string): void;
+	setSkipDependentUpdate(b: boolean): void;
+	setSource(source: string): void;
+	static setZbootJS(b: boolean): void;
+	static startPluginFromCluster(pluginName: string): void;
+	upgrade(): void;
+	upgradeCount(): number;
+	static verifyFilenames(): void;
+}
+declare class SysStyleResult  {
+	// constructor();
+	// constructor(initInRhino: boolean);
+	// constructor(sysId: string, style: string, alt: string);
+	constructor(initInRhino_OR_sysId?: boolean|string, style?: string, alt?: string);
+	getAlt(): string;
+	getStyle(): string;
+}
+// FRom https://github.com/yln99517/snts
+declare class GlideElement  {
+	canCreate(): boolean;
+	canRead(): boolean;
+	canWrite(): boolean;
+	changes(): boolean;
+	changesFrom(o: any): boolean;
+	changesFromNotEmpty(): boolean;
+	changesTo(o: any): boolean;
+	changesToNotEmpty(): boolean;
+	constructor();
+	debug(msg: any): void;
+	elementSupportsMapping(): boolean;
+	explainLock(): string;
+	getAttribute(attribute: string): string;
+	getBaseTableName(): string;
+	getBooleanAttribute(attribute: string): boolean;
+	getChoiceValue(): string;
+	getChoices(dependent: string): Array<any>;
+	getDebugCount(): number;
+	getDependent(): string;
+	getDependentTable(): string;
+	getDisplayValue(maxCharacters: number): string;
+	getDisplayValueExt(maxCharacters: number, nullsub: string): string;
+	getED(): GlideElementDescriptor;
+	getElementValue(name: string): string;
+	getError(): string;
+	getEscapedValue(): string;
+	getFieldStyle(): string;
+	getFullStyle(): SysStyleResult;
+	getGlideObject(): any;
+	getGlideRecord(): GlideRecord;
+	getHTMLValue(maxChars: number): string;
+	getHTMLValueExt(maxCharacters: number, nullsub: string): string;
+	getInitialValue(): string;
+	getLabel(): string;
+	getMappingConfig(): ScopedServer.MappingLookupSourceDescriptor;
+	getModifiedBy(): string;
+	getName(): string;
+	getReferenceKey(): string;
+	getStyle(): string;
+	getTableName(): string;
+	getTextAreaDisplayValue(): string;
+	getValue(): string;
+	getValueMapping(): string;
+	getXHTMLValue(): string;
+	getXMLValue(): string;
+	hasAttribute(attribute: string): boolean;
+	hasMapping(): boolean;
+	hasRightsTo(operation: string): boolean;
+	hasValue(): boolean;
+	isArray(): boolean;
+	isDynamicCreate(): boolean;
+	isNil(): boolean;
+	isObject(): boolean;
+	nil(): boolean;
+	setDisplayValue(value: any): void;
+	setError(error: string): void;
+	setInitialValue(value: string): void;
+	setJournalEntry(value: any, userName: string): void;
+	setValue(value: any): void;
+	setValueMapping(mapping: string): void;
+	size(): number;
+	toString(): string;
+}
+declare interface GlideElement_old {
     /**
      * Determines if the user's role permits the creation of new records in this field.
      * @returns {boolean} True if the field can be created, false otherwise.
@@ -1100,5 +1532,119 @@ declare interface GlideElement {
      */
     toString(): string;
 }
-
+declare class GlideDBI  {
+	close(): void;
+	compactTable(tableName: string): void;
+	constructor(identifierQuoter: any);
+	dropIndex(tableName: string, element: string): string;
+	executeProcedure(procName: string, inputs: Array<any>, outputs: Array<any>, map: Array<number>, types: Array<number>): any;
+	executeStatementViaJS(sql: string): any;
+	getAcceptableNameForDB(baseName: string, childName: string): string;
+	getConnectionStringViaJS(): string;
+	getDatabaseName(): string;
+	getDatabaseProductVersion(): string;
+	getDatabaseVersion(): number;
+	getDriverName(): string;
+	getDriverVersion(): string;
+	getPasswordViaJS(): string;
+	getQuotedIdentifier(identifier: string): string;
+	getRDBMS(): string;
+	getURLViaJS(): string;
+	getUserViaJS(): string;
+	isMySQL(): boolean;
+	isOracle(): boolean;
+	isSqlServer(): boolean;
+	tableDropViaJS(name: string): void;
+	truncateTableViaJS(name: string): boolean;
+}
+declare class GlideAttributes  {
+	// constructor(attributes: string);
+	// constructor();
+	constructor(attributes?: string);
+	containsAttribute(attribute: string): boolean;
+	getAttribute(attribute: string): string;
+	removeAttribute(attribute: string): string;
+	serializeAttributes(): string;
+	setAttribute(key: string, value: string): void;
+}
+declare class GlideElementDescriptor  {
+	canAvg(): boolean;
+	canMax(): boolean;
+	canMin(): boolean;
+	canSum(): boolean;
+	// constructor();
+	// constructor(name: string, jdbcType: number);
+	// constructor(name: string, jdbcType: number, length: number);
+	// constructor(name: string, type_1: string, length: number);
+	// constructor(is: any, unusedSignatureVariable: boolean);
+	// constructor(dbi: GlideDBI, dictionaryTableName: any, columnMetadata: any, elementMetadata: any);
+	// constructor(rsmd: any, i: number);
+	// constructor(e: any, tableName: string);
+	// constructor(r: any);
+	constructor(name_OR_is_OR_dbi_OR_rsmd_OR_e_OR_r?: string|any|GlideDBI, jdbcType_OR_type_1_OR_unusedSignatureVariable_OR_dictionaryTableName_OR_i_OR_tableName?: number|string|boolean|any, length_OR_columnMetadata?: number|any, elementMetadata?: any);
+	getAttachmentEncryptionType(): string;
+	getAttribute(name: string): string;
+	// getBooleanAttribute(attribute: string, def: boolean): boolean;
+	// getBooleanAttribute(attribute: string): boolean;
+	getBooleanAttribute(attribute: string, def?: boolean): boolean;
+	getChoice(): number;
+	getChoiceTable(): string;
+	getColumnName(): string;
+	getDefault(): string;
+	getDependent(): string;
+	getDirectAttribute(name: string): string;
+	getEncryptionType(): string;
+	getFirstTableName(): string;
+	getHint(): string;
+	getInternalType(): string;
+	getLabel(): string;
+	getLength(): number;
+	getName(): string;
+	getPlural(): string;
+	getReference(): string;
+	getReferenceKey(): string;
+	getReferenceQualifier(): string;
+	getScopeID(): string;
+	getSqlLength(): number;
+	getTableName(): string;
+	getTableNameFromJS(): string;
+	getType(): number;
+	getUniqueID(): string;
+	hasAttachmentsEncrypted(): boolean;
+	hasAttribute(attribute: string): boolean;
+	isAutoOrSysID(): boolean;
+	isBoolean(): boolean;
+	isChoiceTable(): boolean;
+	isDateOnly(): boolean;
+	isDateType(): boolean;
+	isDisplay(): boolean;
+	isDuration(): boolean;
+	isEdgeEncryptable(): boolean;
+	isEdgeEncrypted(): boolean;
+	isEncrypted(): boolean;
+	isFirstTableName(): boolean;
+	isInDatabase(): boolean;
+	isJournal(): boolean;
+	isJournalList(): boolean;
+	isList(): boolean;
+	isMandatory(): boolean;
+	isMetricType(): boolean;
+	isMultiText(): boolean;
+	isNumber(): boolean;
+	isObject(): boolean;
+	isReadOnly(): boolean;
+	isReference(): boolean;
+	isString(): boolean;
+	isTimeType(): boolean;
+	isTrulyNumber(): boolean;
+	isVirtual(): boolean;
+	mergeAttributesWithTables(): GlideAttributes;
+	serializeAttributes(): string;
+	setInternalType(s: string): void;
+	setIsReference(b: boolean): void;
+	setName(name: string): void;
+	toSQLType(dbi: GlideDBI): string;
+	toString(): string;
+	toXML(): any;
+}
 declare let gs: GlideSystem;

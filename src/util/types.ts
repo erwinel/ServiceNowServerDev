@@ -1,403 +1,1597 @@
 namespace x_44813_util {
-    export class types {
-        private newLineString: string = "\n";
-        private whitespaceRegex: RegExp = /^\s*$/;
-        private trimEndRegex: RegExp = /^(\s*\S+(\s+\S+)*)/;
-        private lineSplitRegex: RegExp = /\r\n?|\n/g;
-        private boolRegex: RegExp = /^(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))$/i;
-        private ucFirstRegex: RegExp = /^([^a-zA-Z\d]*[a-z])(.+)?$/g;
-        private abnormalWhitespaceRegex = /( |(?=[^ ]))\s+/g;
+    /**
+     * Defines options for updating regular expressions used in the current module.
+     */
+    export interface IJsTypeCommanderRegex {
+        /**
+         * Pattern which matches one or more consecutive whitespace characters.
+         */
+        onlyWhitespace?: RegExp;
+        /**
+         * Pattern which captures text from the first non-whitespace character to the end of the string in group index 1 or fails if there are no non-whitespace characters.
+         */
+        trimStart?: RegExp;
+        /**
+         * Pattern which captures text in group at index 1, omitting trailing whitespace characters, or fails if there are no non-whitespace characters.
+         */
+        trimEnd?: RegExp;
+        /**
+         * Pattern which matches a single character sequence which separates 2 lines of text.
+         */
+        lineSeparator?: RegExp;
+        /**
+         * Pattern which captures text that can represent a boolean value, with true values being a successful match at group index 1,
+         * and false values being a successful match at group index 2.
+         */
+        booleanText?: RegExp;
+        /**
+         * Pattern which captures text that can be used for capitalizing text.
+         * @description The group at index 1 captures all leading text which is not a letter or digit, and will fail if there are no such leading characters.
+         * The group at index 1 captures the first letter to be capitalized, and will never fail unless the whole pattern fails.
+         * The group at index 2 captures remaining text following the capitalized letter, and will fail if there are no remaining characters.
+         * If there are no letter characters or if the first letter is already capitalized, then the entire match will fail.
+         */
+        firstLetterLc?: RegExp;
+        /**
+         * Pattern which matches consecutive whitespace characters except for single space (' ') characters that are not next to other whitespace characters.
+         */
+        abnormalWhitespace?: RegExp;
+    }
+
+    /**
+     * Names of settings which can be used to reference regular expression patters used in the current module.
+     */
+    export type PatternSettingsName = "onlyWhitespace"|"trimStart"|"trimEnd"|"lineSeparator"|"booleanText"|"firstLetterLc"|"abnormalWhitespace";
     
-        type: "types";
+    /**
+     * Alias for a type that is defined.
+     * @description This is intended to represent any defined value at all when strictNullChecks is turned on.
+     */
+    export type TDefined = any|null;
+
+    /**
+     * Alias for a type that includes null and undefined.
+     * @description This is intended for use when strictNullChecks is turned on.
+     */
+    export type Nilable<T> = T|null|undefined;
+
+    /**
+     * Alias for any type, including null and undefined.
+     * @description This is intended to represent any value at all when strictNullChecks is turned on.
+     */
+    export type AnyNilable = any|null|undefined;
+
+    /**
+     * Alias for a type that includes null and undefined.
+     * @description This is intended to include nulls in a type when strictNullChecks is turned on.
+     */
+    export type Nullable<T> = T|null;
+
+    /**
+     * Alias for any type or null.
+     * @description This is intended for use when strictNullChecks is turned on.
+     */
+    export type AnyNullable = any|null;
+
+    /** Represents an object which can contained arbitrarily named properties. */
+    export interface IStringKeyedObject { [key: string]: AnyNilable };
+    
+    /**
+     * Represents an object which contains both named properties and indexed elements.
+     */
+    export interface ICompoundArrayObject extends IStringKeyedObject, ArrayLike<AnyNilable> {
+        readonly [key: string]: AnyNilable
+    }
+    
+    /**
+     * Represents an object which contains properties that are similar to Error objects.
+     * @description Properties described in this interface are an aggregation of selectred reference information provided by
+     * [Microsoft]{@link https://docs.microsoft.com/en-us/scripting/javascript/reference/stack-property-error-javascript} and
+     * the [Mozilla Developer Network]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error}.
+     */
+    export interface ErrorLike {
+        /**
+         * Brief string that describes the error.
+         * @type {string}
+         */
+        message: string,
+        /**
+         * String describing the error.
+         * @description This can be used in lieu of the {@link ErrorLike.message} property or it can contain more detailed descriptive information.
+         * @type {string}
+         */
+        description?: string,
+        /**
+         * Numeric value assigned to the error.
+         * @type {number}
+         */
+        number?: number,
+        /**
+         * The name for the type of error.
+         * @type {string}
+         */
+        name?: string,
+        /**
+         * The name of the file associated with the error.
+         * @type {string}
+         */
+        fileName?: string,
+        /**
+         * The line number associated with the error.
+         * @type {number}
+         */
+        lineNumber?: number,
+        /**
+         * Contains stack trace information when error is thrown.
+         * 
+         */
+        stack?: string
+    }
+    
+    /**
+     * Function to get mapped value according to a source value.
+     * @param {*} value Source value.
+     * @returns {*} Mapped value.
+     */
+    export interface MapFromValueCallback<TSource, TResult> { (value: TSource): TResult; }
+    
+    /**
+     * Represents supported return values from the <code>typeof</code> funciton.
+     */
+    export type ObjectTypeString = "boolean"|"function"|"number"|"object"|"string"|"symbol"|"undefined";
+    
+    export type ReservedClassPropertyName = "Arguments"|"Array"|"Boolean"|"Date"|"Error"|"Function"|"JSON"|"Math"|"Number"|"Object"|"RegExp"|"String";
+    /**
+     * Defines a set of values and/or {@link MapFromValueCallback} which will determine the mapped value according to a source value's type.
+     */
+    export interface TypeGuardResultSpecs<TSource, TResult> {
+        /**
+         * If defined, will be the "this" variable when callbacks defined in this interface are invoked.
+         */
+        thisObj?: any;
 
         /**
-         * Indicates whether a value is defined.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is defined; otherwise, false if it is undefined. This also returns true if the value is null.
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"boolean"</code>.
+         * @description If the source value is <code>"boolean"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
          */
-        defined(value?: any) : boolean { return typeof(value) !== "undefined"; }
+        whenBoolean?: MapFromValueCallback<boolean, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"function"</code>.
+         * @description If the source value is a <code>"function"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenFunction?: MapFromValueCallback<Function, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is an infinite value.
+         * @description If the source value is an infinite value and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
+         */
+        whenInfinity?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is <code>NaN</code>.
+         * @description If the source value is <code>NaN/code> and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
+         */
+        whenNaN?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code>.
+         * @description If the source value is a <code>"number"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         * If the source value is an infinite value, and {@link TypeGuardResultSpecs#whenInfinity} is defined, then that property will determine the mapped value, instead.
+         * Likewise, if the source value is <code>NaN</code>, and {@link TypeGuardResultSpecs#whenNaN} is defined, then that property will determine the mapped value, instead.
+         */
+        whenNumber?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value derrives from <code>Array</code>.
+         * @description If the source value derrives from <code>Array</code> and this property is not defined, then {@link TypeGuardResultSpecs#whenArrayLike} will be next in line to determine the mapped value.
+         */
+        whenArray?: MapFromValueCallback<AnyNilable[], TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source appears to implement the <code>ArrayLike</code> interface.
+         * @description If this property is not defined then the following rules apply:
+         * If the source value derrives from <code>Array</code> and {@link TypeGuardResultSpecs#whenArrayLike} is defined, then {@link TypeGuardResultSpecs#whenArrayLike} will determine the mapped value.
+         * Otherwise, {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
+         */
+        whenArrayLike?: MapFromValueCallback<ArrayLike<AnyNilable>, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value does not derrive from <code>Array</code> and does not appear to implement the <code>ArrayLike</code> interface.
+         * @description If the source value is an object and this property is not defined, then {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
+         */
+        whenNotArrayLike?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"string"</code>.
+         * @description If the source value is a <code>"string"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenString?: MapFromValueCallback<string, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"symbol"</code>.
+         * @description If the source value is a <code>"symbol"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenSymbol?: MapFromValueCallback<symbol, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is equal to <code>null</code>.
+         * @description If the source value is null and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenNull?: MapFromValueCallback<null, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"undefined"</code>.
+         * @description If the source value is <code>"undefined"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenUndefined?: MapFromValueCallback<undefined, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is not equal to <code>null</code>.
+         * @description If the source value is array-like and either {@link TypeGuardResultSpecs#whenArray} or {@link TypeGuardResultSpecs#whenArrayLike} are defined, then those methods will determine the mapped value, instead.
+         */
+        whenObject?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when the associated type-based property was not defined.
+         */
+        otherwise: MapFromValueCallback<TSource, TResult>|TResult;
+    }
+  
+    /**
+     * @callback
+     * Similar to Array.map, recursively iterate through nested arrays and named object properties to map result values.
+     * @param {*} current The current item being interated. This can be null or undefined, according to the current element or property being iterated.
+     * @param {number|string|undefined} key The array element index or object property name of the current item.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @param {*[]|object|undefined} source The source object containing the element or property currently being iterated.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @param {*[]|object|undefined} target The target object which will contain the element or property containing return value of this callback function.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @returns {*} The value to replace the current value. Null and undefined values will be accepted.
+     * @description Each element on the parent array is iterated, as well as for each named named property on objects. The only exception is the "count" property on arrays, which will be ignored.
+     * If the current item is an array, then the return value must also be an array in order for the current value to be recursively iterated.
+     * Likewise,if the curren item is an object, then the return value must a non-null value of type "object" in order for the current value to be recursively iterated.
+     * If an empty array is returned, elements will be pushed onto the end of the target array as needed, otherwise, they values at the current index will be replaced.
+     * If an object with no properties is returned, property values will be added or replaced on the target according to the current property name.
+     * @example The following example effectively deep clones the source array to create an object compatible with JSON.stringify:
+     * let deepClone = JsTypeCommander.mapInto([{a: 1, b: 2}, 3, 4, ["Eins", "Svein", "Drei"]], (current?: any, key?: number|string, source?: any[]|object, target?: any[]|object) => {
+     *     if (JsTypeCommander.isArray(current))
+     *         return [];
+     *     if (JsTypeCommander.isNonArrayObject(current))
+     *         return {};
+     *     return (JsTypeCommander.isString(current) || JsTypeCommander.isNumber(current) || JsTypeCommander.isBoolean(current) || JsTypeCommander.isObjectOrNil(current)) ? current : current.toString();
+     * });
+     */
+    export interface RecursiveMapCallbackFn {
+        (current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined, target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable;
+    }
+
+    /**
+     * Represents options for the JsTypeCommander.mapInto function.
+     */
+    export interface MapIntoOptions {
+        /**
+         * If defined, this becomes the 'this' object when the callback function is invoked.
+         * @type {*}
+         */
+        thisObj?: any;
+        
+        /**
+         * Maximum number of items that will be iterated before all iteration is aborted.
+         * @type {number=8192}
+         * @description A value less than one wil prevent iteration.
+         */
+        totalMaxItems?: number;
+        
+        /**
+         * Maximum number of elements or properties that will be added to target objects.
+         * @type {number=1024}
+         * @description A value less than one wil prevent iteration.
+         */
+        maxItemsInObject?: number;
     
         /**
-         * Tests whether a value is an object.
-         * @param value Value to test.
+         * Maximum recursion depth for recursing. This helps to prevent endless loops, should there be any circular references.
+         * @type {number=32}
+         * @description A value less than one wil prevent recursion.
+         */
+        maxDepth?: number;
+    }
+    
+    class limitingIterator implements MapIntoOptions {
+        callbackfn: RecursiveMapCallbackFn;
+        totalMaxItems: number = 8192;
+        currentTotalItems: number = 0;
+        maxItemsInObject: number = 1024;
+        maxDepth: number = 32;
+        thisObj?: any;
+        private _types: types;
+    
+        constructor(callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
+            this._types = new types();
+            this.callbackfn = callbackfn;
+            if (typeof(options) == "object") {
+                this.totalMaxItems = this._types.toNumber(options.totalMaxItems, this.totalMaxItems);
+                this.maxDepth = this._types.toNumber(options.maxDepth, this.maxDepth);
+                this.thisObj = options.thisObj;
+            }
+        }
+    
+        iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
+                target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
+            this.currentTotalItems++;
+            target = (this._types.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key);
+            if (maxDepth < 1 || this.currentTotalItems >= this.totalMaxItems || !this._types.isObject(target) || !this._types.isObject(source))
+                return target;
+            source = current;
+            if (this._types.isArray(target)) {
+                if (!this._types.isArray(current))
+                    return target;
+                for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
+                    var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
+                    if (index < target.length)
+                        target[index] = t;
+                    else
+                        target.push(t);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            } else {
+                let count: number = 0;
+                for (var n in current) {
+                    count++;
+                    if (count > this.maxItemsInObject)
+                        break;
+                    target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            }
+    
+            return target;
+        }
+    }
+    
+    export class types {
+        type: "types";
+
+        static readonly patternDefaults = {
+            newLineSequence: "\n",
+            regex: {
+                onlyWhitespace: /^[\s\r\n]+$/,
+                trimStart: /^[\s\r\n]+(\S[\S\s]*)$/,
+                trimEnd: /^([\s\r\n]*\S+(?:[\s\r\n]+[^\s\r\n]+)*)/,
+                lineSeparator: /\r\n?|\n/,
+                booleanText: /^[\s\r\n]*(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))[\s\r\n]*$/i,
+                firstLetterLc: /^([^a-zA-Z\d]+)?([a-z])(.+)?$/,
+                abnormalWhitespace: /(?:(?=[^ ])[\s\r\n]+|[\s\r\n]{2,})/
+            }
+        };
+
+        readonly patternOptions = {
+            newLineSequence: types.patternDefaults.newLineSequence,
+            regex: {
+                onlyWhitespace: types.patternDefaults.regex.onlyWhitespace,
+                trimStart: types.patternDefaults.regex.trimStart,
+                trimEnd: types.patternDefaults.regex.trimEnd,
+                lineSeparator: types.patternDefaults.regex.lineSeparator,
+                booleanText: types.patternDefaults.regex.booleanText,
+                firstLetterLc: types.patternDefaults.regex.firstLetterLc,
+                abnormalWhitespace: types.patternDefaults.regex.abnormalWhitespace
+            }
+        };
+
+        /**
+         * Gets the default character sequence that will be used when joining lines of text.
+         * @returns {string} The default character sequence that will be used when joining lines of text.
+         */
+        getDefaultLineSeparatorSequence(): string { return this.patternOptions.newLineSequence; }
+
+        /**
+         * Gets regular expression patterns used internally by this module.
+         * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns used internally by this module.
+         */
+        getPatternOptions(): IJsTypeCommanderRegex {
+            return {
+                onlyWhitespace: this.patternOptions.regex.onlyWhitespace,
+                trimStart: this.patternOptions.regex.trimStart,
+                trimEnd: this.patternOptions.regex.trimEnd,
+                lineSeparator: this.patternOptions.regex.lineSeparator,
+                booleanText: this.patternOptions.regex.booleanText,
+                firstLetterLc: this.patternOptions.regex.firstLetterLc,
+                abnormalWhitespace: this.patternOptions.regex.abnormalWhitespace
+            };
+        }
+
+        /**
+         * Sets regular expression pattern options used internally by this module.
+         * @param {IJsTypeCommanderRegex} settings Object whose properties contain regular expression patterns used internally by this module.
+         * Undefined properties will not be changed. If this parameter is not defined, then the default pattern options will be restored.
+         * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns now being used internally by this module.
+         */
+        setPatternOptions(settings?: IJsTypeCommanderRegex): IJsTypeCommanderRegex {
+            if (typeof(settings) == "undefined" || settings === null) {
+                this.patternOptions.regex.onlyWhitespace = types.patternDefaults.regex.onlyWhitespace;
+                this.patternOptions.regex.trimStart = types.patternDefaults.regex.trimStart;
+                this.patternOptions.regex.trimEnd = types.patternDefaults.regex.trimEnd;
+                this.patternOptions.regex.lineSeparator = types.patternDefaults.regex.lineSeparator;
+                this.patternOptions.regex.booleanText = types.patternDefaults.regex.booleanText;
+                this.patternOptions.regex.firstLetterLc = types.patternDefaults.regex.firstLetterLc;
+                this.patternOptions.regex.abnormalWhitespace = types.patternDefaults.regex.abnormalWhitespace;
+            } else if (typeof(settings) == "object") {
+                if (this.derivesFrom<RegExp>(settings.onlyWhitespace))
+                    this.patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
+                if (this.derivesFrom<RegExp>(settings.trimStart))
+                    this.patternOptions.regex.trimStart = settings.trimStart;
+                if (this.derivesFrom<RegExp>(settings.trimEnd))
+                    this.patternOptions.regex.trimEnd = settings.trimEnd;
+                if (this.derivesFrom<RegExp>(settings.lineSeparator))
+                    this.patternOptions.regex.lineSeparator = settings.lineSeparator;
+                if (this.derivesFrom<RegExp>(settings.booleanText))
+                    this.patternOptions.regex.booleanText = settings.booleanText;
+                if (this.derivesFrom<RegExp>(settings.firstLetterLc))
+                    this.patternOptions.regex.firstLetterLc = settings.firstLetterLc;
+                if (this.derivesFrom<RegExp>(settings.abnormalWhitespace))
+                    this.patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
+            }
+            return this.getPatternOptions();
+        }
+
+        /**
+         * Sets the default character sequence that will be used when joining lines of text.
+         * @param s The default character sequence to use when joining lines of text. If this parameter is not defined, then the default character sequence will be restored.
+         * @returns {string} The default character sequence that will now be used when joining lines of text.
+         */
+        setDefaultLineSeparatorSequence(s?: string): string {
+            if (this.isNil(s))
+                this.patternOptions.newLineSequence = types.patternDefaults.newLineSequence;
+            else {
+                let t = this.toString(s, "");
+                if (t.length == 0)
+                    throw new Error("Line separator sequence cannot be empty.");
+                    this.patternOptions.newLineSequence = t;
+            }
+            return this.patternOptions.newLineSequence;
+        }
+
+        /**
+         * Maps a source value to a new value based upon the source value's type.
+         * @param target Source value to be mapped.
+         * @param callbacks Conditional callbacks which get invoked based upon the source object's type.
+         * @param checkElements When checking whether an object is <code>ArrayLike</code> and this is set true, then the existance of each element index is checked, which makes it slower, but more accurate.
+         * @returns {*} Value returned from the matching callback.
+         */
+        mapByTypeValue<TSource, TResult>(target: Nilable<TSource>, callbacks: TypeGuardResultSpecs<Nilable<TSource>, TResult>, checkElements?: boolean): TResult {
+            let selectedCallback: Function|TResult|undefined;
+
+            switch (typeof(target)) {
+                case "boolean":
+                    selectedCallback = callbacks.whenBoolean;
+                    break;
+                case "function":
+                    selectedCallback = callbacks.whenFunction;
+                    break;
+                case "number":
+                    let n: number = <number>(<AnyNilable>target);
+                    if (isNaN(n) && typeof(callbacks.whenNaN) != "undefined")
+                        selectedCallback = callbacks.whenNaN;
+                    else if ((n == Infinity || n == -Infinity) && typeof(callbacks.whenInfinity) != "undefined")
+                        selectedCallback = callbacks.whenInfinity;
+                    else
+                        selectedCallback = callbacks.whenNumber;
+                    break;
+                case "string":
+                    selectedCallback = callbacks.whenString;
+                    break;
+                case "symbol":
+                    selectedCallback = callbacks.whenSymbol;
+                    break;
+                case "undefined":
+                    selectedCallback = callbacks.whenUndefined;
+                    break;
+                default:
+                    if (target === null)
+                        selectedCallback = callbacks.whenNull;
+                    else if (Array.isArray(target)) {
+                        if (typeof(callbacks.whenArray) !== "undefined")
+                            selectedCallback = callbacks.whenArray;
+                        else
+                            selectedCallback = (typeof(callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
+                    } else if (this.isArrayLike(target, checkElements))
+                        selectedCallback = (typeof(callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
+                    else
+                        selectedCallback = (typeof(callbacks.whenNotArrayLike) !== "undefined") ? callbacks.whenNotArrayLike : callbacks.whenObject;
+                    break;
+            }
+            if (typeof(selectedCallback) == "undefined")
+                selectedCallback = callbacks.otherwise;
+            if (typeof(selectedCallback) == "function")
+                return selectedCallback.call(callbacks.thisObj, target);
+            return selectedCallback;
+        }
+        
+        /**
+         * Gets a mapped value according to whether the object is defined and optionally by target object type.
+         * @param target Value to test.
+         * @param whenTrue When target type is not "undefined": Callback to invoke to get the return value according to target object type, or value to return.
+         * @param otherwise When target is "undefined": Function to call to get return value, or value to return.
+         * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+         * @returns {*} Mapped value according to whether the object is defined and optionally by target object type.
+         */
+        mapByDefined<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
+                otherwise: { (): TResult; }|TResult, thisObj?: any) : TResult {
+            if (typeof(target) != "undefined") {
+                if (typeof(whenTrue) == "function")
+                    return whenTrue.call(thisObj, target);
+                return whenTrue;
+            }
+            
+            if (typeof(otherwise) == "function")
+                return otherwise.call(thisObj);
+            return otherwise;
+        }
+        
+        /**
+         * Gets a mapped value according to whether the object is not defined or not null and optionally by defined target object type.
+         * @param target Value to test.
+         * @param whenTrue When target value is not null: Function to call to get return value according to target object type, or value to return.
+         * @param otherwise When target value is null: Function to call to get return value, or value to return, when target is null.
+         * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+         * @returns {*} Mapped value according to whether the object is not defined or not null and optionally by defined target object type.
+         */
+        mapByNotNull<TSource, TResult>(target: TSource, whenTrue: MapFromValueCallback<TSource, TResult>|TResult, otherwise: { (): TResult; }|TResult, thisObj?: any) : TResult {
+            if (typeof(target) == "object" && target == null) {
+                if (typeof(otherwise) == "function")
+                    return otherwise.call(thisObj);
+                return otherwise;
+            }
+            
+            if (typeof(whenTrue) == "function")
+                return whenTrue.call(thisObj, target);
+            return whenTrue;
+        }
+        
+        /**
+         * Gets a mapped value according to whether the object is defined and not null and optionally by defined target object type.
+         * @param target Value to test.
+         * @param whenTrue When target type is not "undefined" and target value is not null: Function to call to get return value according to target object type, or value to return.
+         * @param otherwise When target type is "undefined" or target value is null: Function to call to get return value, or value to return.
+         * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+         * @returns {*} Mapped value according to whether the object is defined and not null and optionally by defined target object type.
+         */
+        mapByNotNil<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
+                otherwise: MapFromValueCallback<AnyNilable, TResult>|TResult, thisObj?: any) : TResult {
+            if (typeof(target) == "undefined" || (typeof(target) == "object" && target === null)) {
+                if (typeof(otherwise) == "function")
+                    return otherwise.call(thisObj, target);
+                return otherwise;
+            }
+            
+            if (typeof(whenTrue) == "function")
+                return whenTrue.call(thisObj, target);
+            return whenTrue;
+        }
+        
+        /**
+         * Determesin whether an object is undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is undefined; otherwise, false.
+         */
+        notDefined(obj?: TDefined): obj is undefined { return typeof(obj) == "undefined"; }
+        
+        /**
+         * Determines wether an object is undefined or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is undefined or null; otherwise, false.
+         */
+        isNil(obj?: TDefined): obj is null|undefined { return typeof(obj) == "undefined" || obj === null; }
+        
+        /**
+         * Determines whether an object is null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is null; otherwise false (not defined or not null).
+         */
+        isNull(obj?: TDefined): obj is null|undefined { return typeof(obj) == "object" && obj === null; }
+        
+        /**
+         * Determines whether a value is a string.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a string; otherwise false.
+         */
+        isString(obj?: TDefined): obj is string { return typeof(obj) == "string"; }
+        
+        /**
+         * Determines whether a value is a string or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a string or undefined; otherwise false.
+         */
+        isStringIfDef(obj?: TDefined): obj is string|undefined { return typeof(obj) == "undefined" || typeof(obj) == "string"; }
+        
+        /**
+         * Determines whether a value is a string or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a string or null; otherwise false.
+         */
+        isStringOrNull(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenString: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a string, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a string, null or undefined; otherwise false.
+         */
+        isStringOrNil(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenUndefined: true,
+                whenString: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string; otherwise false.
+         */
+        isEmptyString(obj?: TDefined): obj is string {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenString: (s) => s.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string undefined; otherwise false.
+         */
+        isEmptyStringIfDef(obj?: TDefined): obj is string|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenString: (s) => s.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a empty string or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string or null; otherwise false.
+         */
+        isEmptyStringOrNull(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenString: (s) => s.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string, null or undefined; otherwise false.
+         */
+        isEmptyStringOrNil(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenString: (s) => s.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string or contains only whitespace characters.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string or contains only whitespace characters; otherwise false.
+         */
+        isEmptyOrWhitespace(obj?: TDefined): obj is string {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string, contains only whitespace characters, or is undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is undefined; otherwise false.
+         */
+        isEmptyOrWhitespaceIfDef(obj?: TDefined): obj is string|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string, contains only whitespace characters, or is null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null; otherwise false.
+         */
+        isNullOrWhitespace(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty string, contains only whitespace characters, or is null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null or undefined; otherwise false.
+         */
+        isNilOrWhitespace(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Converts a value to a string.
+         * @param {*} obj Object to convert.
+         * @param {string|null} [defaultValue] Default value if object could not be converted to a string.
+         * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
+         * @returns {string|null|undefined} Value converted to a string or the default value.
+         */
+        asString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): Nilable<string> {
+            let str: Nilable<string> = this.mapByTypeValue<any, Nilable<string>>(obj, {
+                whenUndefined: (s) => s,
+                whenNull: (s) => s,
+                whenString: (s) => s,
+                whenArray: (a) => (a.length == 0) ? "" : a.join(","),
+                otherwise: (s) => {
+                    try { return s.toString(); } catch (e) { }
+                    return s + "";
+                }
+            });
+            if (typeof(str) == "string" && (!ifWhitespace || str.trim().length > 0))
+                return str;
+            return this.mapByTypeValue<any, Nilable<string>>(defaultValue, {
+                whenUndefined: (s) => str,
+                whenNull: (s) => (typeof(str) == "string") ? str : s,
+                whenString: (s) => s,
+                whenArray: (a) => (a.length == 0) ? "" : a.join(","),
+                otherwise: (s) => {
+                    try { return s.toString(); } catch (e) { }
+                    return s + "";
+                }
+            });
+        }
+        
+        /**
+         * Forces a value to a string.
+         * @param {*} obj Object to convert.
+         * @param {string|null} [defaultValue] Default value if object could not be converted to a string.
+         * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
+         * @returns {string} Value converted to a string or the default value. If the default value is nil, then an empty string will be returned.
+         */
+        toString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): string
+        {
+            let s = this.asString(obj, defaultValue, ifWhitespace);
+            if (this.isString(s))
+                return s;
+            return "";
+        }
+        
+        /**
+         * Trims leading whitespace from text.
+         * @param text Text to trim.
+         * @returns {string} Text with leading whitespace removed.
+         */
+        trimStart(text: string): string {
+            let s = this.toString(text, "");
+            let m = this.patternOptions.regex.trimStart.exec(s);
+            return (this.isNil(m)) ? "" : m[1];
+        }
+        
+        /**
+         * Trims trailing whitespace from text.
+         * @param text Text to trim.
+         * @returns {string} Text with trailing whitespace removed.
+         */
+        trimEnd(text: string): string {
+            let s = this.toString(text, "");
+            let m = this.patternOptions.regex.trimEnd.exec(s);
+            return (this.isNil(m)) ? "" : m[1];
+        }
+        
+        /**
+         * Normalizes whitespace in text.
+         * @param text Text to trim.
+         * @returns {string} Text with outer whitespace removed and inner whitespace normalized.
+         */
+        asNormalizedWs(text: string): string {
+            let s = this.toString(text, "").trim();
+            if (s.length == 0)
+                return s;
+            return s.replace(this.patternOptions.regex.abnormalWhitespace, " ");
+        }
+        
+        /**
+         * Capitalizes first letter in text.
+         * @param {string} text Text to capitalize.
+         * @returns {string} Capitalizes the first letter in text, skipping over any leading characters that are not letters or digits.
+         */
+        ucFirst(text: string): string {
+            let s = this.toString(text, "");
+            if (s.length < 2)
+                return s.toUpperCase();
+            let m = this.patternOptions.regex.firstLetterLc.exec(s);
+            if (this.isNil(m))
+                return s;
+            if (this.isString(m[1])) {
+                if (this.isString(m[3]))
+                    return m[1] + m[2].toUpperCase() + m[3];
+                return m[1] + m[2].toUpperCase();
+            }
+            if (this.isString(m[3]))
+                return m[2].toUpperCase() + m[3];
+            return m[2].toUpperCase();
+        }
+        
+        /**
+         * Splits text by line separator character sequences.
+         * @param {string} text Text to split.
+         * @returns {string[]} Array containing individual lines of text.
+         */
+        splitLines(text: string): string[] {
+            let s = this.toString(text, "");
+            if (s.length == 0)
+                return [s];
+            return s.split(this.patternOptions.regex.lineSeparator);
+        }
+        
+        /**
+         * Indents lines within text and trims trailing whitespace.
+         * @param {string|string[]} text Text to indent.
+         * @param {string} indent Characters to use for indentation.
+         * @returns {string} Text with lines indented.
+         */
+        indentText(text: string|string[], indent?: string): string {
+            let i = this.toString(indent, "\t");
+            if (i.length == 0)
+                i = "\t";
+            let t = (Array.isArray(text)) ? text.join(this.patternOptions.newLineSequence) : this.toString(text, "");
+            if (i.length == 0 || t.length == 0)
+                return t;
+        
+            return this.splitLines(t).map(s => this.trimEnd(s)).map(s => {
+                if (s.length == 0)
+                    return s;
+                return i + s;
+            }).join(this.patternOptions.newLineSequence);
+        }
+        
+        /**
+         * Indents lines of text and trim trailing whitespace.
+         * @param {string[]|string} text Text to indent.
+         * @param {string} indent Characters to use for indentation.
+         * @returns {string} Array containing indented lines.
+         */
+        indentLines(text: string[]|string, indent?: string): string[] {
+            let i = this.toString(indent, "\t");
+            let t = (Array.isArray(text)) ? text.join(this.patternOptions.newLineSequence) : this.toString(text, "");
+            if (t.length == 0)
+                return [t];
+            let a = this.splitLines(t).map(s => this.trimEnd(s));
+            if (i.length == 0)
+                return a;
+        
+            return a.map(s => {
+                if (s.length == 0)
+                    return s;
+                return i + s;
+            });
+        }
+        
+        /**
+         * Determines whether a value is boolean.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is boolean; otherwise false.
+         */
+        isBoolean(obj?: TDefined): obj is boolean { return typeof(obj) == "boolean"; }
+        
+        /**
+         * Determines whether a value is boolean or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is boolean or undefined; otherwise false.
+         */
+        isBooleanIfDef(obj?: TDefined): obj is boolean|undefined { return typeof(obj) == "undefined" || typeof(obj) == "boolean"; }
+        
+        /**
+         * Determines whether a value is boolean or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is boolean or null; otherwise false.
+         */
+        isBooleanOrNull(obj?: TDefined): obj is Nullable<boolean> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenBoolean: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is boolean, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is boolean, null or undefined; otherwise false.
+         */
+        isBooleanOrNil(obj?: TDefined): obj is Nilable<boolean> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenBoolean: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Converts a value to a boolean.
+         * @param {*} obj Object to convert.
+         * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
+         * @returns {boolean|null|undefined} Value converted to a boolean or the default value.
+         */
+        asBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): Nilable<boolean> {
+            let bs: Nilable<boolean|string> = this.mapByTypeValue<any, Nilable<boolean|string>>(obj, {
+                whenUndefined: (b) => b,
+                whenNull: (b) => b,
+                whenBoolean: (b) => b,
+                whenString: (s) => s,
+                whenNaN: false,
+                whenNumber: (n) => n != 0,
+                otherwise: (o) => {
+                    try {
+                        return this.mapByTypeValue<any, Nilable<boolean|string>>(o.valueOf(), {
+                            whenUndefined: (b) => o.toString(),
+                            whenNull: (b) => o.toString(),
+                            whenBoolean: (b) => b,
+                            whenString: (s) => s,
+                            whenNaN: o.toString(),
+                            whenNumber: (n) => n != 0,
+                            otherwise: (v) => {
+                                try { return v.toString(); } catch (e) { }
+                                return v + "";
+                            }
+                        })
+                    } catch (e) { }
+                    try { return o.toString(); } catch (e) { }
+                    return o + "";
+                }
+            });
+            return this.mapByTypeValue<Nilable<boolean|string>, Nilable<boolean>>(bs, {
+                whenBoolean: (b) => b,
+                whenString: (s) => {
+                    if ((s = s.trim()).length > 0) {
+                        let m = this.patternOptions.regex.booleanText.exec(s);
+                        if (!this.isNil(m))
+                            return this.isNil(m[2]);
+                    }
+                    return this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                        whenUndefined: (o) => o,
+                        whenNull: (o) => o,
+                        whenBoolean: (b) => b,
+                        otherwise: (o) => this.asBoolean(o)
+                    });
+                },
+                whenNull: (o) => this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                    whenUndefined: (d) => o,
+                    whenNull: (d) => d,
+                    whenBoolean: (b) => b,
+                    otherwise: (d) => this.asBoolean(d)
+                }),
+                otherwise: (o) => this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                    whenUndefined: (d) => d,
+                    whenNull: (d) => d,
+                    whenBoolean: (b) => b,
+                    otherwise: (d) => this.asBoolean(d)
+                })
+            });
+        }
+        
+        /**
+         * Forces a value to a boolean.
+         * @param {*} obj Object to convert.
+         * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
+         * @returns {boolean} Value converted to a boolean or the default value. If the default value is nil, then a false value will be returned.
+         */
+        toBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): boolean
+        {
+            let b = this.asBoolean(obj, defaultValue);
+            return this.isBoolean(b) && b;
+        }
+        
+        /**
+         * Determines whether a value is a finite number (not including NaN).
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a finite number; otherwise false.
+         */
+        isNumber(obj?: TDefined): obj is number {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: false,
+                whenUndefined: false,
+                whenNumber: true,
+                whenInfinity: false,
+                whenNaN: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a finite number or undefined (not including NaN).
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is finite number or undefined; otherwise false.
+         */
+        isNumberIfDef(obj?: TDefined): obj is number|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: false,
+                whenUndefined: true,
+                whenNumber: true,
+                whenInfinity: false,
+                whenNaN: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a finite number or null (not including NaN).
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a finite number or null; otherwise false.
+         */
+        isNumberOrNull(obj?: TDefined): obj is Nullable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenNumber: true,
+                whenInfinity: false,
+                whenNaN: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a number or null (including NaN and Infinity).
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a number or null; otherwise false.
+         */
+        isNumberNaNorNull(obj?: TDefined): obj is Nullable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenNumber: true,
+                whenInfinity: true,
+                whenNaN: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is a finite number, null or undefined (including NaN).
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a finite number, null or undefined; otherwise false.
+         */
+        isNumberOrNil(obj?: TDefined): obj is Nilable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenNumber: true,
+                whenInfinity: false,
+                whenNaN: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an infinite number.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an infinite number; otherwise false.
+         */
+        isInfinite(obj?: TDefined): obj is number {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: false,
+                whenNull: false,
+                whenNumber: false,
+                whenInfinity: true,
+                whenNaN: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Converts a value to a number.
+         * @param {*} obj Object to convert.
+         * @param {number|null} [defaultValue] Default value if object could not be converted to a number.
+         * @returns {number|null|undefined} Value converted to a number or the default value.
+         */
+        asNumber(obj?: TDefined, defaultValue?: Nullable<number>): Nilable<number>
+        {
+            let ns: Nilable<number> = this.mapByTypeValue<any, Nilable<number>>(obj, {
+                whenUndefined: (b) => b,
+                whenNull: (b) => b,
+                whenBoolean: (b) => (b) ? 1 : 0,
+                whenString: (s) => parseFloat(s),
+                whenNaN: null,
+                whenInfinity: null,
+                whenNumber: (n) => n,
+                otherwise: (o) => {
+                    try {
+                        return this.mapByTypeValue<any, Nilable<number>>(o.valueOf(), {
+                            whenUndefined: (b) => o.toString(),
+                            whenNull: (b) => o.toString(),
+                            whenBoolean: (b) => (b) ? 1 : 0,
+                            whenString: (s) => parseFloat(s),
+                            whenNaN: null,
+                            whenInfinity: null,
+                            whenNumber: (n) => n,
+                            otherwise: (v) => {
+                                try { return parseFloat(v.toString()); } catch (e) { }
+                                return parseFloat(v + "");
+                            }
+                        })
+                    } catch (e) { }
+                    try { return parseFloat(o.toString()); } catch (e) { }
+                    return parseFloat(o + "");
+                }
+            });
+        
+            if (typeof(defaultValue) == "undefined" || typeof(ns) == "number" && !isNaN(ns) && !this.isInfinite(ns))
+                return ns;
+            return this.mapByTypeValue<Nilable<number>,Nilable<number>>(this.asNumber(defaultValue), {
+                whenUndefined: d => ns,
+                whenInfinity: d => (typeof(ns) != "number" || isNaN(ns)) ? d : ns,
+                whenNumber: d => d,
+                otherwise: d => (typeof(ns) == "number") ? ns : d
+            });
+        }
+        
+        /**
+         * Forces a value to a number.
+         * @param {*} obj Object to convert.
+         * @param {number|null} [defaultValue] Default value if object could not be converted to a number.
+         * @returns {number} Value converted to a number or the default value. If the default value is nil, then a zer0 value will be returned.
+         */
+        toNumber(obj?: TDefined, defaultValue?: Nullable<number>): number
+        {
+            let i = this.asNumber(obj, defaultValue);
+            if (this.isNumber(i))
+                return i;
+            return 0;
+        }
+        
+        /**
+         * Determines whether a value is a function.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is function; otherwise false.
+         */
+        isFunction(obj?: TDefined) : obj is Function { return typeof(obj) === "function"; }
+        
+        /**
+         * Determines whether a value is function or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is function or undefined; otherwise false.
+         */
+        isFunctionIfDef(obj?: TDefined) : obj is Function|undefined { return typeof(obj) === "undefined" || typeof(obj) === "function"; }
+        
+        /**
+         * Determines whether a value is function or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is function or null; otherwise false.
+         */
+        isFunctionOrNull(obj?: TDefined) : obj is Nullable<Function> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenFunction: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is function, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is function, null or undefined; otherwise false.
+         */
+        isFunctionOrNil(obj?: TDefined) : obj is Nilable<Function> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenFunction: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value's type is "object" and it is not null.
+         * @param {*} obj Object to test.
          * @returns {boolean} True if the value's type is "object" and it is not null; otherwise false.
          */
-        isObjectType(value?: any) : value is object { return typeof(value) === "object" && value !== null; }
-    
-        /**
-         * Tests whether a value is an object and is not an array.
-         * @param value Value to test.
-         * @returns {boolean} True if the value's type is "object", it is not null and it is not an array; otherwise false.
-         */
-        isNonArrayObject(value: any) : value is { [key: string]: any } { return typeof(value) == "object" && value !== null && !Array.isArray(value); }
-    
-        /**
-         * Tests whether a value is a string
-         * @param value Value to test.
-         * @returns {boolean} True if the value is a string; otherwise, false.
-         */
-        isString(value?: any) : value is string { return typeof(value) === "string"; }
+        isObjectType(obj?: TDefined): obj is object { return typeof(obj) == "object" && obj !== null; }
         
         /**
-         * Tests whether a value is a function.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is a function; otherwise, false.
+         * Determines whether a value is undefined or its type is "object" and it is not null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value is undefined or its type is "object" and it is not null; otherwise false.
          */
-        isFunction(value?: any) : value is { (...args: any[]): any; } { return typeof(value) === "function"; }
-    
-        /**
-         * Tests whether a value is a boolean type.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is boolean; otherwise, false.
-         */
-        isBoolean(value?: any) : value is boolean { return typeof(value) === "boolean"; }
-        
-        /**
-         * Tests whether a value is a number type.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is a number and is not NaN; otherwise, false.
-         */
-        isNumber(value?: any) : value is number { return typeof(value) === "number" && !isNaN(value); }
-    
-        /**
-         * Tests whether a value is a number type.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is a number and is not NaN; otherwise, false.
-         */
-        isInteger(value?: any) : value is number { return typeof(value) === "number" && !isNaN(value) && Math.round(value) === value; }
-    
-        /**
-         * Tests whether a value is undefined or null.
-         * @param value Value to test.
-         * @returns {boolean} True if the value is undefined or null; othwerise, false.
-         */
-        isNil(value?: any) : value is undefined|null { return !this.defined(value) || value === null; }
-        
-        /**
-         * Tests whether a string is undefined, null or empty.
-         * @param value String to test.
-         * @returns {boolean} True if the value is undefined, null or empty; otherwise, false.
-         */
-        isNilOrEmptyString(value?: string|null) : boolean { return this.isNil(value) || (this.isString(value) && value.length == 0); }
-    
-        /**
-         * Tests whether a string is undefined, null, empty or contains only whitespace characters.
-         * @param value String to test.
-         * @returns {boolean} True if the value is undefined, null, empty or contains only whitespace characters; otherwise, false.
-         */
-        isNilOrWhitespace(value?: string|null) : boolean { return this.isNil(value) || (this.isString(value) && this.whitespaceRegex.test(value)); }
-    
-        /**
-         * Convert a value to a string.
-         * @param value Value to convert.
-         * @param {string|null} [defaultValue] Default value to return if the value was undefined, null or if it converts to an empty string. If this is not defined, 
-         * then an undefined value is returned when the value was undefined or null.
-         * @param {boolean} [ignoreWhitespace] If true, and the converted value contains only whitespace, then it is treated as though it was converted to an empty string by
-         * returning the default value.
-         * @returns {string|null=} Value converted to a string.
-         * @description     If the value is converted to an empty string, and the default value is null, then a null value will be returned.
-         * If an array is passed, then the 'join' method is called with a newline character as the parameter.
-         * Otherwise, this method first attempts to call the value's "valueOf" function it is an object type, then it comply calls the "toString" method to convert it to a string.
-         */
-        asString(value: any, defaultValue? : string|null, ignoreWhitespace? : boolean) : string {
-            if (!this.defined(value)) {
-                if (this.isNil(defaultValue))
-                    return defaultValue;
-                return this.asString(defaultValue);
-            }
-            if (value === null) {
-                if (this.isNil(defaultValue))
-                    return value;
-                return this.asString(defaultValue);
-            }
-            let s: string;
-            if (!this.isString(value))
-                s = (Array.isArray(value)) ? value.join(this.newLineString) : (function() {
-                    if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
-                        try {
-                            let v = value.valueOf();
-                            if (this.isString(v))
-                                return v;
-                            if (!this.isNil(v)) {
-                                if (Array.isArray(v))
-                                    return v.join(this.newLineString);
-                                value = v;
-                            }
-                        } catch (e) { }
-                    }
-                    try {
-                        let s = value.toString();
-                        if (this.isString(s))
-                            return s;
-                    } catch (e) { }
-                    return value + "";
-                })();
-            else
-                s = value;
-            if ((ignoreWhitespace) ? this.whitespaceRegex.test(s) : s.length == 0) {
-                let d = this.asString(defaultValue);
-                if (this.isString(d))
-                    return d;
-            }
-            return s;
+        isObjectTypeIfDef(obj?: TDefined): obj is object|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: false,
+                whenObject: true,
+                otherwise: false
+            });
         }
         
         /**
-         * Convert a value to a string with normalized whitespace.
-         * @param value Value to convert.
-         * @param {string|null} [defaultValue] Default value to return if the value was undefined, null or if it converts to an empty string. If this is not defined,
-         * then an undefined value is returned when the value was undefined or null.
-         * @returns {string|null=} Value converted to a string.
-         * @description     If the value is converted to an empty string, and the default value is null, then a null value will be returned.
-         * If an array is passed, then the 'join' method is called with a newline character as the parameter.
-         * Otherwise, this method first attempts to call the value's "valueOf" function it is an object type, then it comply calls the "toString" method to convert it to a string.
+         * Determines whether a value is null or its type is "object".
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value is null, or its type is "object"; otherwise false.
          */
-        asNormalizedString(value: any, defaultValue?: string) {
-            value = this.asString(value, defaultValue, true).trim();
-            if (this.isNil(value) || value.length == 0)
-                return value;
-            return value.replace(this.abnormalWhitespaceRegex, ' ');
-        }
-    
+        isObjectTypeOrNull(obj?: TDefined): obj is Nullable<object> { return typeof(obj) == "object"; }
+        
         /**
-         * Trims trailing whitespace from the end of a string.
-         * @param {string} text Text to trim.
-         * @returns {string} String with trailing whitespace removed.
+         * Determines whether a value is undefined, null, or its type is "object".
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value is undefined, null, or its type is "object"; otherwise false.
          */
-        trimEnd(text : string) : string {
-            text = this.asString(text, "");
-            let m = this.trimEndRegex.exec(text);
-            if (this.isNil(m))
-                return "";
-            return m[1];
-        }
-    
+        isObjectTypeOrNil(obj?: TDefined): obj is Nilable<object> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
+        
         /**
-         * Convert a value to a number.
-         * @param value Convert a value to a number.
-         * @param {number|null} [defaultValue] Default value to return if the value was undefined, null, could not be converted to a number or is a NaN value.
-         * @returns {number|null=} String converted to a number.
-         * @description This method will first attempt to get a number value through the value's "valueOf" method if the value is an object type.
-         * If the value is a boolean type, then it will return 1 for true, and 0 for false. Otherwise, it will convert it to a string and attempt to
-         * parse a number value.
+         * Determines whether a value is an object and it is not null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value is an object and it is not null; otherwise false.
+         * @description As a type guard, this behaves the same as isNonArrayObject() and isPlainObject().
+         * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
          */
-        asNumber(value: any, defaultValue? : number) : number {
-            if (!this.defined(value)) {
-                if (this.isNil(defaultValue))
-                    return (this.defined(defaultValue)) ? defaultValue : value;
-                return this.asNumber(defaultValue);
+        isObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null; }
+        
+        /**
+         * Determines whether a value undefined or it is an object and it is not null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value undefined or it is an object and it is not null; otherwise false.
+         * @description As a type guard, this behaves the same as isNonArrayObjectIfDef() and isPlainObjectIfDef().
+         * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+         */
+        isObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined { return typeof(obj) == "undefined" || (typeof(obj) == "object" && obj !== null); }
+        
+        /**
+         * Determines whether a value null or it is an object.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value null or it is an object; otherwise false.
+         * @description As a type guard, this behaves the same as isNonArrayObjectOrNull() and isPlainObjectOrNull().
+         * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+         */
+        isObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object"; }
+        
+        /**
+         * Determines whether a value undefined, null, or it is an object.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if the value undefined, null, or it is an object; otherwise false.
+         * @description As a type guard, this behaves the same as isNonArrayObjectOrNil() and isPlainObjectOrNil().
+         * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+         */
+        isObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
+        
+        /**
+         * Determines whether a value is an object, but not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type; otherwise false.
+         * @description As a type guard, this behaves the same as isObject() and isPlainObject().
+         * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+         */
+        isNonArrayObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null && !Array.isArray(obj); }
+        
+        /**
+         * Determines whether a value is an object or undefined, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type or undefined; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectIfDef() and isPlainObjectIfDef().
+         * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+         */
+        isNonArrayObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: false,
+                whenObject: true,
+                whenArray: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an object or null, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type or null; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectOrNull() and isPlainObjectOrNull().
+         * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+         */
+        isNonArrayObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object" && (obj === null || !Array.isArray(obj)); }
+        
+        /**
+         * Determines whether a value is an object, null or undefined, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type, null or undefined; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectOrNil() and isPlainObjectOrNil().
+         * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+         */
+        isNonArrayObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenObject: true,
+                whenArray: false,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an object, but not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type; otherwise false.
+         * @description As a type guard, this behaves the same as isObject() and isNonArrayObject().
+         * The difference is that this returns false if the value is not constructed directly from Object.
+         */
+        isPlainObject(obj?: TDefined): obj is IStringKeyedObject {
+            if (typeof(obj) != "object" || obj === null)
+                return false;
+            let proto = Object.getPrototypeOf(obj);
+            return this.isNil(proto) || proto.constructor === Object;
+        }
+        
+        /**
+         * Determines whether a value is an object or undefined, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type or undefined; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectIfDef() and isNonArrayObjectIfDef().
+         * The difference is that this returns false if the value is not constructed directly from Object.
+         */
+        isPlainObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
+            let t = typeof(obj);
+            if (t == "undefined")
+                return true;
+            if (t != "object" || obj === null)
+                return false;
+            let proto = Object.getPrototypeOf(obj);
+            return this.isNil(proto) || proto.constructor === Object;
+        }
+        
+        /**
+         * Determines whether a value is an object or null, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type or null; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectOrNull() and isNonArrayObjectOrNull().
+         * The difference is that this returns false if the value is not constructed directly from Object.
+         */
+        isPlainObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> {
+            if (typeof(obj) != "object")
+                return false;
+            if (obj === null)
+                return true;
+            let proto = Object.getPrototypeOf(obj);
+            return this.isNil(proto) || proto.constructor === Object;
+        }
+        
+        /**
+         * Determines whether a value is an object, null or undefined, and not an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is a non-array object type, null or undefined; otherwise false.
+         * @description As a type guard, this behaves the same as isObjectOrNil() and isNonArrayObjectOrNil().
+         * The difference is that this returns false if the value is not constructed directly from Object.
+         */
+        isPlainObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
+            let t = typeof(obj);
+            if (t == "undefined")
+                return true;
+            if (t != "object")
+                return false;
+            if (obj === null)
+                return true;
+            let proto = Object.getPrototypeOf(obj);
+            return this.isNil(proto) || proto.constructor === Object;
+        }
+        
+        /**
+         * Determines whether a value is an array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an array; otherwise false.
+         */
+        isArray(obj?: TDefined): obj is AnyNilable[] { return this.isObject(obj) && Array.isArray(obj); }
+        
+        /**
+         * Determines whether a value is an array or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an array or undefined; otherwise false.
+         */
+        isArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined { return typeof(obj) == "undefined" || this.isArray(obj); }
+        
+        /**
+         * Determines whether a value is an array or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an array or null; otherwise false.
+         */
+        isArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> { return typeof(obj) == "object" && (obj === null || Array.isArray(obj)); }
+        
+        /**
+         * Determines whether a value is an array, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an array, null or undefined; otherwise false.
+         */
+        isArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> { return typeof(obj) == "undefined" || (typeof(obj) == "object" && (obj === null || Array.isArray(obj))); }
+        
+        /**
+         * Determines whether a value is an empty array.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty array; otherwise false.
+         */
+        isEmptyArray(obj?: TDefined): obj is AnyNilable[] {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenArray: (a) => a.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty array or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty array or undefined; otherwise false.
+         */
+        isEmptyArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenArray: (a) => a.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty array or null.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty array or null; otherwise false.
+         */
+        isEmptyArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenArray: (a) => a.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether a value is an empty array, null or undefined.
+         * @param {*} obj Object to test.
+         * @returns {boolean} True if object is an empty array, null or undefined; otherwise false.
+         */
+        isEmptyArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenArray: (a) => a.length == 0,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether an object has properties which indiciates it behaves like an array.
+         * @param {*} obj Object to test.
+         * @param {boolan} checkElements If true, then the existance of each element index is checked, which makes this function slower, but more accurate.
+         * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+         * @see {@link https://github.com/Microsoft/TypeScript/blob/530d7e9358ee95d2101a619e73356867b617cd95/lib/lib.es5.d.ts}
+         */
+        isArrayLike(obj?: TDefined, checkElements?: boolean): obj is ArrayLike<AnyNilable> {
+            if (!this.isObject(obj))
+                return false;
+            if (Array.isArray(obj))
+                return true;
+            if (!this.isNumber(obj.length) || isNaN(obj.length) || obj.length < 0 || obj.length == Infinity || obj.length == -Infinity)
+                return false;
+            if (!checkElements || obj.length == 0)
+                return true;
+            let arr: boolean[] = [];
+            for (var i = 0; i < obj.length; i++)
+                arr.push(false);
+            for (var n in obj) {
+                var f = parseFloat(n);
+                if (!isNaN(f) && f >= 0 && f < arr.length && parseInt(n) == f)
+                    arr[f] = true;
             }
-            if (value === null) {
-                if (this.isNil(defaultValue))
-                    return value;
-                return this.asNumber(defaultValue, value);
-            }
-            let n : number = null;
-            if (typeof(value) !== "number") {
-                if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
-                    try {
-                        let i = value.valueOf();
-                        if (this.isNumber(i))
-                            return i;
-                        if (!this.isNil(i))
-                            value = i;
-                    } catch (e) { }
-                }
-                if (this.isBoolean(value))
-                    return (value) ? 1 : 0;
-                value = this.asString(value, "").trim();
-                n = (value.length == 0) ? NaN : parseFloat(value);
-            } else
-                n = value;
+            return arr.filter(v => !v).length == 0;
+        }
+        
+        /**
+         * Determines whether an object has properties which indiciates it behaves like an array.
+         * @param {*} obj Object to test.
+         * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+         * but can result in false positives for non-array objects which have a numeric "length" property.
+         * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+         */
+        isArrayLikeIfDef(obj?: TDefined, simpleCheck?: boolean): obj is ArrayLike<AnyNilable>|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenArrayLike: true,
+                whenArray: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether an object has properties which indiciates it behaves like an array.
+         * @param {*} obj Object to test.
+         * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+         * but can result in false positives for non-array objects which have a numeric "length" property.
+         * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+         */
+        isArrayLikeOrNull(obj?: TDefined, simpleCheck?: boolean): obj is Nullable<ArrayLike<AnyNilable>> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenNull: true,
+                whenArrayLike: true,
+                whenArray: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Determines whether an object has properties which indiciates it behaves like an array.
+         * @param {*} obj Object to test.
+         * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+         * but can result in false positives for non-array objects which have a numeric "length" property.
+         * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+         */
+        isArrayLikeOrNil(obj?: TDefined, simpleCheck?: boolean): obj is Nilable<ArrayLike<AnyNilable>> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                whenArrayLike: true,
+                whenArray: true,
+                otherwise: false
+            });
+        }
+        
+        /**
+         * Ensures that a value is a true array.
+         * @param {*} obj Value to convert.
+         * @param {boolan} checkElements If true and obj is Array-like (but not a true array), then the existance of each element index is checked, which makes this function more accurate, but slower.
+         * @returns {*[]} Value as an array.
+         * @description If the value is undefined, an empty array is returned.
+         * If the value is an actual array, then the object itself is returned;
+         * If the object is Array-like, an array is returned with values taken from each of its indexed values.
+         * Otherwise, an array with a single element containing the value is returned.
+         */
+        toArray(obj?: TDefined, checkElements?: boolean): AnyNilable[] {
+            if (this.isArray(obj))
+                return obj;
             
-            if (isNaN(n) && !this.isNil(defaultValue))
-                return this.asNumber(defaultValue);
-            return n;
-        }
+            if (this.isArrayLike(obj, checkElements)) {
+                let result: AnyNilable[] = [];
+                for (var i = 0; i < obj.length; i++)
+                    result.push(obj[i]);
+                return result;
+            }
         
-        /**
-         * Convert a value to a number rounded to the nearest integer.
-         * @param value Value to be converted.
-         * @param {number|null} [defaultValue] Default value to return if the value was undefined, null, could not be converted to a number or is a NaN value.
-         * @returns {number|null=} Value converted to an integer.
-         * @description This method will first attempt to get a number value through the value's "valueOf" method if the value is an object type.
-         * If the value is a boolean type, then it will return 1 for true, and 0 for false. Otherwise, it will convert it to a string and attempt to
-         * parse a number value. If the number is not an integer, then it will be rounded to the nearest integer value.
-         */
-        asInteger(value: any, defaultValue? : number) : number {
-            let v: number = this.asNumber(value, defaultValue);
-            if (this.isNil(v) || isNaN(v))
-                return  v;
-            
-            return Math.round(v);
-        }
-    
-        /**
-         * Convert a value to a boolean value.
-         * @param value Value to be converted.
-         * @param {boolean|null} [defaultValue] Default value to return if the value was undefined, null or could not be converted to a boolean value.
-         * @returns {boolean|null=} Value converted to a boolean type.
-         * @description This method will first attempt to get a boolean value through the value's "valueOf" method if the value is an object type.
-         * If the value is a number type (an not a NaN value), then it will return true for non-zero and false for zero. Otherwise, it will convert it to a string and attempt to
-         * parse a true/false, t/f, yes/no, y/n (all case-insensitive) or number value in order to derive a boolean result.
-         */
-        asBoolean(value: any, defaultValue? : boolean) : boolean {
-            if (typeof(value) === "boolean")
-                return value;
-        
-            if (!this.defined(value)) {
-                if (this.isNil(defaultValue))
-                    return defaultValue;
-                return this.asBoolean(defaultValue);
-            }
-            if (value === null) {
-                if (this.isNil(defaultValue))
-                    return (this.defined(defaultValue)) ? defaultValue : value;
-                return this.asBoolean(defaultValue, value);
-            }
-            if (typeof(value) === "number")
-                return !isNaN(value) && value != 0;
-            if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
-                try {
-                    let n = value.valueOf();
-                    if (this.isNumber(n))
-                        return n != 0;
-                    if (this.isBoolean(value))
-                        return value;
-                    if (!this.isNil(n))
-                        value = n;
-                } catch (e) { }
-            }
-            let mg = this.boolRegex.exec(this.asString(value, "").trim());
-            if (this.isNil(mg))
-                return this.asBoolean(defaultValue);
-            return this.isNil(mg[2]);
-        }
-    
-        /**
-         * Converts a value to an array.
-         * @param value Value to convert.
-         * @description If given value is an array, it is simply returned. If it is not defined, then an empty array is returned. Otherwise, the given value is returned
-         * within a single-element array.
-         */
-        asArray(value: any) : any[] {
-            if (!this.defined(value))
+            if (this.notDefined(obj))
                 return [];
-            if (Array.isArray(value))
-                return value;
-            return [value];
+            return [obj];
         }
-    
+        
         /**
-         * Gets the name of a value's constructor function.
-         * @param value Value from which to retrieve the constructor class name.
-         * @returns {string} The first named constructor function in the prototype inheritance chain or the value's type if a named constructor could not be found.
-         */
-        getClassName(value: any) : string {
-            if (!this.defined(value))
-                return "undefined";
-            if (value === null)
-                return "null";
-            let prototype, constructor;
-            if (this.isFunction(value)) {
-                constructor = value;
-                prototype = value.prototype;
-            } else {
-                prototype = Object.getPrototypeOf(value);
-                constructor = prototype.constructor;
-                while (!this.isFunction(constructor)) {
-                    prototype = Object.getPrototypeOf(prototype);
-                    if (this.isNil(prototype))
-                        return typeof(value);
-                    constructor = prototype.constructor;
-                }
-            }
-            if (this.isString(constructor.name) && constructor.name.length > 0)
-                return constructor.name;
-            let basePrototype = Object.getPrototypeOf(prototype);
-            if (this.isNil(basePrototype)) {
-                if (this.isString(prototype.name) && prototype.name.length > 0)
-                    return prototype.name;
-                if (this.isString(value.name) && value.name.length > 0)
-                    return value.name;
-                return typeof(value);
-            }
-            let name = this.getClassName(basePrototype);
-            if (name == "Object") {
-                if (this.isString(prototype.name) && prototype.name.length > 0)
-                    return prototype.name;
-                if (this.isString(value.name) && value.name.length > 0)
-                    return value.name;
-            }
-            return name;
-        }
-    
-        /**
-         * Gets ordered list of named constructor functions in the value's prototype inheritance chain.
-         * @param value Value from which to extract the inheritance chain.
-         * @returns {string[]} An array of string values with the first element being the first named constructor function in the value's inherited prototypes.
-         */
-        getInheritanceChain(value: any) : string[] {
-            if (!this.defined(value))
-                return ["undefined"];
-            if (value === null)
-                return ["null"];
-            let prototype, constructor;
-            if (this.isFunction(value)) {
-                constructor = value;
-                prototype = value.prototype;
-            } else {
-                prototype = Object.getPrototypeOf(value);
-                constructor = prototype.constructor;
-                while (!this.isFunction(constructor)) {
-                    prototype = Object.getPrototypeOf(prototype);
-                    if (this.isNil(prototype))
-                        return [typeof(value)];
-                    constructor = prototype.constructor;
-                }
-            }
-            
-            let basePrototype = Object.getPrototypeOf(prototype);
-            if (this.isNil(basePrototype)) {
-                if (this.isString(constructor.name) && constructor.name.length > 0)
-                    return [constructor.name];
-                if (this.isString(prototype.name) && prototype.name.length > 0)
-                    return [prototype.name];
-                if (this.isString(value.name) && value.name.length > 0)
-                    return [value.name];
-                return [typeof(value)];
-            }
-            let arr = this.getInheritanceChain(basePrototype);
-            if (this.isString(constructor.name) && constructor.name.length > 0) {
-                arr.unshift(constructor.name);
-                return arr;
-            }
-            if (this.isString(prototype.name) && prototype.name.length > 0) {
-                arr.unshift(prototype.name);
-                return arr;
-            }
-    
-            if (arr.length > 0)
-                return arr;
-            
-            if (this.isString(value.name) && value.name.length > 0)
-                return [value.name];
-            
-            return [typeof(value)];
-        }
-    
-        /**
-         * Searches the value's inherited prototype chain for a constructor function.
+         * Searches the value's inherited prototype chain for a matching constructor function.
          * @param value Value to test.
          * @param {AnyFunction} classConstructor Constructor function to look for.
          * @returns {boolean} True if the value is determined to inherit from the specified class; otherwise false.
          */
-        derivesFrom<T>(value: any, classConstructor: { new(...args: any[]): T; }) : value is T {
-            if (!this.defined(value))
-                return !this.defined(classConstructor);
-            if (!this.defined(classConstructor))
+        derivesFrom<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T {
+            if (this.notDefined(obj))
+                return this.notDefined(classConstructor);
+            if (this.notDefined(classConstructor))
                 return false;
-            if (value === null)
+            if (obj === null)
                 return classConstructor === null;
             let classProto;
             if (this.isFunction(classConstructor)) {
@@ -412,16 +1606,16 @@ namespace x_44813_util {
                     classConstructor = classProto.constructor;
                 }
             }
-    
-            if (value instanceof classConstructor)
+        
+            if (this.isFunction(classConstructor) && obj instanceof classConstructor)
                 return true;
                 
             let valueProto, valueConstructor;
-            if (this.isFunction(value)) {
-                valueConstructor = value;
-                valueProto = value.prototype;
+            if (this.isFunction(obj)) {
+                valueConstructor = obj;
+                valueProto = obj.prototype;
             } else {
-                valueProto = Object.getPrototypeOf(value);
+                valueProto = Object.getPrototypeOf(obj);
                 valueConstructor = valueProto.constructor;
                 while (!this.isFunction(valueConstructor)) {
                     valueProto = Object.getPrototypeOf(valueProto);
@@ -439,7 +1633,7 @@ namespace x_44813_util {
             
             let constructorChain = [];
             do {
-                if (valueProto instanceof classConstructor)
+                if (this.isFunction(classConstructor) && valueProto instanceof classConstructor)
                     return true;
                 constructorChain.push(valueConstructor);
                 valueConstructor = null;
@@ -456,293 +1650,111 @@ namespace x_44813_util {
             }
             return false;
         }
-    
-        /**
-         * Gets extended type string for a value.
-         * @param value Value to determine type.
-         * @returns {string} Value's type. If the value is null, then "null" is returned. If it is NaN, then "NaN" is returned.
-         * Otherwise, the type and class name, separated by a space, is returned. If the class name could not be determined, then just the object type is returned.
-         */
-        typeOfExt(value: any) : string {
-            let t = typeof(value);
-            if (t == "object") {
-                if (value === null)
-                    return "null";
-            } else if (t != "function") {
-                if (t == "number" && isNaN(value))
-                    return "NaN";
-                return t;
-            }
         
-            let n = this.getClassName(value);
-            if (n == t)
-                return t;
-            return t + " " + n;
-        }
-    
         /**
-         * Indents the lines of a text and trims trailing whitespace.
-         * @param text Text to be indented.
-         * @param indent String to use for indenting. Defaults to a single tab character.
-         * @param skipLineCount Number of initial lines to preclude from indentation.
-         * @returns {string} A string containing lines indented with trailing white space removed.
+         * If defined, Searches the value's inherited prototype chain for a matching constructor function.
+         * @param value Value to test.
+         * @param {AnyFunction} classConstructor Constructor function to look for.
+         * @returns {boolean} True if the value is not defined or if it is determined to inherit from the specified class; otherwise false.
          */
-        indentText(text : string|string[], indent? : string, skipLineCount? : number) : string {
-            let arr : string[], joinedText : string;
-            if (this.isNil(text) || !this.isObjectType(text) || !Array.isArray(text))
-                text = this.asString(text, "");
-            if (typeof(text) != "string") {
-                arr = text;
-                if (arr.length == 0)
-                    return "";
-                if (arr.length == 1)
-                    joinedText = this.asString(arr[0], "");
-                else
-                    joinedText = arr.join(this.newLineString);
-            } else
-                joinedText = this.asString(text, "");
-            if (joinedText.length == 0)
-                return joinedText;
-            indent = this.asString(indent, "\t");
-            skipLineCount = this.asInteger(skipLineCount, 0);
-            arr = joinedText.split(this.lineSplitRegex).map(function(s) { return this.trimEnd(s); });
-            if (arr.length == 1) {
-                if (skipLineCount < 1 && arr[0].length > 1)
-                    return indent + arr[0];
-                return arr[0];
-            }
-            return arr.map(function(s, i) {
-                if (i < skipLineCount || s.length == 0)
-                    return s;
-                return indent + s;
-            }).join(this.newLineString);
+        derivesFromIfDef<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T|undefined {
+            return typeof(obj) == "undefined" || this.derivesFrom<T>(obj, classConstructor);
         }
         
-        private _serializeToString(obj: any) : string {
-            if (!this.defined(obj))
-                return "undefined";
-            if (obj === null)
-                return "null";
-            let type = typeof(obj);
-            if (type == "number")
-                return (isNaN(obj)) ? "NaN" : JSON.stringify(obj);
-            if (type == "boolean" || type == "string")
-                return JSON.stringify(obj);
-            let className = this.getClassName(obj);
-            if (typeof(obj.toJSON) != "function") {
-                if (type == "object")
-                {
-                    if (this.derivesFrom(obj, Error)) {
-                        var e: {[k: string]: any} = obj;
-                        var jObj: {[k: string]: any} = {};
-                        if (!this.isNil(e.message)) {
-                            jObj.message = this.asString(e.message, "");
-                            if (!this.isNil(e.description)) {
-                                if (jObj.message.trim().length > 0)
-                                    jObj.description = this.asString(e.description, "");
-                                else {
-                                    let s = this.asString(e.description, "");
-                                    if (s.trim().length > 0 || s.length > jObj.message.length)
-                                        jObj.message = s;
-                                }
-                            }
-                        } else if (!this.isNil(e.description))
-                            jObj.message = this.asString(e.description, "");
-                        if (!this.isNil(e.name))
-                            jObj.name = this.asString(e.name);
-                        if (!this.isNil(e.number))
-                            jObj.number = this.asNumber(e.number);
-                        if (!this.isNil(e.fileName))
-                            jObj.fileName = this.asString(e.fileName);
-                        if (!this.isNil(e.lineNumber))
-                            jObj.lineNumber = this.asNumber(e.lineNumber);
-                        if (!this.isNil(e.columnNumber))
-                            jObj.columnNumber = this.asNumber(e.columnNumber);
-                        if (!this.isNil(e.stack))
-                            jObj.stack = this.asString(e.stack);
-                        return JSON.stringify({
-                            className: className,
-                            type: type,
-                            properties: jObj
-                        }, undefined, "\t");
-                    }
-                    if (Array.isArray(obj)) {
-                        var arr : any[] = obj;
-                        if (arr.length == 0)
-                            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                            this.newLineString + "\t\"elements\": [] }";
-                        if (arr.length == 1)
-                            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                            this.newLineString + "\t\"elements\": " + this.indentText(JSON.stringify(arr), "\t\t", 1) + " }";
-                        return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                        this.newLineString + "\t\"elements\": [" + this.newLineString + this.indentText(JSON.stringify(arr), "\t\t\t", 1) + this.newLineString + "\t] }";
-                    }
-                    return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                    this.newLineString + "\t\"properties\": " + this.indentText(JSON.stringify(obj), "\t\t", 1) + " }";
-                }
-                return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                this.newLineString + "\t\"value\": " + JSON.stringify(obj.toString()) + " }";
-            }
-            if (this.isFunction(obj.toJSON) || type == "object")
-                return JSON.stringify({
-                    className: className,
-                    type: type,
-                    data: obj.toJSON()
-                }, undefined, "\t");
-            return JSON.stringify({
-                className: className,
-                type: type,
-                data: obj.toString()
-            }, undefined, "\t");
-        }
-    
         /**
-         * Serializes an object and its properties in a JSON-like representation.
-         * @param obj Object to serialize.
-         * @returns {string} Object converted to a JSON-like representation.
+         * If not null, Searches the value's inherited prototype chain for a matching constructor function.
+         * @param value Value to test.
+         * @param {AnyFunction} classConstructor Constructor function to look for.
+         * @returns {boolean} True if the value is null or if it is determined to inherit from the specified class; otherwise false.
          */
-        serializeToString(obj: any) : string {
-            if (!this.defined(obj))
-                return "undefined";
-            if (obj === null)
-                return "null";
-            let type = typeof(obj);
-            if (type == "number")
-                return (isNaN(obj)) ? "NaN" : JSON.stringify(obj);
-            if (type == "boolean" || type == "string")
-                return JSON.stringify(obj);
-            let className = this.getClassName(obj);
-            let n: string, v: any;
-            if (typeof(obj.toJSON) != "function") {
-                if (type == "object") {
-                    let elements : string[] = [];
-                    let propertyLines : string[] = [];
-                    let byName: {[k: string]: any} = {};
-                    if (Array.isArray(obj)) {
-                        elements = obj.map(function(e) { return this.serializeToString(e); });
-                        for (n in obj) {
-                            let i = this.asNumber(n, null);
-                            v = obj[n];
-                            if ((!this.isNil(i) && n !== "length") || i < 0 || i > obj.length) {
-                                byName[n] = this.serializeToString(obj[n]);
-                                propertyLines.push(JSON.stringify(n) + ": " + this.serializeToString(obj[n]));
-                            }
-                        }
-                    } else {
-                        for (n in obj) {
-                            if (n !== "length") {
-                                byName[n] = this.serializeToString(obj[n]);
-                                propertyLines.push(JSON.stringify(n) + ": " + this.serializeToString(obj[n]));
-                            }
-                        }
-                    }
-                    if (this.derivesFrom<{[k: string]: any}>(obj, Error)) {
-                        if (!this.isNil(obj.columnNumber) && this.isNil(byName.columnNumber))
-                            propertyLines.unshift("\"columnNumber\": " + this.serializeToString(obj.columnNumber));
-                        if (!this.isNil(obj.lineNumber) && this.isNil(byName.lineNumber))
-                            propertyLines.unshift("\"lineNumber\": " + this.serializeToString(obj.lineNumber));
-                        if (!this.isNil(obj.fileName) && this.isNil(byName.fileName))
-                            propertyLines.unshift("\"fileName\": " + this.serializeToString(obj.fileName));
-                        if (!this.isNil(obj.number) && this.isNil(byName.number))
-                            propertyLines.unshift("\"number\": " + this.serializeToString(obj.number));
-                        if (!this.isNil(obj.name) && this.isNil(byName.name))
-                            propertyLines.unshift("\"name\": " + this.serializeToString(obj.name));
-                        if (!this.isNil(obj.description) && this.isNil(byName.description)) {
-                            if (this.isNil(obj.message) || (this.isString(obj.message) && this.isString(obj.description) && obj.description.length > obj.message.length &&
-                                    obj.message.trim().length == 0)) {
-                                byName.message = obj.description;
-                                propertyLines.unshift("\"message\": " + this.serializeToString(obj.description));
-                            }
-                            else
-                                propertyLines.unshift("\"description\": " + this.serializeToString(obj.description));
-                        }
-    
-                        if (!this.isNil(obj.message) && this.isNil(byName.message))
-                            propertyLines.unshift("\"message\": " + this.serializeToString(obj.message));
-                    }
-                    if (propertyLines.length == 0) {
-                        if (Array.isArray(obj)) {
-                            if (elements.length == 0) {
-                                if (className == "Array")
-                                    return "[]";
-                                return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) +
-                                    "," + this.newLineString + "\t\"elements\": []" + this.newLineString + ", \t\"properties\": {}" + this.newLineString + "}";
-                            }
-                            if (elements.length == 1) {
-                                if (className == "Array")
-                                    return "[ " + this.trimEnd(elements[0]) + " ]";
-                                return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) +
-                                    "," + this.newLineString + "\t\"elements\": [ " + this.indentText(elements[0], "\t", 1) + " ]" + this.newLineString + ", \t\"properties\": {}" +
-                                    this.newLineString + "}";
-                            }
-                            if (className == "Array")
-                                return "[" + this.newLineString + elements.map(function(e) { return this.indentText(e); }).join(this.newLineString) + this.newLineString + "]";
-                            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                                this.newLineString + "\t\"elements\": [" + this.newLineString + elements.map(function(e) { return this.indentText(e, "\t\t"); }).join(this.newLineString) +
-                                this.newLineString + "]" + this.newLineString + ", \t\"properties\": {}" + this.newLineString + "}";
-                        }
-                        if (className == "Object")
-                            return "{ \"type\": " + JSON.stringify(type) + ", \"properties\": {} }";
-                        return "{ \"className\": " + JSON.stringify(className) + ", \"type\": " + JSON.stringify(type) + ", \"properties\": {} }";
-                    }
+        derivesFromOrNull<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nullable<T> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: false,
+                whenNull: true,
+                otherwise: (o) => this.derivesFrom<T>(obj, classConstructor)
+            });
+        }
+        
+        /**
+         * If defined and not null, Searches the value's inherited prototype chain for a matching constructor function.
+         * @param value Value to test.
+         * @param {AnyFunction} classConstructor Constructor function to look for.
+         * @returns {boolean} True if the value is null, not defined or if it is determined to inherit from the specified class; otherwise false.
+         */
+        derivesFromOrNil<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nilable<T> {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenUndefined: true,
+                whenNull: true,
+                otherwise: (o) => this.derivesFrom<T>(obj, classConstructor)
+            });
+        }
+        
+        /**
+         * Determines if an object has properties similar to an Error object.
+         * @param {*} obj Value to test
+         * @returns {boolean} True if the object has properties similar to an Error object; otherwise, false.
+         */
+        isErrorLike(obj?: TDefined): obj is ErrorLike {
+            if (!this.isNonArrayObject(obj))
+                return false;
+            if (this.derivesFrom<Error>(obj, Error))
+                return true;
+            if (this.isString(obj.message))
+                return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.description) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                    this.isNumberIfDef(obj.lineNumber);
+            if (this.isString(obj.description))
+                return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                    this.isNumberIfDef(obj.lineNumber);
+            if (!(this.notDefined(obj.message) && this.notDefined(obj.description)))
+                return false;
+            return this.isString(obj.stack) && this.isStringIfDef(obj.name);
+        }
+        
+        /**
+         * Creates an object with properties similar to an Error object.
+         * @param {*} obj Object to convert.
+         * @returns {ErrorLike|null|undefined} Object with properties similar to an error objecst. If the object is null or emtpy, then the object is returned.
+         * @description This can be useful for serializing error objects when logging.
+         */
+        asErrorLike(obj?: TDefined): Nilable<ErrorLike> {
+            if (this.isNil(obj))
+                return obj;
+            if (this.isErrorLike(obj)) {
+                let result: ErrorLike = { message: obj.message, name: (typeof(obj.name) == "string") ? obj.name : "ErrorLike" };
+                if (typeof(obj.description) == "string") {
+                    if (typeof(obj.message) != "string" || obj.message.trim().length == 0)
+                        result.message = obj.description;
+                    else
+                        result.description = obj.description;
                 }
-                return JSON.stringify({
-                    className: className,
-                    type: type,
-                    value: obj.toString()
-                }, undefined, "\t");
+                if (typeof(obj.number) == "number")
+                    result.number = obj.number;
+                if (typeof(obj.fileName) == "string")
+                    result.fileName = obj.fileName;
+                if (typeof(obj.lineNumber) == "number")
+                    result.lineNumber = obj.lineNumber;
+                if (typeof(obj.stack) == "string")
+                    result.stack = obj.stack;
+                return result;
             }
-    
-            if (typeof(obj.toJSON) == "function")
-                return JSON.stringify({
-                    className: className,
-                    type: type,
-                    data: obj.toJSON()
-                }, undefined, "\t");
-            if (typeof(obj) != "object")
-                return JSON.stringify({
-                    className: className,
-                    type: type,
-                    data: obj.toString()
-                }, undefined, "\t");
-            if (Array.isArray(obj)) {
-                if (obj.length == 0)
-                    return "[]";
-                return "[" + this.newLineString + obj.map(function(e) {
-                    if (!this.defined(e))
-                        return "undefined";
-                    if (e === null)
-                        return "null";
-                    if (typeof(e) == "number")
-                        return (isNaN(e)) ? "NaN" : JSON.stringify(e, undefined, "\t");
-                    if (typeof(e.toJSON) == "function" || typeof(e) == "boolean" || typeof(e) == "string" ||
-                            typeof(e) == "object")
-                        return JSON.stringify(e, undefined, "\t");
-                    return e.toString();
-                }).map(function(s) {
-                    s.split(this.lineSplitRegex).map(function(l: string) { return "\t" + l; }).join(this.newLineString);
-                }).join(",") + this.newLineString + this.newLineString + "]";
-            }
-            let lines = [];
-            for (n in obj) {
-                v = obj[n];
-                if (!this.defined(v))
-                    lines.push(JSON.stringify(n) + ": undefined");
-                else if (v === null)
-                    lines.push(n + ((typeof(v) == "number") ? ": NaN" : ": null"));
-                else if (typeof(v) == "number")
-                    lines.push(JSON.stringify(n) + ": " + ((isNaN(v)) ? "NaN" : JSON.stringify(v, undefined, "\t")));
-                else if (typeof(v.toJSON) == "function" || typeof(v) == "boolean" || typeof(v) == "string" ||
-                        typeof(v) == "object")
-                    lines.push(JSON.stringify(n) + ": " + JSON.stringify(v, undefined, "\t"));
-                else
-                    lines.push(JSON.stringify(n) + ": " + v.toString());
-            }
-            if (lines.length == 0)
-                return "{}";
-            return "{" + this.newLineString + lines.map(function(s) {
-                s.split(this.lineSplitRegex).map(function(l) { return "\t" + l; }).join(this.newLineString);
-            }).join("," + this.newLineString) + this.newLineString + "}";
+            if (this.isNumber(obj))
+                return { message: obj.toString(), number: obj, name: "ErrorLike" };
+            let s: string = this.toString(obj);
+            if (this.isString(s))
+                return { message: s, name: "ErrorLike" };
+            return s;
+        }
+
+        /**
+         * Recursively maps an object or array.
+         * @param {*} obj Object to recursively map
+         * @param {{ (current: any|null|undefined, key?: number|string): any|null|undefined; }} callbackfn Call-back function for each iteration.
+         * @param options Recursive Iteration options.
+         * @returns {*} Mapped object or array.
+         */
+        mapInto(obj: any, callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions): any {
+            let i: limitingIterator = new limitingIterator(callbackfn, options);
+            return i.iterateInto(i.maxDepth, obj, undefined, undefined, undefined);
         }
     }
 }

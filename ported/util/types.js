@@ -1,14 +1,81 @@
 var types = Class.create();
 (function (types) {
+    var limitingIterator = /** @class */ (function () {
+        function limitingIterator(callbackfn, options) {
+            this.totalMaxItems = 8192;
+            this.currentTotalItems = 0;
+            this.maxItemsInObject = 1024;
+            this.maxDepth = 32;
+            this._types = new types();
+            this.callbackfn = callbackfn;
+            if (typeof (options) == "object") {
+                this.totalMaxItems = this._types.toNumber(options.totalMaxItems, this.totalMaxItems);
+                this.maxDepth = this._types.toNumber(options.maxDepth, this.maxDepth);
+                this.thisObj = options.thisObj;
+            }
+        }
+        limitingIterator.prototype.iterateInto = function (maxDepth, current, key, source, target) {
+            this.currentTotalItems++;
+            target = (this._types.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key);
+            if (maxDepth < 1 || this.currentTotalItems >= this.totalMaxItems || !this._types.isObject(target) || !this._types.isObject(source))
+                return target;
+            source = current;
+            if (this._types.isArray(target)) {
+                if (!this._types.isArray(current))
+                    return target;
+                for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
+                    var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
+                    if (index < target.length)
+                        target[index] = t;
+                    else
+                        target.push(t);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            }
+            else {
+                var count = 0;
+                for (var n in current) {
+                    count++;
+                    if (count > this.maxItemsInObject)
+                        break;
+                    target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            }
+            return target;
+        };
+        return limitingIterator;
+    }());
+
+    var patternDefaults = {
+        newLineSequence: "\n",
+        regex: {
+            onlyWhitespace: /^[\s\r\n]+$/,
+            trimStart: /^[\s\r\n]+(\S[\S\s]*)$/,
+            trimEnd: /^([\s\r\n]*\S+(?:[\s\r\n]+[^\s\r\n]+)*)/,
+            lineSeparator: /\r\n?|\n/,
+            booleanText: /^[\s\r\n]*(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))[\s\r\n]*$/i,
+            firstLetterLc: /^([^a-zA-Z\d]+)?([a-z])(.+)?$/,
+            abnormalWhitespace: /(?:(?=[^ ])[\s\r\n]+|[\s\r\n]{2,})/
+        }
+    };
+
     var tProto = {
         initialize: function() {
-            this.newLineString = "\n";
-            this.whitespaceRegex = /^\s*$/;
-            this.trimEndRegex = /^(\s*\S+(\s+\S+)*)/;
-            this.lineSplitRegex = /\r\n?|\n/g;
-            this.boolRegex = /^(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))$/i;
-            this.ucFirstRegex = /^([^a-zA-Z\d]*[a-z])(.+)?$/g;
-            this.abnormalWhitespaceRegex = /( |(?=[^ ]))\s+/g;
+            this.patternOptions = {
+                newLineSequence: patternDefaults.newLineSequence,
+                regex: {
+                    onlyWhitespace: patternDefaults.regex.onlyWhitespace,
+                    trimStart: patternDefaults.regex.trimStart,
+                    trimEnd: patternDefaults.regex.trimEnd,
+                    lineSeparator: patternDefaults.regex.lineSeparator,
+                    booleanText: patternDefaults.regex.booleanText,
+                    firstLetterLc: patternDefaults.regex.firstLetterLc,
+                    abnormalWhitespace: patternDefaults.regex.abnormalWhitespace
+                }
+            };
         }
     };
     /**
@@ -18,367 +85,1151 @@ var types = Class.create();
      */
     tProto.defined = function (value) { return typeof (value) !== "undefined"; };
     /**
-     * Tests whether a value is an object.
-     * @param value Value to test.
-     * @returns {boolean} True if the value's type is "object" and it is not null; otherwise false.
+     * Gets the default character sequence that will be used when joining lines of text.
+     * @returns {string} The default character sequence that will be used when joining lines of text.
      */
-    tProto.isObjectType = function (value) { return typeof (value) === "object" && value !== null; };
+    tProto.getDefaultLineSeparatorSequence = function () { return this.patternOptions.newLineSequence; };
     /**
-     * Tests whether a value is an object and is not an array.
-     * @param value Value to test.
-     * @returns {boolean} True if the value's type is "object", it is not null and it is not an array; otherwise false.
+     * Gets regular expression patterns used internally by this module.
+     * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns used internally by this module.
      */
-    tProto.isNonArrayObject = function (value) { return typeof (value) == "object" && value !== null && !Array.isArray(value); };
+    tProto.getPatternOptions = function () {
+        return {
+            onlyWhitespace: this.patternOptions.regex.onlyWhitespace,
+            trimStart: this.patternOptions.regex.trimStart,
+            trimEnd: this.patternOptions.regex.trimEnd,
+            lineSeparator: this.patternOptions.regex.lineSeparator,
+            booleanText: this.patternOptions.regex.booleanText,
+            firstLetterLc: this.patternOptions.regex.firstLetterLc,
+            abnormalWhitespace: this.patternOptions.regex.abnormalWhitespace
+        };
+    };
     /**
-     * Tests whether a value is a string
-     * @param value Value to test.
-     * @returns {boolean} True if the value is a string; otherwise, false.
+     * Sets regular expression pattern options used internally by this module.
+     * @param {IJsTypeCommanderRegex} settings Object whose properties contain regular expression patterns used internally by this module.
+     * Undefined properties will not be changed. If this parameter is not defined, then the default pattern options will be restored.
+     * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns now being used internally by this module.
      */
-    tProto.isString = function (value) { return typeof (value) === "string"; };
-    /**
-     * Tests whether a value is a function.
-     * @param value Value to test.
-     * @returns {boolean} True if the value is a function; otherwise, false.
-     */
-    tProto.isFunction = function (value) { return typeof (value) === "function"; };
-    /**
-     * Tests whether a value is a boolean type.
-     * @param value Value to test.
-     * @returns {boolean} True if the value is boolean; otherwise, false.
-     */
-    tProto.isBoolean = function (value) { return typeof (value) === "boolean"; };
-    /**
-     * Tests whether a value is a number type.
-     * @param value Value to test.
-     * @returns {boolean} True if the value is a number and is not NaN; otherwise, false.
-     */
-    tProto.isNumber = function (value) { return typeof (value) === "number" && !isNaN(value); };
-    /**
-     * Tests whether a value is a number type.
-     * @param value Value to test.
-     * @returns {boolean} True if the value is a number and is not NaN; otherwise, false.
-     */
-    tProto.isInteger = function (value) { return typeof (value) === "number" && !isNaN(value) && Math.round(value) === value; };
-    /**
-     * Tests whether a value is undefined or null.
-     * @param value Value to test.
-     * @returns {boolean} True if the value is undefined or null; othwerise, false.
-     */
-    tProto.isNil = function (value) { return !this.defined(value) || value === null; };
-    /**
-     * Tests whether a string is undefined, null or empty.
-     * @param value String to test.
-     * @returns {boolean} True if the value is undefined, null or empty; otherwise, false.
-     */
-    tProto.isNilOrEmptyString = function (value) { return this.isNil(value) || (this.isString(value) && value.length == 0); };
-    /**
-     * Tests whether a string is undefined, null, empty or contains only whitespace characters.
-     * @param value String to test.
-     * @returns {boolean} True if the value is undefined, null, empty or contains only whitespace characters; otherwise, false.
-     */
-    tProto.isNilOrWhitespace = function (value) { return this.isNil(value) || (this.isString(value) && this.whitespaceRegex.test(value)); };
-    /**
-     * Convert a value to a string.
-     * @param value Value to convert.
-     * @param {string|null} [defaultValue] Default value to return if the value was undefined, null or if it converts to an empty string. If this is not defined,
-     * then an undefined value is returned when the value was undefined or null.
-     * @param {boolean} [ignoreWhitespace] If true, and the converted value contains only whitespace, then it is treated as though it was converted to an empty string by
-     * returning the default value.
-     * @returns {string|null=} Value converted to a string.
-     * @description     If the value is converted to an empty string, and the default value is null, then a null value will be returned.
-     * If an array is passed, then the 'join' method is called with a newline character as the parameter.
-     * Otherwise, this method first attempts to call the value's "valueOf" function it is an object type, then it comply calls the "toString" method to convert it to a string.
-     */
-    tProto.asString = function (value, defaultValue, ignoreWhitespace) {
-        if (!this.defined(value)) {
-            if (this.isNil(defaultValue))
-                return defaultValue;
-            return this.asString(defaultValue);
+    tProto.setPatternOptions = function (settings) {
+        if (typeof (settings) == "undefined" || settings === null) {
+            this.patternOptions.regex.onlyWhitespace = patternDefaults.regex.onlyWhitespace;
+            this.patternOptions.regex.trimStart = patternDefaults.regex.trimStart;
+            this.patternOptions.regex.trimEnd = patternDefaults.regex.trimEnd;
+            this.patternOptions.regex.lineSeparator = patternDefaults.regex.lineSeparator;
+            this.patternOptions.regex.booleanText = patternDefaults.regex.booleanText;
+            this.patternOptions.regex.firstLetterLc = patternDefaults.regex.firstLetterLc;
+            this.patternOptions.regex.abnormalWhitespace = patternDefaults.regex.abnormalWhitespace;
         }
-        if (value === null) {
-            if (this.isNil(defaultValue))
-                return value;
-            return this.asString(defaultValue);
+        else if (typeof (settings) == "object") {
+            if (this.derivesFrom(settings.onlyWhitespace))
+                this.patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
+            if (this.derivesFrom(settings.trimStart))
+                this.patternOptions.regex.trimStart = settings.trimStart;
+            if (this.derivesFrom(settings.trimEnd))
+                this.patternOptions.regex.trimEnd = settings.trimEnd;
+            if (this.derivesFrom(settings.lineSeparator))
+                this.patternOptions.regex.lineSeparator = settings.lineSeparator;
+            if (this.derivesFrom(settings.booleanText))
+                this.patternOptions.regex.booleanText = settings.booleanText;
+            if (this.derivesFrom(settings.firstLetterLc))
+                this.patternOptions.regex.firstLetterLc = settings.firstLetterLc;
+            if (this.derivesFrom(settings.abnormalWhitespace))
+                this.patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
         }
-        var s;
-        if (!this.isString(value))
-            s = (Array.isArray(value)) ? value.join(this.newLineString) : (function () {
-                if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
-                    try {
-                        var v = value.valueOf();
-                        if (this.isString(v))
-                            return v;
-                        if (!this.isNil(v)) {
-                            if (Array.isArray(v))
-                                return v.join(this.newLineString);
-                            value = v;
-                        }
-                    }
-                    catch (e) { }
+        return this.getPatternOptions();
+    };
+    /**
+     * Sets the default character sequence that will be used when joining lines of text.
+     * @param s The default character sequence to use when joining lines of text. If this parameter is not defined, then the default character sequence will be restored.
+     * @returns {string} The default character sequence that will now be used when joining lines of text.
+     */
+    tProto.setDefaultLineSeparatorSequence = function (s) {
+        if (this.isNil(s))
+            this.patternOptions.newLineSequence = patternDefaults.newLineSequence;
+        else {
+            var t = this.toString(s, "");
+            if (t.length == 0)
+                throw new Error("Line separator sequence cannot be empty.");
+            this.patternOptions.newLineSequence = t;
+        }
+        return this.patternOptions.newLineSequence;
+    };
+    /**
+     * Maps a source value to a new value based upon the source value's type.
+     * @param target Source value to be mapped.
+     * @param callbacks Conditional callbacks which get invoked based upon the source object's type.
+     * @param checkElements When checking whether an object is <code>ArrayLike</code> and this is set true, then the existance of each element index is checked, which makes it slower, but more accurate.
+     * @returns {*} Value returned from the matching callback.
+     */
+    tProto.mapByTypeValue = function (target, callbacks, checkElements) {
+        var selectedCallback;
+        switch (typeof (target)) {
+            case "boolean":
+                selectedCallback = callbacks.whenBoolean;
+                break;
+            case "function":
+                selectedCallback = callbacks.whenFunction;
+                break;
+            case "number":
+                var n = target;
+                if (isNaN(n) && typeof (callbacks.whenNaN) != "undefined")
+                    selectedCallback = callbacks.whenNaN;
+                else if ((n == Infinity || n == -Infinity) && typeof (callbacks.whenInfinity) != "undefined")
+                    selectedCallback = callbacks.whenInfinity;
+                else
+                    selectedCallback = callbacks.whenNumber;
+                break;
+            case "string":
+                selectedCallback = callbacks.whenString;
+                break;
+            case "symbol":
+                selectedCallback = callbacks.whenSymbol;
+                break;
+            case "undefined":
+                selectedCallback = callbacks.whenUndefined;
+                break;
+            default:
+                if (target === null)
+                    selectedCallback = callbacks.whenNull;
+                else if (Array.isArray(target)) {
+                    if (typeof (callbacks.whenArray) !== "undefined")
+                        selectedCallback = callbacks.whenArray;
+                    else
+                        selectedCallback = (typeof (callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
                 }
+                else if (this.isArrayLike(target, checkElements))
+                    selectedCallback = (typeof (callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
+                else
+                    selectedCallback = (typeof (callbacks.whenNotArrayLike) !== "undefined") ? callbacks.whenNotArrayLike : callbacks.whenObject;
+                break;
+        }
+        if (typeof (selectedCallback) == "undefined")
+            selectedCallback = callbacks.otherwise;
+        if (typeof (selectedCallback) == "function")
+            return selectedCallback.call(callbacks.thisObj, target);
+        return selectedCallback;
+    };
+    /**
+     * Gets a mapped value according to whether the object is defined and optionally by target object type.
+     * @param target Value to test.
+     * @param whenTrue When target type is not "undefined": Callback to invoke to get the return value according to target object type, or value to return.
+     * @param otherwise When target is "undefined": Function to call to get return value, or value to return.
+     * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+     * @returns {*} Mapped value according to whether the object is defined and optionally by target object type.
+     */
+    tProto.mapByDefined = function (target, whenTrue, otherwise, thisObj) {
+        if (typeof (target) != "undefined") {
+            if (typeof (whenTrue) == "function")
+                return whenTrue.call(thisObj, target);
+            return whenTrue;
+        }
+        if (typeof (otherwise) == "function")
+            return otherwise.call(thisObj);
+        return otherwise;
+    };
+    /**
+     * Gets a mapped value according to whether the object is not defined or not null and optionally by defined target object type.
+     * @param target Value to test.
+     * @param whenTrue When target value is not null: Function to call to get return value according to target object type, or value to return.
+     * @param otherwise When target value is null: Function to call to get return value, or value to return, when target is null.
+     * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+     * @returns {*} Mapped value according to whether the object is not defined or not null and optionally by defined target object type.
+     */
+    tProto.mapByNotNull = function (target, whenTrue, otherwise, thisObj) {
+        if (typeof (target) == "object" && target == null) {
+            if (typeof (otherwise) == "function")
+                return otherwise.call(thisObj);
+            return otherwise;
+        }
+        if (typeof (whenTrue) == "function")
+            return whenTrue.call(thisObj, target);
+        return whenTrue;
+    };
+    /**
+     * Gets a mapped value according to whether the object is defined and not null and optionally by defined target object type.
+     * @param target Value to test.
+     * @param whenTrue When target type is not "undefined" and target value is not null: Function to call to get return value according to target object type, or value to return.
+     * @param otherwise When target type is "undefined" or target value is null: Function to call to get return value, or value to return.
+     * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
+     * @returns {*} Mapped value according to whether the object is defined and not null and optionally by defined target object type.
+     */
+    tProto.mapByNotNil = function (target, whenTrue, otherwise, thisObj) {
+        if (typeof (target) == "undefined" || (typeof (target) == "object" && target === null)) {
+            if (typeof (otherwise) == "function")
+                return otherwise.call(thisObj, target);
+            return otherwise;
+        }
+        if (typeof (whenTrue) == "function")
+            return whenTrue.call(thisObj, target);
+        return whenTrue;
+    };
+    /**
+     * Determesin whether an object is undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is undefined; otherwise, false.
+     */
+    tProto.notDefined = function (obj) { return typeof (obj) == "undefined"; };
+    /**
+     * Determines wether an object is undefined or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is undefined or null; otherwise, false.
+     */
+    tProto.isNil = function (obj) { return typeof (obj) == "undefined" || obj === null; };
+    /**
+     * Determines whether an object is null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is null; otherwise false (not defined or not null).
+     */
+    tProto.isNull = function (obj) { return typeof (obj) == "object" && obj === null; };
+    /**
+     * Determines whether a value is a string.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a string; otherwise false.
+     */
+    tProto.isString = function (obj) { return typeof (obj) == "string"; };
+    /**
+     * Determines whether a value is a string or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a string or undefined; otherwise false.
+     */
+    tProto.isStringIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "string"; };
+    /**
+     * Determines whether a value is a string or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a string or null; otherwise false.
+     */
+    tProto.isStringOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenString: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a string, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a string, null or undefined; otherwise false.
+     */
+    tProto.isStringOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenUndefined: true,
+            whenString: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string; otherwise false.
+     */
+    tProto.isEmptyString = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenString: function (s) { return s.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string undefined; otherwise false.
+     */
+    tProto.isEmptyStringIfDef = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenString: function (s) { return s.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a empty string or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string or null; otherwise false.
+     */
+    tProto.isEmptyStringOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenString: function (s) { return s.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string, null or undefined; otherwise false.
+     */
+    tProto.isEmptyStringOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenString: function (s) { return s.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string or contains only whitespace characters.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string or contains only whitespace characters; otherwise false.
+     */
+    tProto.isEmptyOrWhitespace = function (obj) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string, contains only whitespace characters, or is undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is undefined; otherwise false.
+     */
+    tProto.isEmptyOrWhitespaceIfDef = function (obj) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string, contains only whitespace characters, or is null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null; otherwise false.
+     */
+    tProto.isNullOrWhitespace = function (obj) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty string, contains only whitespace characters, or is null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null or undefined; otherwise false.
+     */
+    tProto.isNilOrWhitespace = function (obj) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
+            otherwise: false
+        });
+    };
+    /**
+     * Converts a value to a string.
+     * @param {*} obj Object to convert.
+     * @param {string|null} [defaultValue] Default value if object could not be converted to a string.
+     * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
+     * @returns {string|null|undefined} Value converted to a string or the default value.
+     */
+    tProto.asString = function (obj, defaultValue, ifWhitespace) {
+        var str = this.mapByTypeValue(obj, {
+            whenUndefined: function (s) { return s; },
+            whenNull: function (s) { return s; },
+            whenString: function (s) { return s; },
+            whenArray: function (a) { return (a.length == 0) ? "" : a.join(","); },
+            otherwise: function (s) {
                 try {
-                    var s_1 = value.toString();
-                    if (this.isString(s_1))
-                        return s_1;
+                    return s.toString();
                 }
                 catch (e) { }
-                return value + "";
-            })();
-        else
-            s = value;
-        if ((ignoreWhitespace) ? this.whitespaceRegex.test(s) : s.length == 0) {
-            var d = this.asString(defaultValue);
-            if (this.isString(d))
-                return d;
-        }
-        return s;
+                return s + "";
+            }
+        });
+        if (typeof (str) == "string" && (!ifWhitespace || str.trim().length > 0))
+            return str;
+        return this.mapByTypeValue(defaultValue, {
+            whenUndefined: function (s) { return str; },
+            whenNull: function (s) { return (typeof (str) == "string") ? str : s; },
+            whenString: function (s) { return s; },
+            whenArray: function (a) { return (a.length == 0) ? "" : a.join(","); },
+            otherwise: function (s) {
+                try {
+                    return s.toString();
+                }
+                catch (e) { }
+                return s + "";
+            }
+        });
     };
     /**
-     * Convert a value to a string with normalized whitespace.
-     * @param value Value to convert.
-     * @param {string|null} [defaultValue] Default value to return if the value was undefined, null or if it converts to an empty string. If this is not defined,
-     * then an undefined value is returned when the value was undefined or null.
-     * @returns {string|null=} Value converted to a string.
-     * @description     If the value is converted to an empty string, and the default value is null, then a null value will be returned.
-     * If an array is passed, then the 'join' method is called with a newline character as the parameter.
-     * Otherwise, this method first attempts to call the value's "valueOf" function it is an object type, then it comply calls the "toString" method to convert it to a string.
+     * Forces a value to a string.
+     * @param {*} obj Object to convert.
+     * @param {string|null} [defaultValue] Default value if object could not be converted to a string.
+     * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
+     * @returns {string} Value converted to a string or the default value. If the default value is nil, then an empty string will be returned.
      */
-    tProto.asNormalizedString = function (value, defaultValue) {
-        value = this.asString(value, defaultValue, true).trim();
-        if (this.isNil(value) || value.length == 0)
-            return value;
-        return value.replace(this.abnormalWhitespaceRegex, ' ');
+    tProto.toString = function (obj, defaultValue, ifWhitespace) {
+        var s = this.asString(obj, defaultValue, ifWhitespace);
+        if (this.isString(s))
+            return s;
+        return "";
     };
     /**
-     * Trims trailing whitespace from the end of a string.
-     * @param {string} text Text to trim.
-     * @returns {string} String with trailing whitespace removed.
+     * Trims leading whitespace from text.
+     * @param text Text to trim.
+     * @returns {string} Text with leading whitespace removed.
+     */
+    tProto.trimStart = function (text) {
+        var s = this.toString(text, "");
+        var m = this.patternOptions.regex.trimStart.exec(s);
+        return (this.isNil(m)) ? "" : m[1];
+    };
+    /**
+     * Trims trailing whitespace from text.
+     * @param text Text to trim.
+     * @returns {string} Text with trailing whitespace removed.
      */
     tProto.trimEnd = function (text) {
-        text = this.asString(text, "");
-        var m = this.trimEndRegex.exec(text);
-        if (this.isNil(m))
-            return "";
-        return m[1];
+        var s = this.toString(text, "");
+        var m = this.patternOptions.regex.trimEnd.exec(s);
+        return (this.isNil(m)) ? "" : m[1];
     };
     /**
-     * Convert a value to a number.
-     * @param value Convert a value to a number.
-     * @param {number|null} [defaultValue] Default value to return if the value was undefined, null, could not be converted to a number or is a NaN value.
-     * @returns {number|null=} String converted to a number.
-     * @description This method will first attempt to get a number value through the value's "valueOf" method if the value is an object type.
-     * If the value is a boolean type, then it will return 1 for true, and 0 for false. Otherwise, it will convert it to a string and attempt to
-     * parse a number value.
+     * Normalizes whitespace in text.
+     * @param text Text to trim.
+     * @returns {string} Text with outer whitespace removed and inner whitespace normalized.
      */
-    tProto.asNumber = function (value, defaultValue) {
-        if (!this.defined(value)) {
-            if (this.isNil(defaultValue))
-                return (this.defined(defaultValue)) ? defaultValue : value;
-            return this.asNumber(defaultValue);
+    tProto.asNormalizedWs = function (text) {
+        var s = this.toString(text, "").trim();
+        if (s.length == 0)
+            return s;
+        return s.replace(this.patternOptions.regex.abnormalWhitespace, " ");
+    };
+    /**
+     * Capitalizes first letter in text.
+     * @param {string} text Text to capitalize.
+     * @returns {string} Capitalizes the first letter in text, skipping over any leading characters that are not letters or digits.
+     */
+    tProto.ucFirst = function (text) {
+        var s = this.toString(text, "");
+        if (s.length < 2)
+            return s.toUpperCase();
+        var m = this.patternOptions.regex.firstLetterLc.exec(s);
+        if (this.isNil(m))
+            return s;
+        if (this.isString(m[1])) {
+            if (this.isString(m[3]))
+                return m[1] + m[2].toUpperCase() + m[3];
+            return m[1] + m[2].toUpperCase();
         }
-        if (value === null) {
-            if (this.isNil(defaultValue))
-                return value;
-            return this.asNumber(defaultValue, value);
-        }
-        var n = null;
-        if (typeof (value) !== "number") {
-            if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
+        if (this.isString(m[3]))
+            return m[2].toUpperCase() + m[3];
+        return m[2].toUpperCase();
+    };
+    /**
+     * Splits text by line separator character sequences.
+     * @param {string} text Text to split.
+     * @returns {string[]} Array containing individual lines of text.
+     */
+    tProto.splitLines = function (text) {
+        var s = this.toString(text, "");
+        if (s.length == 0)
+            return [s];
+        return s.split(this.patternOptions.regex.lineSeparator);
+    };
+    /**
+     * Indents lines within text and trims trailing whitespace.
+     * @param {string|string[]} text Text to indent.
+     * @param {string} indent Characters to use for indentation.
+     * @returns {string} Text with lines indented.
+     */
+    tProto.indentText = function (text, indent) {
+        var _this = this;
+        var i = this.toString(indent, "\t");
+        if (i.length == 0)
+            i = "\t";
+        var t = (Array.isArray(text)) ? text.join(this.patternOptions.newLineSequence) : this.toString(text, "");
+        if (i.length == 0 || t.length == 0)
+            return t;
+        return this.splitLines(t).map(function (s) { return _this.trimEnd(s); }).map(function (s) {
+            if (s.length == 0)
+                return s;
+            return i + s;
+        }).join(this.patternOptions.newLineSequence);
+    };
+    /**
+     * Indents lines of text and trim trailing whitespace.
+     * @param {string[]|string} text Text to indent.
+     * @param {string} indent Characters to use for indentation.
+     * @returns {string} Array containing indented lines.
+     */
+    tProto.indentLines = function (text, indent) {
+        var _this = this;
+        var i = this.toString(indent, "\t");
+        var t = (Array.isArray(text)) ? text.join(this.patternOptions.newLineSequence) : this.toString(text, "");
+        if (t.length == 0)
+            return [t];
+        var a = this.splitLines(t).map(function (s) { return _this.trimEnd(s); });
+        if (i.length == 0)
+            return a;
+        return a.map(function (s) {
+            if (s.length == 0)
+                return s;
+            return i + s;
+        });
+    };
+    /**
+     * Determines whether a value is boolean.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is boolean; otherwise false.
+     */
+    tProto.isBoolean = function (obj) { return typeof (obj) == "boolean"; };
+    /**
+     * Determines whether a value is boolean or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is boolean or undefined; otherwise false.
+     */
+    tProto.isBooleanIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "boolean"; };
+    /**
+     * Determines whether a value is boolean or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is boolean or null; otherwise false.
+     */
+    tProto.isBooleanOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenBoolean: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is boolean, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is boolean, null or undefined; otherwise false.
+     */
+    tProto.isBooleanOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenBoolean: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Converts a value to a boolean.
+     * @param {*} obj Object to convert.
+     * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
+     * @returns {boolean|null|undefined} Value converted to a boolean or the default value.
+     */
+    tProto.asBoolean = function (obj, defaultValue) {
+        var _this = this;
+        var bs = this.mapByTypeValue(obj, {
+            whenUndefined: function (b) { return b; },
+            whenNull: function (b) { return b; },
+            whenBoolean: function (b) { return b; },
+            whenString: function (s) { return s; },
+            whenNaN: false,
+            whenNumber: function (n) { return n != 0; },
+            otherwise: function (o) {
                 try {
-                    var i = value.valueOf();
-                    if (this.isNumber(i))
-                        return i;
-                    if (!this.isNil(i))
-                        value = i;
+                    return _this.mapByTypeValue(o.valueOf(), {
+                        whenUndefined: function (b) { return o.toString(); },
+                        whenNull: function (b) { return o.toString(); },
+                        whenBoolean: function (b) { return b; },
+                        whenString: function (s) { return s; },
+                        whenNaN: o.toString(),
+                        whenNumber: function (n) { return n != 0; },
+                        otherwise: function (v) {
+                            try {
+                                return v.toString();
+                            }
+                            catch (e) { }
+                            return v + "";
+                        }
+                    });
                 }
                 catch (e) { }
+                try {
+                    return o.toString();
+                }
+                catch (e) { }
+                return o + "";
             }
-            if (this.isBoolean(value))
-                return (value) ? 1 : 0;
-            value = this.asString(value, "").trim();
-            n = (value.length == 0) ? NaN : parseFloat(value);
-        }
-        else
-            n = value;
-        if (isNaN(n) && !this.isNil(defaultValue))
-            return this.asNumber(defaultValue);
-        return n;
+        });
+        return this.mapByTypeValue(bs, {
+            whenBoolean: function (b) { return b; },
+            whenString: function (s) {
+                if ((s = s.trim()).length > 0) {
+                    var m = _this.patternOptions.regex.booleanText.exec(s);
+                    if (!_this.isNil(m))
+                        return _this.isNil(m[2]);
+                }
+                return _this.mapByTypeValue(defaultValue, {
+                    whenUndefined: function (o) { return o; },
+                    whenNull: function (o) { return o; },
+                    whenBoolean: function (b) { return b; },
+                    otherwise: function (o) { return _this.asBoolean(o); }
+                });
+            },
+            whenNull: function (o) { return _this.mapByTypeValue(defaultValue, {
+                whenUndefined: function (d) { return o; },
+                whenNull: function (d) { return d; },
+                whenBoolean: function (b) { return b; },
+                otherwise: function (d) { return _this.asBoolean(d); }
+            }); },
+            otherwise: function (o) { return _this.mapByTypeValue(defaultValue, {
+                whenUndefined: function (d) { return d; },
+                whenNull: function (d) { return d; },
+                whenBoolean: function (b) { return b; },
+                otherwise: function (d) { return _this.asBoolean(d); }
+            }); }
+        });
     };
     /**
-     * Convert a value to a number rounded to the nearest integer.
-     * @param value Value to be converted.
-     * @param {number|null} [defaultValue] Default value to return if the value was undefined, null, could not be converted to a number or is a NaN value.
-     * @returns {number|null=} Value converted to an integer.
-     * @description This method will first attempt to get a number value through the value's "valueOf" method if the value is an object type.
-     * If the value is a boolean type, then it will return 1 for true, and 0 for false. Otherwise, it will convert it to a string and attempt to
-     * parse a number value. If the number is not an integer, then it will be rounded to the nearest integer value.
+     * Forces a value to a boolean.
+     * @param {*} obj Object to convert.
+     * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
+     * @returns {boolean} Value converted to a boolean or the default value. If the default value is nil, then a false value will be returned.
      */
-    tProto.asInteger = function (value, defaultValue) {
-        var v = this.asNumber(value, defaultValue);
-        if (this.isNil(v) || isNaN(v))
-            return v;
-        return Math.round(v);
+    tProto.toBoolean = function (obj, defaultValue) {
+        var b = this.asBoolean(obj, defaultValue);
+        return this.isBoolean(b) && b;
     };
     /**
-     * Convert a value to a boolean value.
-     * @param value Value to be converted.
-     * @param {boolean|null} [defaultValue] Default value to return if the value was undefined, null or could not be converted to a boolean value.
-     * @returns {boolean|null=} Value converted to a boolean type.
-     * @description This method will first attempt to get a boolean value through the value's "valueOf" method if the value is an object type.
-     * If the value is a number type (an not a NaN value), then it will return true for non-zero and false for zero. Otherwise, it will convert it to a string and attempt to
-     * parse a true/false, t/f, yes/no, y/n (all case-insensitive) or number value in order to derive a boolean result.
+     * Determines whether a value is a finite number (not including NaN).
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a finite number; otherwise false.
      */
-    tProto.asBoolean = function (value, defaultValue) {
-        if (typeof (value) === "boolean")
-            return value;
-        if (!this.defined(value)) {
-            if (this.isNil(defaultValue))
-                return defaultValue;
-            return this.asBoolean(defaultValue);
-        }
-        if (value === null) {
-            if (this.isNil(defaultValue))
-                return (this.defined(defaultValue)) ? defaultValue : value;
-            return this.asBoolean(defaultValue, value);
-        }
-        if (typeof (value) === "number")
-            return !isNaN(value) && value != 0;
-        if (this.isObjectType(value) && this.isFunction(value.valueOf)) {
-            try {
-                var n = value.valueOf();
-                if (this.isNumber(n))
-                    return n != 0;
-                if (this.isBoolean(value))
-                    return value;
-                if (!this.isNil(n))
-                    value = n;
+    tProto.isNumber = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: false,
+            whenUndefined: false,
+            whenNumber: true,
+            whenInfinity: false,
+            whenNaN: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a finite number or undefined (not including NaN).
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is finite number or undefined; otherwise false.
+     */
+    tProto.isNumberIfDef = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: false,
+            whenUndefined: true,
+            whenNumber: true,
+            whenInfinity: false,
+            whenNaN: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a finite number or null (not including NaN).
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a finite number or null; otherwise false.
+     */
+    tProto.isNumberOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenNumber: true,
+            whenInfinity: false,
+            whenNaN: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a number or null (including NaN and Infinity).
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a number or null; otherwise false.
+     */
+    tProto.isNumberNaNorNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenNumber: true,
+            whenInfinity: true,
+            whenNaN: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is a finite number, null or undefined (including NaN).
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a finite number, null or undefined; otherwise false.
+     */
+    tProto.isNumberOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenNumber: true,
+            whenInfinity: false,
+            whenNaN: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an infinite number.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an infinite number; otherwise false.
+     */
+    tProto.isInfinite = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: false,
+            whenNull: false,
+            whenNumber: false,
+            whenInfinity: true,
+            whenNaN: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Converts a value to a number.
+     * @param {*} obj Object to convert.
+     * @param {number|null} [defaultValue] Default value if object could not be converted to a number.
+     * @returns {number|null|undefined} Value converted to a number or the default value.
+     */
+    tProto.asNumber = function (obj, defaultValue) {
+        var _this = this;
+        var ns = this.mapByTypeValue(obj, {
+            whenUndefined: function (b) { return b; },
+            whenNull: function (b) { return b; },
+            whenBoolean: function (b) { return (b) ? 1 : 0; },
+            whenString: function (s) { return parseFloat(s); },
+            whenNaN: null,
+            whenInfinity: null,
+            whenNumber: function (n) { return n; },
+            otherwise: function (o) {
+                try {
+                    return _this.mapByTypeValue(o.valueOf(), {
+                        whenUndefined: function (b) { return o.toString(); },
+                        whenNull: function (b) { return o.toString(); },
+                        whenBoolean: function (b) { return (b) ? 1 : 0; },
+                        whenString: function (s) { return parseFloat(s); },
+                        whenNaN: null,
+                        whenInfinity: null,
+                        whenNumber: function (n) { return n; },
+                        otherwise: function (v) {
+                            try {
+                                return parseFloat(v.toString());
+                            }
+                            catch (e) { }
+                            return parseFloat(v + "");
+                        }
+                    });
+                }
+                catch (e) { }
+                try {
+                    return parseFloat(o.toString());
+                }
+                catch (e) { }
+                return parseFloat(o + "");
             }
-            catch (e) { }
-        }
-        var mg = this.boolRegex.exec(this.asString(value, "").trim());
-        if (this.isNil(mg))
-            return this.asBoolean(defaultValue);
-        return this.isNil(mg[2]);
+        });
+        if (typeof (defaultValue) == "undefined" || typeof (ns) == "number" && !isNaN(ns) && !this.isInfinite(ns))
+            return ns;
+        return this.mapByTypeValue(this.asNumber(defaultValue), {
+            whenUndefined: function (d) { return ns; },
+            whenInfinity: function (d) { return (typeof (ns) != "number" || isNaN(ns)) ? d : ns; },
+            whenNumber: function (d) { return d; },
+            otherwise: function (d) { return (typeof (ns) == "number") ? ns : d; }
+        });
     };
     /**
-     * Converts a value to an array.
-     * @param value Value to convert.
-     * @description If given value is an array, it is simply returned. If it is not defined, then an empty array is returned. Otherwise, the given value is returned
-     * within a single-element array.
+     * Forces a value to a number.
+     * @param {*} obj Object to convert.
+     * @param {number|null} [defaultValue] Default value if object could not be converted to a number.
+     * @returns {number} Value converted to a number or the default value. If the default value is nil, then a zer0 value will be returned.
      */
-    tProto.asArray = function (value) {
-        if (!this.defined(value))
+    tProto.toNumber = function (obj, defaultValue) {
+        var i = this.asNumber(obj, defaultValue);
+        if (this.isNumber(i))
+            return i;
+        return 0;
+    };
+    /**
+     * Determines whether a value is a function.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is function; otherwise false.
+     */
+    tProto.isFunction = function (obj) { return typeof (obj) === "function"; };
+    /**
+     * Determines whether a value is function or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is function or undefined; otherwise false.
+     */
+    tProto.isFunctionIfDef = function (obj) { return typeof (obj) === "undefined" || typeof (obj) === "function"; };
+    /**
+     * Determines whether a value is function or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is function or null; otherwise false.
+     */
+    tProto.isFunctionOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenFunction: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is function, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is function, null or undefined; otherwise false.
+     */
+    tProto.isFunctionOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenFunction: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value's type is "object" and it is not null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value's type is "object" and it is not null; otherwise false.
+     */
+    tProto.isObjectType = function (obj) { return typeof (obj) == "object" && obj !== null; };
+    /**
+     * Determines whether a value is undefined or its type is "object" and it is not null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value is undefined or its type is "object" and it is not null; otherwise false.
+     */
+    tProto.isObjectTypeIfDef = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: false,
+            whenObject: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is null or its type is "object".
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value is null, or its type is "object"; otherwise false.
+     */
+    tProto.isObjectTypeOrNull = function (obj) { return typeof (obj) == "object"; };
+    /**
+     * Determines whether a value is undefined, null, or its type is "object".
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value is undefined, null, or its type is "object"; otherwise false.
+     */
+    tProto.isObjectTypeOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
+    /**
+     * Determines whether a value is an object and it is not null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value is an object and it is not null; otherwise false.
+     * @description As a type guard, this behaves the same as isNonArrayObject() and isPlainObject().
+     * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+     */
+    tProto.isObject = function (obj) { return typeof (obj) == "object" && obj !== null; };
+    /**
+     * Determines whether a value undefined or it is an object and it is not null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value undefined or it is an object and it is not null; otherwise false.
+     * @description As a type guard, this behaves the same as isNonArrayObjectIfDef() and isPlainObjectIfDef().
+     * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+     */
+    tProto.isObjectIfDef = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && obj !== null); };
+    /**
+     * Determines whether a value null or it is an object.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value null or it is an object; otherwise false.
+     * @description As a type guard, this behaves the same as isNonArrayObjectOrNull() and isPlainObjectOrNull().
+     * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+     */
+    tProto.isObjectOrNull = function (obj) { return typeof (obj) == "object"; };
+    /**
+     * Determines whether a value undefined, null, or it is an object.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if the value undefined, null, or it is an object; otherwise false.
+     * @description As a type guard, this behaves the same as isNonArrayObjectOrNil() and isPlainObjectOrNil().
+     * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
+     */
+    tProto.isObjectOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
+    /**
+     * Determines whether a value is an object, but not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type; otherwise false.
+     * @description As a type guard, this behaves the same as isObject() and isPlainObject().
+     * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+     */
+    tProto.isNonArrayObject = function (obj) { return typeof (obj) == "object" && obj !== null && !Array.isArray(obj); };
+    /**
+     * Determines whether a value is an object or undefined, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type or undefined; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectIfDef() and isPlainObjectIfDef().
+     * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+     */
+    tProto.isNonArrayObjectIfDef = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: false,
+            whenObject: true,
+            whenArray: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an object or null, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type or null; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectOrNull() and isPlainObjectOrNull().
+     * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+     */
+    tProto.isNonArrayObjectOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || !Array.isArray(obj)); };
+    /**
+     * Determines whether a value is an object, null or undefined, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type, null or undefined; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectOrNil() and isPlainObjectOrNil().
+     * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
+     */
+    tProto.isNonArrayObjectOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenObject: true,
+            whenArray: false,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an object, but not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type; otherwise false.
+     * @description As a type guard, this behaves the same as isObject() and isNonArrayObject().
+     * The difference is that this returns false if the value is not constructed directly from Object.
+     */
+    tProto.isPlainObject = function (obj) {
+        if (typeof (obj) != "object" || obj === null)
+            return false;
+        var proto = Object.getPrototypeOf(obj);
+        return this.isNil(proto) || proto.constructor === Object;
+    };
+    /**
+     * Determines whether a value is an object or undefined, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type or undefined; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectIfDef() and isNonArrayObjectIfDef().
+     * The difference is that this returns false if the value is not constructed directly from Object.
+     */
+    tProto.isPlainObjectIfDef = function (obj) {
+        var t = typeof (obj);
+        if (t == "undefined")
+            return true;
+        if (t != "object" || obj === null)
+            return false;
+        var proto = Object.getPrototypeOf(obj);
+        return this.isNil(proto) || proto.constructor === Object;
+    };
+    /**
+     * Determines whether a value is an object or null, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type or null; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectOrNull() and isNonArrayObjectOrNull().
+     * The difference is that this returns false if the value is not constructed directly from Object.
+     */
+    tProto.isPlainObjectOrNull = function (obj) {
+        if (typeof (obj) != "object")
+            return false;
+        if (obj === null)
+            return true;
+        var proto = Object.getPrototypeOf(obj);
+        return this.isNil(proto) || proto.constructor === Object;
+    };
+    /**
+     * Determines whether a value is an object, null or undefined, and not an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is a non-array object type, null or undefined; otherwise false.
+     * @description As a type guard, this behaves the same as isObjectOrNil() and isNonArrayObjectOrNil().
+     * The difference is that this returns false if the value is not constructed directly from Object.
+     */
+    tProto.isPlainObjectOrNil = function (obj) {
+        var t = typeof (obj);
+        if (t == "undefined")
+            return true;
+        if (t != "object")
+            return false;
+        if (obj === null)
+            return true;
+        var proto = Object.getPrototypeOf(obj);
+        return this.isNil(proto) || proto.constructor === Object;
+    };
+    /**
+     * Determines whether a value is an array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an array; otherwise false.
+     */
+    tProto.isArray = function (obj) { return this.isObject(obj) && Array.isArray(obj); };
+    /**
+     * Determines whether a value is an array or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an array or undefined; otherwise false.
+     */
+    tProto.isArrayIfDef = function (obj) { return typeof (obj) == "undefined" || this.isArray(obj); };
+    /**
+     * Determines whether a value is an array or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an array or null; otherwise false.
+     */
+    tProto.isArrayOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || Array.isArray(obj)); };
+    /**
+     * Determines whether a value is an array, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an array, null or undefined; otherwise false.
+     */
+    tProto.isArrayOrNil = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && (obj === null || Array.isArray(obj))); };
+    /**
+     * Determines whether a value is an empty array.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty array; otherwise false.
+     */
+    tProto.isEmptyArray = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenArray: function (a) { return a.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty array or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty array or undefined; otherwise false.
+     */
+    tProto.isEmptyArrayIfDef = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenArray: function (a) { return a.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty array or null.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty array or null; otherwise false.
+     */
+    tProto.isEmptyArrayOrNull = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenArray: function (a) { return a.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether a value is an empty array, null or undefined.
+     * @param {*} obj Object to test.
+     * @returns {boolean} True if object is an empty array, null or undefined; otherwise false.
+     */
+    tProto.isEmptyArrayOrNil = function (obj) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenArray: function (a) { return a.length == 0; },
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether an object has properties which indiciates it behaves like an array.
+     * @param {*} obj Object to test.
+     * @param {boolan} checkElements If true, then the existance of each element index is checked, which makes this function slower, but more accurate.
+     * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+     * @see {@link https://github.com/Microsoft/TypeScript/blob/530d7e9358ee95d2101a619e73356867b617cd95/lib/lib.es5.d.ts}
+     */
+    tProto.isArrayLike = function (obj, checkElements) {
+        if (!this.isObject(obj))
+            return false;
+        if (Array.isArray(obj))
+            return true;
+        if (!this.isNumber(obj.length) || isNaN(obj.length) || obj.length < 0 || obj.length == Infinity || obj.length == -Infinity)
+            return false;
+        if (!checkElements || obj.length == 0)
+            return true;
+        var arr = [];
+        for (var i = 0; i < obj.length; i++)
+            arr.push(false);
+        for (var n in obj) {
+            var f = parseFloat(n);
+            if (!isNaN(f) && f >= 0 && f < arr.length && parseInt(n) == f)
+                arr[f] = true;
+        }
+        return arr.filter(function (v) { return !v; }).length == 0;
+    };
+    /**
+     * Determines whether an object has properties which indiciates it behaves like an array.
+     * @param {*} obj Object to test.
+     * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+     * but can result in false positives for non-array objects which have a numeric "length" property.
+     * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+     */
+    tProto.isArrayLikeIfDef = function (obj, simpleCheck) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenArrayLike: true,
+            whenArray: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether an object has properties which indiciates it behaves like an array.
+     * @param {*} obj Object to test.
+     * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+     * but can result in false positives for non-array objects which have a numeric "length" property.
+     * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+     */
+    tProto.isArrayLikeOrNull = function (obj, simpleCheck) {
+        return this.mapByTypeValue(obj, {
+            whenNull: true,
+            whenArrayLike: true,
+            whenArray: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Determines whether an object has properties which indiciates it behaves like an array.
+     * @param {*} obj Object to test.
+     * @param {boolan} simpleCheck If true, then the existance of each element index is not checked, which makes this function faster,
+     * but can result in false positives for non-array objects which have a numeric "length" property.
+     * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
+     */
+    tProto.isArrayLikeOrNil = function (obj, simpleCheck) {
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            whenArrayLike: true,
+            whenArray: true,
+            otherwise: false
+        });
+    };
+    /**
+     * Ensures that a value is a true array.
+     * @param {*} obj Value to convert.
+     * @param {boolan} checkElements If true and obj is Array-like (but not a true array), then the existance of each element index is checked, which makes this function more accurate, but slower.
+     * @returns {*[]} Value as an array.
+     * @description If the value is undefined, an empty array is returned.
+     * If the value is an actual array, then the object itself is returned;
+     * If the object is Array-like, an array is returned with values taken from each of its indexed values.
+     * Otherwise, an array with a single element containing the value is returned.
+     */
+    tProto.toArray = function (obj, checkElements) {
+        if (this.isArray(obj))
+            return obj;
+        if (this.isArrayLike(obj, checkElements)) {
+            var result = [];
+            for (var i = 0; i < obj.length; i++)
+                result.push(obj[i]);
+            return result;
+        }
+        if (this.notDefined(obj))
             return [];
-        if (Array.isArray(value))
-            return value;
-        return [value];
+        return [obj];
     };
     /**
-     * Gets the name of a value's constructor function.
-     * @param value Value from which to retrieve the constructor class name.
-     * @returns {string} The first named constructor function in the prototype inheritance chain or the value's type if a named constructor could not be found.
-     */
-    tProto.getClassName = function (value) {
-        if (!this.defined(value))
-            return "undefined";
-        if (value === null)
-            return "null";
-        var prototype, constructor;
-        if (this.isFunction(value)) {
-            constructor = value;
-            prototype = value.prototype;
-        }
-        else {
-            prototype = Object.getPrototypeOf(value);
-            constructor = prototype.constructor;
-            while (!this.isFunction(constructor)) {
-                prototype = Object.getPrototypeOf(prototype);
-                if (this.isNil(prototype))
-                    return typeof (value);
-                constructor = prototype.constructor;
-            }
-        }
-        if (this.isString(constructor.name) && constructor.name.length > 0)
-            return constructor.name;
-        var basePrototype = Object.getPrototypeOf(prototype);
-        if (this.isNil(basePrototype)) {
-            if (this.isString(prototype.name) && prototype.name.length > 0)
-                return prototype.name;
-            if (this.isString(value.name) && value.name.length > 0)
-                return value.name;
-            return typeof (value);
-        }
-        var name = this.getClassName(basePrototype);
-        if (name == "Object") {
-            if (this.isString(prototype.name) && prototype.name.length > 0)
-                return prototype.name;
-            if (this.isString(value.name) && value.name.length > 0)
-                return value.name;
-        }
-        return name;
-    };
-    /**
-     * Gets ordered list of named constructor functions in the value's prototype inheritance chain.
-     * @param value Value from which to extract the inheritance chain.
-     * @returns {string[]} An array of string values with the first element being the first named constructor function in the value's inherited prototypes.
-     */
-    tProto.getInheritanceChain = function (value) {
-        if (!this.defined(value))
-            return ["undefined"];
-        if (value === null)
-            return ["null"];
-        var prototype, constructor;
-        if (this.isFunction(value)) {
-            constructor = value;
-            prototype = value.prototype;
-        }
-        else {
-            prototype = Object.getPrototypeOf(value);
-            constructor = prototype.constructor;
-            while (!this.isFunction(constructor)) {
-                prototype = Object.getPrototypeOf(prototype);
-                if (this.isNil(prototype))
-                    return [typeof (value)];
-                constructor = prototype.constructor;
-            }
-        }
-        var basePrototype = Object.getPrototypeOf(prototype);
-        if (this.isNil(basePrototype)) {
-            if (this.isString(constructor.name) && constructor.name.length > 0)
-                return [constructor.name];
-            if (this.isString(prototype.name) && prototype.name.length > 0)
-                return [prototype.name];
-            if (this.isString(value.name) && value.name.length > 0)
-                return [value.name];
-            return [typeof (value)];
-        }
-        var arr = this.getInheritanceChain(basePrototype);
-        if (this.isString(constructor.name) && constructor.name.length > 0) {
-            arr.unshift(constructor.name);
-            return arr;
-        }
-        if (this.isString(prototype.name) && prototype.name.length > 0) {
-            arr.unshift(prototype.name);
-            return arr;
-        }
-        if (arr.length > 0)
-            return arr;
-        if (this.isString(value.name) && value.name.length > 0)
-            return [value.name];
-        return [typeof (value)];
-    };
-    /**
-     * Searches the value's inherited prototype chain for a constructor function.
+     * Searches the value's inherited prototype chain for a matching constructor function.
      * @param value Value to test.
      * @param {AnyFunction} classConstructor Constructor function to look for.
      * @returns {boolean} True if the value is determined to inherit from the specified class; otherwise false.
      */
-    tProto.derivesFrom = function (value, classConstructor) {
-        if (!this.defined(value))
-            return !this.defined(classConstructor);
-        if (!this.defined(classConstructor))
+    tProto.derivesFrom = function (obj, classConstructor) {
+        if (this.notDefined(obj))
+            return this.notDefined(classConstructor);
+        if (this.notDefined(classConstructor))
             return false;
-        if (value === null)
+        if (obj === null)
             return classConstructor === null;
         var classProto;
         if (this.isFunction(classConstructor)) {
@@ -394,15 +1245,15 @@ var types = Class.create();
                 classConstructor = classProto.constructor;
             }
         }
-        if (value instanceof classConstructor)
+        if (this.isFunction(classConstructor) && obj instanceof classConstructor)
             return true;
         var valueProto, valueConstructor;
-        if (this.isFunction(value)) {
-            valueConstructor = value;
-            valueProto = value.prototype;
+        if (this.isFunction(obj)) {
+            valueConstructor = obj;
+            valueProto = obj.prototype;
         }
         else {
-            valueProto = Object.getPrototypeOf(value);
+            valueProto = Object.getPrototypeOf(obj);
             valueConstructor = valueProto.constructor;
             while (!this.isFunction(valueConstructor)) {
                 valueProto = Object.getPrototypeOf(valueProto);
@@ -419,7 +1270,7 @@ var types = Class.create();
             return (this.isNil(classProto) && valueConstructor === classConstructor);
         var constructorChain = [];
         do {
-            if (valueProto instanceof classConstructor)
+            if (this.isFunction(classConstructor) && valueProto instanceof classConstructor)
                 return true;
             constructorChain.push(valueConstructor);
             valueConstructor = null;
@@ -437,288 +1288,106 @@ var types = Class.create();
         return false;
     };
     /**
-     * Gets extended type string for a value.
-     * @param value Value to determine type.
-     * @returns {string} Value's type. If the value is null, then "null" is returned. If it is NaN, then "NaN" is returned.
-     * Otherwise, the type and class name, separated by a space, is returned. If the class name could not be determined, then just the object type is returned.
+     * If defined, Searches the value's inherited prototype chain for a matching constructor function.
+     * @param value Value to test.
+     * @param {AnyFunction} classConstructor Constructor function to look for.
+     * @returns {boolean} True if the value is not defined or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.typeOfExt = function (value) {
-        var t = typeof (value);
-        if (t == "object") {
-            if (value === null)
-                return "null";
-        }
-        else if (t != "function") {
-            if (t == "number" && isNaN(value))
-                return "NaN";
-            return t;
-        }
-        var n = this.getClassName(value);
-        if (n == t)
-            return t;
-        return t + " " + n;
+    tProto.derivesFromIfDef = function (obj, classConstructor) {
+        return typeof (obj) == "undefined" || this.derivesFrom(obj, classConstructor);
     };
     /**
-     * Indents the lines of a text and trims trailing whitespace.
-     * @param text Text to be indented.
-     * @param indent String to use for indenting. Defaults to a single tab character.
-     * @param skipLineCount Number of initial lines to preclude from indentation.
-     * @returns {string} A string containing lines indented with trailing white space removed.
+     * If not null, Searches the value's inherited prototype chain for a matching constructor function.
+     * @param value Value to test.
+     * @param {AnyFunction} classConstructor Constructor function to look for.
+     * @returns {boolean} True if the value is null or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.indentText = function (text, indent, skipLineCount) {
-        var arr, joinedText;
-        if (this.isNil(text) || !this.isObjectType(text) || !Array.isArray(text))
-            text = this.asString(text, "");
-        if (typeof (text) != "string") {
-            arr = text;
-            if (arr.length == 0)
-                return "";
-            if (arr.length == 1)
-                joinedText = this.asString(arr[0], "");
-            else
-                joinedText = arr.join(this.newLineString);
-        }
-        else
-            joinedText = this.asString(text, "");
-        if (joinedText.length == 0)
-            return joinedText;
-        indent = this.asString(indent, "\t");
-        skipLineCount = this.asInteger(skipLineCount, 0);
-        arr = joinedText.split(this.lineSplitRegex).map(function (s) { return this.trimEnd(s); });
-        if (arr.length == 1) {
-            if (skipLineCount < 1 && arr[0].length > 1)
-                return indent + arr[0];
-            return arr[0];
-        }
-        return arr.map(function (s, i) {
-            if (i < skipLineCount || s.length == 0)
-                return s;
-            return indent + s;
-        }).join(this.newLineString);
-    };
-    tProto._serializeToString = function (obj) {
-        if (!this.defined(obj))
-            return "undefined";
-        if (obj === null)
-            return "null";
-        var type = typeof (obj);
-        if (type == "number")
-            return (isNaN(obj)) ? "NaN" : JSON.stringify(obj);
-        if (type == "boolean" || type == "string")
-            return JSON.stringify(obj);
-        var className = this.getClassName(obj);
-        if (typeof (obj.toJSON) != "function") {
-            if (type == "object") {
-                if (this.derivesFrom(obj, Error)) {
-                    var e = obj;
-                    var jObj = {};
-                    if (!this.isNil(e.message)) {
-                        jObj.message = this.asString(e.message, "");
-                        if (!this.isNil(e.description)) {
-                            if (jObj.message.trim().length > 0)
-                                jObj.description = this.asString(e.description, "");
-                            else {
-                                var s = this.asString(e.description, "");
-                                if (s.trim().length > 0 || s.length > jObj.message.length)
-                                    jObj.message = s;
-                            }
-                        }
-                    }
-                    else if (!this.isNil(e.description))
-                        jObj.message = this.asString(e.description, "");
-                    if (!this.isNil(e.name))
-                        jObj.name = this.asString(e.name);
-                    if (!this.isNil(e.number))
-                        jObj.number = this.asNumber(e.number);
-                    if (!this.isNil(e.fileName))
-                        jObj.fileName = this.asString(e.fileName);
-                    if (!this.isNil(e.lineNumber))
-                        jObj.lineNumber = this.asNumber(e.lineNumber);
-                    if (!this.isNil(e.columnNumber))
-                        jObj.columnNumber = this.asNumber(e.columnNumber);
-                    if (!this.isNil(e.stack))
-                        jObj.stack = this.asString(e.stack);
-                    return JSON.stringify({
-                        className: className,
-                        type: type,
-                        properties: jObj
-                    }, undefined, "\t");
-                }
-                if (Array.isArray(obj)) {
-                    var arr = obj;
-                    if (arr.length == 0)
-                        return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                            this.newLineString + "\t\"elements\": [] }";
-                    if (arr.length == 1)
-                        return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                            this.newLineString + "\t\"elements\": " + this.indentText(JSON.stringify(arr), "\t\t", 1) + " }";
-                    return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                        this.newLineString + "\t\"elements\": [" + this.newLineString + this.indentText(JSON.stringify(arr), "\t\t\t", 1) + this.newLineString + "\t] }";
-                }
-                return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                    this.newLineString + "\t\"properties\": " + this.indentText(JSON.stringify(obj), "\t\t", 1) + " }";
-            }
-            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                this.newLineString + "\t\"value\": " + JSON.stringify(obj.toString()) + " }";
-        }
-        if (this.isFunction(obj.toJSON) || type == "object")
-            return JSON.stringify({
-                className: className,
-                type: type,
-                data: obj.toJSON()
-            }, undefined, "\t");
-        return JSON.stringify({
-            className: className,
-            type: type,
-            data: obj.toString()
-        }, undefined, "\t");
+    tProto.derivesFromOrNull = function (obj, classConstructor) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenUndefined: false,
+            whenNull: true,
+            otherwise: function (o) { return _this.derivesFrom(obj, classConstructor); }
+        });
     };
     /**
-     * Serializes an object and its properties in a JSON-like representation.
-     * @param obj Object to serialize.
-     * @returns {string} Object converted to a JSON-like representation.
+     * If defined and not null, Searches the value's inherited prototype chain for a matching constructor function.
+     * @param value Value to test.
+     * @param {AnyFunction} classConstructor Constructor function to look for.
+     * @returns {boolean} True if the value is null, not defined or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.serializeToString = function (obj) {
-        if (!this.defined(obj))
-            return "undefined";
-        if (obj === null)
-            return "null";
-        var type = typeof (obj);
-        if (type == "number")
-            return (isNaN(obj)) ? "NaN" : JSON.stringify(obj);
-        if (type == "boolean" || type == "string")
-            return JSON.stringify(obj);
-        var className = this.getClassName(obj);
-        var n, v;
-        if (typeof (obj.toJSON) != "function") {
-            if (type == "object") {
-                var elements = [];
-                var propertyLines = [];
-                var byName = {};
-                if (Array.isArray(obj)) {
-                    elements = obj.map(function (e) { return this.serializeToString(e); });
-                    for (n in obj) {
-                        var i = this.asNumber(n, null);
-                        v = obj[n];
-                        if ((!this.isNil(i) && n !== "length") || i < 0 || i > obj.length) {
-                            byName[n] = this.serializeToString(obj[n]);
-                            propertyLines.push(JSON.stringify(n) + ": " + this.serializeToString(obj[n]));
-                        }
-                    }
-                }
-                else {
-                    for (n in obj) {
-                        if (n !== "length") {
-                            byName[n] = this.serializeToString(obj[n]);
-                            propertyLines.push(JSON.stringify(n) + ": " + this.serializeToString(obj[n]));
-                        }
-                    }
-                }
-                if (this.derivesFrom(obj, Error)) {
-                    if (!this.isNil(obj.columnNumber) && this.isNil(byName.columnNumber))
-                        propertyLines.unshift("\"columnNumber\": " + this.serializeToString(obj.columnNumber));
-                    if (!this.isNil(obj.lineNumber) && this.isNil(byName.lineNumber))
-                        propertyLines.unshift("\"lineNumber\": " + this.serializeToString(obj.lineNumber));
-                    if (!this.isNil(obj.fileName) && this.isNil(byName.fileName))
-                        propertyLines.unshift("\"fileName\": " + this.serializeToString(obj.fileName));
-                    if (!this.isNil(obj.number) && this.isNil(byName.number))
-                        propertyLines.unshift("\"number\": " + this.serializeToString(obj.number));
-                    if (!this.isNil(obj.name) && this.isNil(byName.name))
-                        propertyLines.unshift("\"name\": " + this.serializeToString(obj.name));
-                    if (!this.isNil(obj.description) && this.isNil(byName.description)) {
-                        if (this.isNil(obj.message) || (this.isString(obj.message) && this.isString(obj.description) && obj.description.length > obj.message.length &&
-                            obj.message.trim().length == 0)) {
-                            byName.message = obj.description;
-                            propertyLines.unshift("\"message\": " + this.serializeToString(obj.description));
-                        }
-                        else
-                            propertyLines.unshift("\"description\": " + this.serializeToString(obj.description));
-                    }
-                    if (!this.isNil(obj.message) && this.isNil(byName.message))
-                        propertyLines.unshift("\"message\": " + this.serializeToString(obj.message));
-                }
-                if (propertyLines.length == 0) {
-                    if (Array.isArray(obj)) {
-                        if (elements.length == 0) {
-                            if (className == "Array")
-                                return "[]";
-                            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) +
-                                "," + this.newLineString + "\t\"elements\": []" + this.newLineString + ", \t\"properties\": {}" + this.newLineString + "}";
-                        }
-                        if (elements.length == 1) {
-                            if (className == "Array")
-                                return "[ " + this.trimEnd(elements[0]) + " ]";
-                            return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) +
-                                "," + this.newLineString + "\t\"elements\": [ " + this.indentText(elements[0], "\t", 1) + " ]" + this.newLineString + ", \t\"properties\": {}" +
-                                this.newLineString + "}";
-                        }
-                        if (className == "Array")
-                            return "[" + this.newLineString + elements.map(function (e) { return this.indentText(e); }).join(this.newLineString) + this.newLineString + "]";
-                        return "{" + this.newLineString + "\t\"className\": " + JSON.stringify(className) + "," + this.newLineString + "\t\"type\": " + JSON.stringify(type) + "," +
-                            this.newLineString + "\t\"elements\": [" + this.newLineString + elements.map(function (e) { return this.indentText(e, "\t\t"); }).join(this.newLineString) +
-                            this.newLineString + "]" + this.newLineString + ", \t\"properties\": {}" + this.newLineString + "}";
-                    }
-                    if (className == "Object")
-                        return "{ \"type\": " + JSON.stringify(type) + ", \"properties\": {} }";
-                    return "{ \"className\": " + JSON.stringify(className) + ", \"type\": " + JSON.stringify(type) + ", \"properties\": {} }";
-                }
+    tProto.derivesFromOrNil = function (obj, classConstructor) {
+        var _this = this;
+        return this.mapByTypeValue(obj, {
+            whenUndefined: true,
+            whenNull: true,
+            otherwise: function (o) { return _this.derivesFrom(obj, classConstructor); }
+        });
+    };
+    /**
+     * Determines if an object has properties similar to an Error object.
+     * @param {*} obj Value to test
+     * @returns {boolean} True if the object has properties similar to an Error object; otherwise, false.
+     */
+    tProto.isErrorLike = function (obj) {
+        if (!this.isNonArrayObject(obj))
+            return false;
+        if (this.derivesFrom(obj, Error))
+            return true;
+        if (this.isString(obj.message))
+            return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.description) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                this.isNumberIfDef(obj.lineNumber);
+        if (this.isString(obj.description))
+            return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                this.isNumberIfDef(obj.lineNumber);
+        if (!(this.notDefined(obj.message) && this.notDefined(obj.description)))
+            return false;
+        return this.isString(obj.stack) && this.isStringIfDef(obj.name);
+    };
+    /**
+     * Creates an object with properties similar to an Error object.
+     * @param {*} obj Object to convert.
+     * @returns {ErrorLike|null|undefined} Object with properties similar to an error objecst. If the object is null or emtpy, then the object is returned.
+     * @description This can be useful for serializing error objects when logging.
+     */
+    tProto.asErrorLike = function (obj) {
+        if (this.isNil(obj))
+            return obj;
+        if (this.isErrorLike(obj)) {
+            var result = { message: obj.message, name: (typeof (obj.name) == "string") ? obj.name : "ErrorLike" };
+            if (typeof (obj.description) == "string") {
+                if (typeof (obj.message) != "string" || obj.message.trim().length == 0)
+                    result.message = obj.description;
+                else
+                    result.description = obj.description;
             }
-            return JSON.stringify({
-                className: className,
-                type: type,
-                value: obj.toString()
-            }, undefined, "\t");
+            if (typeof (obj.number) == "number")
+                result.number = obj.number;
+            if (typeof (obj.fileName) == "string")
+                result.fileName = obj.fileName;
+            if (typeof (obj.lineNumber) == "number")
+                result.lineNumber = obj.lineNumber;
+            if (typeof (obj.stack) == "string")
+                result.stack = obj.stack;
+            return result;
         }
-        if (typeof (obj.toJSON) == "function")
-            return JSON.stringify({
-                className: className,
-                type: type,
-                data: obj.toJSON()
-            }, undefined, "\t");
-        if (typeof (obj) != "object")
-            return JSON.stringify({
-                className: className,
-                type: type,
-                data: obj.toString()
-            }, undefined, "\t");
-        if (Array.isArray(obj)) {
-            if (obj.length == 0)
-                return "[]";
-            return "[" + this.newLineString + obj.map(function (e) {
-                if (!this.defined(e))
-                    return "undefined";
-                if (e === null)
-                    return "null";
-                if (typeof (e) == "number")
-                    return (isNaN(e)) ? "NaN" : JSON.stringify(e, undefined, "\t");
-                if (typeof (e.toJSON) == "function" || typeof (e) == "boolean" || typeof (e) == "string" ||
-                    typeof (e) == "object")
-                    return JSON.stringify(e, undefined, "\t");
-                return e.toString();
-            }).map(function (s) {
-                s.split(this.lineSplitRegex).map(function (l) { return "\t" + l; }).join(this.newLineString);
-            }).join(",") + this.newLineString + this.newLineString + "]";
-        }
-        var lines = [];
-        for (n in obj) {
-            v = obj[n];
-            if (!this.defined(v))
-                lines.push(JSON.stringify(n) + ": undefined");
-            else if (v === null)
-                lines.push(n + ((typeof (v) == "number") ? ": NaN" : ": null"));
-            else if (typeof (v) == "number")
-                lines.push(JSON.stringify(n) + ": " + ((isNaN(v)) ? "NaN" : JSON.stringify(v, undefined, "\t")));
-            else if (typeof (v.toJSON) == "function" || typeof (v) == "boolean" || typeof (v) == "string" ||
-                typeof (v) == "object")
-                lines.push(JSON.stringify(n) + ": " + JSON.stringify(v, undefined, "\t"));
-            else
-                lines.push(JSON.stringify(n) + ": " + v.toString());
-        }
-        if (lines.length == 0)
-            return "{}";
-        return "{" + this.newLineString + lines.map(function (s) {
-            s.split(this.lineSplitRegex).map(function (l) { return "\t" + l; }).join(this.newLineString);
-        }).join("," + this.newLineString) + this.newLineString + "}";
+        if (this.isNumber(obj))
+            return { message: obj.toString(), number: obj, name: "ErrorLike" };
+        var s = this.toString(obj);
+        if (this.isString(s))
+            return { message: s, name: "ErrorLike" };
+        return s;
+    };
+    /**
+     * Recursively maps an object or array.
+     * @param {*} obj Object to recursively map
+     * @param {{ (current: any|null|undefined, key?: number|string): any|null|undefined; }} callbackfn Call-back function for each iteration.
+     * @param options Recursive Iteration options.
+     * @returns {*} Mapped object or array.
+     */
+    tProto.mapInto = function (obj, callbackfn, options) {
+        var i = new limitingIterator(callbackfn, options);
+        return i.iterateInto(i.maxDepth, obj, undefined, undefined, undefined);
     };
     tProto.name = "types";
     types.prototype = tProto;

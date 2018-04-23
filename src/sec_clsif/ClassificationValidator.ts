@@ -123,7 +123,7 @@ namespace x_44813_sec_clsif {
                 this._message = this._config.emptyValueMsg;
                 return false;
 			}
-            this._normalizedValue = this._types.asNormalizedString(this._normalizedValue);
+            this._normalizedValue = this._types.asNormalizedWs(this._normalizedValue);
             this._isValid = this._config.validationExpression.test(this._normalizedValue);
             if (this._isValid) {
                 if (this._normalizedValue.length <= this._config.maxLen) {
