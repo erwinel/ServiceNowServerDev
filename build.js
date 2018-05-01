@@ -1,5 +1,4 @@
 var pkg = require('package.json');
-var UglifyJS = require('uglify-js');
 var FS = require('fs');
 var Path = require('path');
 var TypeScript = require('typescript');
