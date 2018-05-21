@@ -61,7 +61,7 @@ namespace x_44813_sec_clsif {
      * Base class for property validation.
      */
     export abstract class ValidationProperty {
-        protected _types = new x_44813_util.types();
+        protected _types = new x_44813_util.JsTypeCommander();
         private _config: ValidationConfig;
         private _isValid: boolean = false;
         private _sourceValue: string = "";
@@ -186,7 +186,7 @@ namespace x_44813_sec_clsif {
 	 * @class
      */
     export class ClassificationValidator {
-        private _types = new x_44813_util.types();
+        private _types = new x_44813_util.JsTypeCommander();
         private _name: NameValidationProperty = new NameValidationProperty(this);
         private _portionMarking: PortionMarkingValidationProperty = new NameValidationProperty(this);
         private _errorMessages: string[] = [ NameValidationProperty.emptyValueMsg, PortionMarkingValidationProperty.emptyValueMsg ];

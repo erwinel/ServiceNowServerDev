@@ -1242,6 +1242,13 @@ declare class GlidePluginManager  {
 declare interface ScriptedProgressWorkerCallback {
     process(...args: any[]): void;
 }
+declare interface IServerClass {
+    intialize(...args: (any|null|undefined)[]): void;
+    type: string;
+}
+declare interface IBackgroundProgressWorkerHandler extends IServerClass {
+    process(...args: (any|null|undefined)[]): void;
+}
 // TestSMTPConnectionWorker, TestPOP3ConnectionWorker, TestIMAPConnectionWorker, UpdateSetPreviewer, TransferAuditToRotations2
 /*
   var worker = new GlideScriptedProgressWorker();

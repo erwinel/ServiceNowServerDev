@@ -6,7 +6,7 @@ var ClassificationUtil = Class.create();
 (function (ClassificationUtil) {
     var cProto = {
         initialize: function() {
-            this._types = new x_44813_util.types();
+            this._types = new x_44813_util.JsTypeCommander();
         }
     };
     

@@ -39,7 +39,7 @@ namespace x_44813_sec_clsif {
 	 * @class
 	 */
 	export class ClassificationUtil {
-		private _types = new x_44813_util.types();
+		private _types = new x_44813_util.JsTypeCommander();
 		private static __defaultPortionMarking: string|null = null;
 		private static __classificationCache: IClassificationCache = {
 			byName: { },

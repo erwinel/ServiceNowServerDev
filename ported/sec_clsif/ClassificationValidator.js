@@ -16,7 +16,7 @@ var ClassificationValidator = Class.create();
              * @param parent Parent object containing the value being validated.
              */
             initialize: function(config, onRevalidate) {
-                this._types = new x_44813_util.types();
+                this._types = new x_44813_util.JsTypeCommander();
                 this._isValid = false;
                 this._sourceValue = "";
                 this._normalizedValue = "";
@@ -159,7 +159,7 @@ var ClassificationValidator = Class.create();
     (function (ClassificationValidator) {
         var vProto = {
             initialize: function() {
-                this._types = new x_44813_util.types();
+                this._types = new x_44813_util.JsTypeCommander();
                 this._name = new NameValidationProperty(this.onRevalidate);
                 this._portionMarking = new NameValidationProperty(this.onRevalidate);
                 this._errorMessages = [NameValidationProperty.emptyValueMsg, PortionMarkingValidationProperty.emptyValueMsg];

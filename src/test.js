@@ -4,7 +4,7 @@ var FS = require('fs');
 var Path = require('path');
 var TypeScript = require('typescript');
 var jsTokens = require("js-tokens");
-var sourcePath = './src/util/types.ts';
+var sourcePath = './src/util/JsTypeCommander.ts';
 
 var configFile = TypeScript.parseConfigFileTextToJson('./tsconfig.json');
 console.log(JSON.stringify(configFile.config));

@@ -15,7 +15,7 @@
     },
     "files": [
         "src/servicenow_mock.ts",
-        "src/util/types.ts",
+        "src/util/JsTypeCommander.ts",
         "src/util/bulk_plugin_activator.ts",
         "src/sec_clsif/ClassificationValidator.ts",
         "src/sec_clsif/ClassificationUtil.ts",

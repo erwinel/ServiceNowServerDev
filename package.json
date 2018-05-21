@@ -33,9 +33,9 @@
       "tsconfig": "./tsconfig.json",
       "source": [
         {
-          "name": "x_44813_util.types",
-          "output": "./publish/x_44813_util/types.js",
-          "files": ["src/util/types.ts"]
+          "name": "x_44813_util.JsTypeCommander",
+          "output": "./publish/x_44813_util/JsTypeCommander.js",
+          "files": ["src/util/JsTypeCommander.ts"]
         },
         {
           "name": "x_44813_util.bulk_plugin_activator",
