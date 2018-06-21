@@ -1,1 +1,0 @@
-let gr: GlideRecord = new GlideRecord('sys_script_include');

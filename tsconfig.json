@@ -16,11 +16,9 @@
     "files": [
         "src/servicenow_mock.ts",
         "src/util/JsTypeCommander.ts",
-        "src/util/bulk_plugin_activator.ts",
+        "src/global/ArmySystemInit.ts",
         "src/sec_clsif/ClassificationValidator.ts",
         "src/sec_clsif/ClassificationUtil.ts",
-        "src/bg scripts/initial_config.ts",
-        "src/bg scripts/bulk_plugin_activate.ts",
-        "src/bg scripts/validate_expected_plugins.ts"
+        "src/bg scripts/initial_config.ts"
     ]
 }
