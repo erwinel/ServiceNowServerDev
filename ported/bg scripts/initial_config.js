@@ -24,7 +24,7 @@ var pluginIds = [
     'com.snc.whtp'
 ];
 var cfgWorker = new GlideScriptedProgressWorker();
-cfgWorker.setProgressName("Initial UI configuration");
+cfgWorker.setProgressName("Initial configuration");
 cfgWorker.setName("ArmySystemInit");
 cfgWorker.addParameter(sdlc_stage);
 for (var i = 0; i < pluginIds.length; i++)

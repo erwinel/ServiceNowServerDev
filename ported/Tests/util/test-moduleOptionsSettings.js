@@ -7,32 +7,6 @@
             expect(result).to.equal("\n");
         });
     });
-    describe("Testing JsTypeCommander.setDefaultLineSeparatorSequence()", function () {
-        it('JsTypeCommander.setDefaultLineSeparatorSequence("\\r\\n") should return "\\r\\n"', function () {
-            var types = new x_44813_util.JsTypeCommander();
-            var result = types.setDefaultLineSeparatorSequence("\r\n");
-            expect(result).to.a('string');
-            expect(result).to.equal("\r\n");
-        });
-        it('JsTypeCommander.getDefaultLineSeparatorSequence() should return "\\r\\n"', function () {
-            var types = new x_44813_util.JsTypeCommander();
-            var result = types.getDefaultLineSeparatorSequence();
-            expect(result).to.a('string');
-            expect(result).to.equal("\r\n");
-        });
-        it('JsTypeCommander.setDefaultLineSeparatorSequence() should return "\\n"', function () {
-            var types = new x_44813_util.JsTypeCommander();
-            var result = types.setDefaultLineSeparatorSequence();
-            expect(result).to.a('string');
-            expect(result).to.equal("\n");
-        });
-        it('JsTypeCommander.getDefaultLineSeparatorSequence() should return "\\n"', function () {
-            var types = new x_44813_util.JsTypeCommander();
-            var result = types.getDefaultLineSeparatorSequence();
-            expect(result).to.a('string');
-            expect(result).to.equal("\n");
-        });
-    });
     describe("Testing JsTypeCommander.getPatternOptions()", function () {
         it('JsTypeCommander.getPatternOptions() should not return nil', function () {
             var types = new x_44813_util.JsTypeCommander();

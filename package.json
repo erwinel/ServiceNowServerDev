@@ -4,7 +4,8 @@
   "description": "TypeScript sources for ServiceNow Server development",
   "main": "compiled/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "npm run jasmine --recursive ./test/**/.test-*js --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "eslint": "^4.19.1",
+    "gulp-jasmine": "^4.0.0",
     "jshint": "^2.9.5",
     "tslint": "^5.9.1",
     "typescript": "^2.8.1",
@@ -35,22 +37,30 @@
         {
           "name": "x_44813_util.JsTypeCommander",
           "output": "./publish/x_44813_util/JsTypeCommander.js",
-          "files": ["src/util/JsTypeCommander.ts"]
+          "files": [
+            "src/util/JsTypeCommander.ts"
+          ]
         },
         {
           "name": "x_44813_util.bulk_plugin_activator",
           "output": "./publish/x_44813_util/bulk_plugin_activator.js",
-          "files": ["src/util/bulk_plugin_activator.ts"]
+          "files": [
+            "src/util/bulk_plugin_activator.ts"
+          ]
         },
         {
           "name": "x_44813_sec_clsif.ClassificationValidator",
           "output": "./publish/x_44813_sec_clsif/ClassificationValidator.js",
-          "files": ["src/sec_clsif/ClassificationValidator.ts"]
+          "files": [
+            "src/sec_clsif/ClassificationValidator.ts"
+          ]
         },
         {
           "name": "x_44813_sec_clsif.ClassificationUtil",
           "output": "./publish/x_44813_sec_clsif/ClassificationUtil.js",
-          "files": ["src/sec_clsif/ClassificationUtil.ts"]
+          "files": [
+            "src/sec_clsif/ClassificationUtil.ts"
+          ]
         }
       ]
     }

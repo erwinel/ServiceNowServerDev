@@ -4,22 +4,88 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "npm",
-            "script": "test",
-            "problemMatcher": []
+            "label": "Build Distributable",
+            "identifier": "buildUtil",
+            "type": "gulp",
+            "task": "buildUtil",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
         },
         {
-            "identifier": "buildServiceNowDev",
-            "type": "typescript",
-            "tsconfig": "./tsconfig.json",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "label": "Build ServiceNow Dev",
-            "problemMatcher": [
-                "$tsc"
-            ]
+            "label": "Re-Build Distributable",
+            "identifier": "rebuildUtil",
+            "type": "gulp",
+            "task": "rebuildUtil",
+            "group": "build",
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build Test",
+            "identifier": "buildTest",
+            "type": "gulp",
+            "task": "buildTest",
+            "group": "build",
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Re-Build Test",
+            "identifier": "rebuildTest",
+            "type": "gulp",
+            "task": "rebuildTest",
+            "group": "build",
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build All",
+            "identifier": "buildAll",
+            "type": "gulp",
+            "task": "buildAll",
+            "group": "build",
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Re-Build All",
+            "identifier": "rebuildAll",
+            "type": "gulp",
+            "task": "rebuildAll",
+            "group": "build",
+            "problemMatcher": [ "$tsc" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
         }
     ]
 }

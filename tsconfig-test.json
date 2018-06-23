@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target":"es5",
+        "module":"commonjs",
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": "./test",
+        "strict": true,
+        "lib": [
+            "es5"
+        ]
+    },
+    "include": [
+        "./src/**/test-*.ts",
+        "./src/**/testLib.ts"
+    ]
+}
