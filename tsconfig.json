@@ -1,26 +1,17 @@
 {
     "compilerOptions": {
-        "target":"es5",
+        "target": "es5",
         "module":"commonjs",
         "noImplicitAny": true,
         "removeComments": false,
         "preserveConstEnums": true,
-        "noEmitHelpers": true,
-        "sourceMap": false,
-        "declaration": false,
+        "sourceMap": true,
+        "declaration": true,
         "outDir": "compiled",
         "lib": [
             "es5"
         ]
     },
-    /*"files": [
-        "src/servicenow_mock.ts",
-        "src/util/JsTypeCommander.ts",
-        "src/global/ArmySystemInit.ts",
-        "src/sec_clsif/ClassificationValidator.ts",
-        "src/sec_clsif/ClassificationUtil.ts",
-        "src/bg scripts/initial_config.ts"
-    ]*/
     "include": [
         "./src/**/*.ts"
     ],

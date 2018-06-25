@@ -4,8 +4,8 @@
   "description": "TypeScript sources for ServiceNow Server development",
   "main": "compiled/main.js",
   "scripts": {
-    "build": "tsc",
-    "test": "npm run jasmine --recursive ./test/**/.test-*js --reporter spec"
+    "build": "gulp buildAll",
+    "test": "npm run jasmine --filter=./test/**/.test-*js"
   },
   "repository": {
     "type": "git",
@@ -18,17 +18,27 @@
   },
   "homepage": "https://github.com/erwinel/ServiceNowServerDev#readme",
   "dependencies": {
+    "@types/node": "^10.3.5",
     "fs": "0.0.1-security",
     "js-tokens": "^4.0.0",
+    "jshint": "^2.9.5",
     "path": "^0.12.7"
   },
   "devDependencies": {
+    "@types/core-js": "^2.5.0",
+    "@types/gulp-jasmine": "^2.4.0",
+    "@types/jasmine": "^2.8.8",
     "eslint": "^4.19.1",
+    "gulp": "^3.9.1",
+    "gulp-changed": "^3.2.0",
     "gulp-jasmine": "^4.0.0",
-    "jshint": "^2.9.5",
-    "tslint": "^5.9.1",
-    "typescript": "^2.8.1",
-    "uglify": "^0.1.5"
+    "gulp-typescript": "^5.0.0-alpha.2",
+    "gulp-util": "^3.0.8",
+    "jasmine": "^3.1.0",
+    "karma": "^2.0.4",
+    "karma-jasmine": "^1.1.2",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
   },
   "serviceNowPublish": {
     "server": {
