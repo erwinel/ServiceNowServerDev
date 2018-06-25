@@ -10,9 +10,7 @@
         "declaration": true,
         "outDir": "./test",
         "strict": true,
-        "lib": [
-            "es5"
-        ]
+        "lib": [ "es5", "dom" ]
     },
     "include": [
         "./src/**/test-*.ts",

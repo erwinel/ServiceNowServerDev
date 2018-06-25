@@ -8,15 +8,15 @@
         "sourceMap": true,
         "declaration": true,
         "outDir": "compiled",
-        "lib": [
-            "es5"
-        ]
+        "lib": [ "es2015", "dom" ]
     },
     "include": [
         "./src/**/*.ts"
     ],
     "exclude": [
         "./src/**/test-*.ts",
-        "./src/**/testLib.ts"
+        "./src/**/testLib.ts",
+        "./src/sn_mock_old.ts",
+        "./src/sec_clsif/test.ts"
     ]
 }
