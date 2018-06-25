@@ -12,41 +12,36 @@ var JsTypeCommander = Class.create();
             abnormalWhitespace: /(?:(?=[^ ])[\s\r\n]+|[\s\r\n]{2,})/
         }
     };
-    var patternOptions = {
-        newLineSequence: patternDefaults.newLineSequence,
-        regex: {
-            onlyWhitespace: patternDefaults.regex.onlyWhitespace,
-            trimStart: patternDefaults.regex.trimStart,
-            trimEnd: patternDefaults.regex.trimEnd,
-            lineSeparator: patternDefaults.regex.lineSeparator,
-            booleanText: patternDefaults.regex.booleanText,
-            firstLetterLc: patternDefaults.regex.firstLetterLc,
-            abnormalWhitespace: patternDefaults.regex.abnormalWhitespace
-        }
-    };
+
     var limitingIterator = /** @class */ (function () {
-        function limitingIterator(callbackfn, options) {
+        function limitingIterator(util, callbackfn, options) {
             this.totalMaxItems = 8192;
             this.currentTotalItems = 0;
             this.maxItemsInObject = 1024;
             this.maxDepth = 32;
-            this._typeCommander = new JsTypeCommander();
+            this._util = util;
             this.callbackfn = callbackfn;
             if (typeof (options) == "object") {
-                this.totalMaxItems = this._typeCommander.toNumber(options.totalMaxItems, this.totalMaxItems);
-                this.maxItemsInObject = this._typeCommander.toNumber(options.maxItemsInObject, this.maxItemsInObject);
-                this.maxDepth = this._typeCommander.toNumber(options.maxDepth, this.maxDepth);
+                this.totalMaxItems = this._util.toNumber(options.totalMaxItems, this.totalMaxItems);
+                this.maxItemsInObject = this._util.toNumber(options.maxItemsInObject, this.maxItemsInObject);
+                this.maxDepth = this._util.toNumber(options.maxDepth, this.maxDepth);
                 this.thisObj = options.thisObj;
             }
         }
         limitingIterator.prototype.iterateInto = function (maxDepth, current, key, source, target) {
-            this.currentTotalItems++;
-            target = (this._typeCommander.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key);
-            if (maxDepth < 1 || this.currentTotalItems >= this.totalMaxItems || !this._typeCommander.isObject(target) || !this._typeCommander.isObject(source))
+            if (maxDepth < 1 || this.totalMaxItems < 1)
+                return current;
+            target = (this._util.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key, source, target);
+            if (!this._util.isNil(source)) {
+                this.currentTotalItems++;
+                if (!this._util.isObject(source))
+                    return target;
+            }
+            if (this.currentTotalItems >= this.totalMaxItems || !this._util.isObject(target))
                 return target;
             source = current;
-            if (this._typeCommander.isArray(target)) {
-                if (!this._typeCommander.isArray(current))
+            if (this._util.isArray(target)) {
+                if (!this._util.isArray(current))
                     return target;
                 for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
                     var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
@@ -74,59 +69,75 @@ var JsTypeCommander = Class.create();
         return limitingIterator;
     }());
 
-    var tProto = { initialize: function() { } };
+    var prototypeObj = {
+        initialize: function() {
+            this.patternOptions = {
+                newLineSequence: patternDefaults.newLineSequence,
+                regex: {
+                    onlyWhitespace: patternDefaults.regex.onlyWhitespace,
+                    trimStart: patternDefaults.regex.trimStart,
+                    trimEnd: patternDefaults.regex.trimEnd,
+                    lineSeparator: patternDefaults.regex.lineSeparator,
+                    booleanText: patternDefaults.regex.booleanText,
+                    firstLetterLc: patternDefaults.regex.firstLetterLc,
+                    abnormalWhitespace: patternDefaults.regex.abnormalWhitespace
+                }
+            };
+        }
+    };
 
     /**
      * Gets the default character sequence that will be used when joining lines of text.
      * @returns {string} The default character sequence that will be used when joining lines of text.
      */
-    tProto.getDefaultLineSeparatorSequence = function () { return patternOptions.newLineSequence; };
+    prototypeObj.getDefaultLineSeparatorSequence = function () { return this.patternOptions.newLineSequence; };
     /**
      * Gets regular expression patterns used internally by this module.
      * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns used internally by this module.
      */
-    tProto.getPatternOptions = function () {
+    prototypeObj.getPatternOptions = function () {
         return {
-            onlyWhitespace: patternOptions.regex.onlyWhitespace,
-            trimStart: patternOptions.regex.trimStart,
-            trimEnd: patternOptions.regex.trimEnd,
-            lineSeparator: patternOptions.regex.lineSeparator,
-            booleanText: patternOptions.regex.booleanText,
-            firstLetterLc: patternOptions.regex.firstLetterLc,
-            abnormalWhitespace: patternOptions.regex.abnormalWhitespace
+            onlyWhitespace: this.patternOptions.regex.onlyWhitespace,
+            trimStart: this.patternOptions.regex.trimStart,
+            trimEnd: this.patternOptions.regex.trimEnd,
+            lineSeparator: this.patternOptions.regex.lineSeparator,
+            booleanText: this.patternOptions.regex.booleanText,
+            firstLetterLc: this.patternOptions.regex.firstLetterLc,
+            abnormalWhitespace: this.patternOptions.regex.abnormalWhitespace
         };
     };
     /**
      * Sets regular expression pattern options used internally by this module.
-     * @param {IJsTypeCommanderRegex} settings Object whose properties contain regular expression patterns used internally by this module.
+     * @param {IJsTypeCommanderRegexOpt} settings Object whose properties contain regular expression patterns used internally by this module.
      * Undefined properties will not be changed. If this parameter is not defined, then the default pattern options will be restored.
      * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns now being used internally by this module.
      */
-    tProto.setPatternOptions = function (settings) {
+    prototypeObj.setPatternOptions = function (settings) {
         if (typeof (settings) == "undefined" || settings === null) {
-            patternOptions.regex.onlyWhitespace = patternDefaults.regex.onlyWhitespace;
-            patternOptions.regex.trimStart = patternDefaults.regex.trimStart;
-            patternOptions.regex.trimEnd = patternDefaults.regex.trimEnd;
-            patternOptions.regex.lineSeparator = patternDefaults.regex.lineSeparator;
-            patternOptions.regex.booleanText = patternDefaults.regex.booleanText;
-            patternOptions.regex.firstLetterLc = patternDefaults.regex.firstLetterLc;
-            patternOptions.regex.abnormalWhitespace = patternDefaults.regex.abnormalWhitespace;
+            this.patternOptions.regex.onlyWhitespace = patternDefaults.regex.onlyWhitespace;
+            this.patternOptions.regex.trimStart = patternDefaults.regex.trimStart;
+            this.patternOptions.regex.trimEnd = patternDefaults.regex.trimEnd;
+            this.patternOptions.regex.lineSeparator = patternDefaults.regex.lineSeparator;
+            this.patternOptions.regex.booleanText = patternDefaults.regex.booleanText;
+            this.patternOptions.regex.firstLetterLc = patternDefaults.regex.firstLetterLc;
+            this.patternOptions.regex.abnormalWhitespace = patternDefaults.regex.abnormalWhitespace;
         }
         else if (typeof (settings) == "object") {
+            // TODO: Test individual settings to see if they are regular expressions or strings
             if (!this.isNil(settings.onlyWhitespace))
-                patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
+                this.patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
             if (!this.isNil(settings.trimStart))
-                patternOptions.regex.trimStart = settings.trimStart;
+                this.patternOptions.regex.trimStart = settings.trimStart;
             if (!this.isNil(settings.trimEnd))
-                patternOptions.regex.trimEnd = settings.trimEnd;
+                this.patternOptions.regex.trimEnd = settings.trimEnd;
             if (!this.isNil(settings.lineSeparator))
-                patternOptions.regex.lineSeparator = settings.lineSeparator;
+                this.patternOptions.regex.lineSeparator = settings.lineSeparator;
             if (!this.isNil(settings.booleanText))
-                patternOptions.regex.booleanText = settings.booleanText;
+                this.patternOptions.regex.booleanText = settings.booleanText;
             if (!this.isNil(settings.firstLetterLc))
-                patternOptions.regex.firstLetterLc = settings.firstLetterLc;
+                this.patternOptions.regex.firstLetterLc = settings.firstLetterLc;
             if (!this.isNil(settings.abnormalWhitespace))
-                patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
+                this.patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
         }
         return this.getPatternOptions();
     };
@@ -135,16 +146,16 @@ var JsTypeCommander = Class.create();
      * @param s The default character sequence to use when joining lines of text. If this parameter is not defined, then the default character sequence will be restored.
      * @returns {string} The default character sequence that will now be used when joining lines of text.
      */
-    tProto.setDefaultLineSeparatorSequence = function (s) {
+    prototypeObj.setDefaultLineSeparatorSequence = function (s) {
         if (this.isNil(s))
-            patternOptions.newLineSequence = patternDefaults.newLineSequence;
+            this.patternOptions.newLineSequence = patternDefaults.newLineSequence;
         else {
             var t = this.toString(s, "");
             if (t.length == 0)
                 throw new Error("Line separator sequence cannot be empty.");
-            patternOptions.newLineSequence = t;
+            this.patternOptions.newLineSequence = t;
         }
-        return patternOptions.newLineSequence;
+        return this.patternOptions.newLineSequence;
     };
     /**
      * Maps a source value to a new value based upon the source value's type.
@@ -153,7 +164,7 @@ var JsTypeCommander = Class.create();
      * @param checkElements When checking whether an object is <code>ArrayLike</code> and this is set true, then the existance of each element index is checked, which makes it slower, but more accurate.
      * @returns {*} Value returned from the matching callback.
      */
-    tProto.mapByTypeValue = function (target, callbacks, checkElements) {
+    prototypeObj.mapByTypeValue = function (target, callbacks, checkElements) {
         var selectedCallback;
         switch (typeof (target)) {
             case "boolean":
@@ -209,7 +220,7 @@ var JsTypeCommander = Class.create();
      * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
      * @returns {*} Mapped value according to whether the object is defined and optionally by target object type.
      */
-    tProto.mapByDefined = function (target, whenTrue, otherwise, thisObj) {
+    prototypeObj.mapByDefined = function (target, whenTrue, otherwise, thisObj) {
         if (typeof (target) != "undefined") {
             if (typeof (whenTrue) == "function")
                 return whenTrue.call(thisObj, target);
@@ -227,7 +238,7 @@ var JsTypeCommander = Class.create();
      * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
      * @returns {*} Mapped value according to whether the object is not defined or not null and optionally by defined target object type.
      */
-    tProto.mapByNotNull = function (target, whenTrue, otherwise, thisObj) {
+    prototypeObj.mapByNotNull = function (target, whenTrue, otherwise, thisObj) {
         if (typeof (target) == "object" && target == null) {
             if (typeof (otherwise) == "function")
                 return otherwise.call(thisObj);
@@ -245,7 +256,7 @@ var JsTypeCommander = Class.create();
      * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
      * @returns {*} Mapped value according to whether the object is defined and not null and optionally by defined target object type.
      */
-    tProto.mapByNotNil = function (target, whenTrue, otherwise, thisObj) {
+    prototypeObj.mapByNotNil = function (target, whenTrue, otherwise, thisObj) {
         if (typeof (target) == "undefined" || (typeof (target) == "object" && target === null)) {
             if (typeof (otherwise) == "function")
                 return otherwise.call(thisObj, target);
@@ -260,37 +271,37 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is undefined; otherwise, false.
      */
-    tProto.notDefined = function (obj) { return typeof (obj) == "undefined"; };
+    prototypeObj.notDefined = function (obj) { return typeof (obj) == "undefined"; };
     /**
      * Determines wether an object is undefined or null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is undefined or null; otherwise, false.
      */
-    tProto.isNil = function (obj) { return typeof (obj) == "undefined" || obj === null; };
+    prototypeObj.isNil = function (obj) { return typeof (obj) == "undefined" || obj === null; };
     /**
      * Determines whether an object is null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is null; otherwise false (not defined or not null).
      */
-    tProto.isNull = function (obj) { return typeof (obj) == "object" && obj === null; };
+    prototypeObj.isNull = function (obj) { return typeof (obj) == "object" && obj === null; };
     /**
      * Determines whether a value is a string.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a string; otherwise false.
      */
-    tProto.isString = function (obj) { return typeof (obj) == "string"; };
+    prototypeObj.isString = function (obj) { return typeof (obj) == "string"; };
     /**
      * Determines whether a value is a string or undefined.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a string or undefined; otherwise false.
      */
-    tProto.isStringIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "string"; };
+    prototypeObj.isStringIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "string"; };
     /**
      * Determines whether a value is a string or null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a string or null; otherwise false.
      */
-    tProto.isStringOrNull = function (obj) {
+    prototypeObj.isStringOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenString: true,
@@ -302,7 +313,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a string, null or undefined; otherwise false.
      */
-    tProto.isStringOrNil = function (obj) {
+    prototypeObj.isStringOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenUndefined: true,
@@ -315,7 +326,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string; otherwise false.
      */
-    tProto.isEmptyString = function (obj) {
+    prototypeObj.isEmptyString = function (obj) {
         return this.mapByTypeValue(obj, {
             whenString: function (s) { return s.length == 0; },
             otherwise: false
@@ -326,7 +337,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string undefined; otherwise false.
      */
-    tProto.isEmptyStringIfDef = function (obj) {
+    prototypeObj.isEmptyStringIfDef = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenString: function (s) { return s.length == 0; },
@@ -338,7 +349,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string or null; otherwise false.
      */
-    tProto.isEmptyStringOrNull = function (obj) {
+    prototypeObj.isEmptyStringOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenString: function (s) { return s.length == 0; },
@@ -350,7 +361,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string, null or undefined; otherwise false.
      */
-    tProto.isEmptyStringOrNil = function (obj) {
+    prototypeObj.isEmptyStringOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -363,9 +374,10 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string or contains only whitespace characters; otherwise false.
      */
-    tProto.isEmptyOrWhitespace = function (obj) {
+    prototypeObj.isEmptyOrWhitespace = function (obj) {
+        var _this = this;
         return this.mapByTypeValue(obj, {
-            whenString: function (s) { return s.length == 0 || patternOptions.regex.onlyWhitespace.test(s); },
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
             otherwise: false
         });
     };
@@ -374,10 +386,11 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is undefined; otherwise false.
      */
-    tProto.isEmptyOrWhitespaceIfDef = function (obj) {
+    prototypeObj.isEmptyOrWhitespaceIfDef = function (obj) {
+        var _this = this;
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
-            whenString: function (s) { return s.length == 0 || patternOptions.regex.onlyWhitespace.test(s); },
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
             otherwise: false
         });
     };
@@ -386,10 +399,11 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null; otherwise false.
      */
-    tProto.isNullOrWhitespace = function (obj) {
+    prototypeObj.isNullOrWhitespace = function (obj) {
+        var _this = this;
         return this.mapByTypeValue(obj, {
             whenNull: true,
-            whenString: function (s) { return s.length == 0 || patternOptions.regex.onlyWhitespace.test(s); },
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
             otherwise: false
         });
     };
@@ -398,11 +412,12 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null or undefined; otherwise false.
      */
-    tProto.isNilOrWhitespace = function (obj) {
+    prototypeObj.isNilOrWhitespace = function (obj) {
+        var _this = this;
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
-            whenString: function (s) { return s.length == 0 || patternOptions.regex.onlyWhitespace.test(s); },
+            whenString: function (s) { return s.length == 0 || _this.patternOptions.regex.onlyWhitespace.test(s); },
             otherwise: false
         });
     };
@@ -413,7 +428,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
      * @returns {string|null|undefined} Value converted to a string or the default value.
      */
-    tProto.asString = function (obj, defaultValue, ifWhitespace) {
+    prototypeObj.asString = function (obj, defaultValue, ifWhitespace) {
         var _this = this;
         var str = this.mapByTypeValue(obj, {
             whenUndefined: function (s) { return s; },
@@ -459,7 +474,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
      * @returns {string} Value converted to a string or the default value. If the default value is nil, then an empty string will be returned.
      */
-    tProto.toString = function (obj, defaultValue, ifWhitespace) {
+    prototypeObj.toString = function (obj, defaultValue, ifWhitespace) {
         var s = this.asString(obj, defaultValue, ifWhitespace);
         if (this.isString(s))
             return s;
@@ -470,9 +485,9 @@ var JsTypeCommander = Class.create();
      * @param text Text to trim.
      * @returns {string} Text with leading whitespace removed.
      */
-    tProto.trimStart = function (text) {
+    prototypeObj.trimStart = function (text) {
         var s = this.toString(text, "");
-        var m = patternOptions.regex.trimStart.exec(s);
+        var m = this.patternOptions.regex.trimStart.exec(s);
         return (this.isNil(m)) ? "" : m[1];
     };
     /**
@@ -480,9 +495,9 @@ var JsTypeCommander = Class.create();
      * @param text Text to trim.
      * @returns {string} Text with trailing whitespace removed.
      */
-    tProto.trimEnd = function (text) {
+    prototypeObj.trimEnd = function (text) {
         var s = this.toString(text, "");
-        var m = patternOptions.regex.trimEnd.exec(s);
+        var m = this.patternOptions.regex.trimEnd.exec(s);
         return (this.isNil(m)) ? "" : m[1];
     };
     /**
@@ -490,22 +505,22 @@ var JsTypeCommander = Class.create();
      * @param text Text to trim.
      * @returns {string} Text with outer whitespace removed and inner whitespace normalized.
      */
-    tProto.asNormalizedWs = function (text) {
+    prototypeObj.asNormalizedWs = function (text) {
         var s = this.toString(text, "").trim();
         if (s.length == 0)
             return s;
-        return s.replace(patternOptions.regex.abnormalWhitespace, " ");
+        return s.replace(this.patternOptions.regex.abnormalWhitespace, " ");
     };
     /**
      * Capitalizes first letter in text.
      * @param {string} text Text to capitalize.
      * @returns {string} Capitalizes the first letter in text, skipping over any leading characters that are not letters or digits.
      */
-    tProto.ucFirst = function (text) {
+    prototypeObj.ucFirst = function (text) {
         var s = this.toString(text, "");
         if (s.length < 2)
             return s.toUpperCase();
-        var m = patternOptions.regex.firstLetterLc.exec(s);
+        var m = this.patternOptions.regex.firstLetterLc.exec(s);
         if (this.isNil(m))
             return s;
         if (this.isString(m[1])) {
@@ -522,11 +537,11 @@ var JsTypeCommander = Class.create();
      * @param {string} text Text to split.
      * @returns {string[]} Array containing individual lines of text.
      */
-    tProto.splitLines = function (text) {
+    prototypeObj.splitLines = function (text) {
         var s = this.toString(text, "");
         if (s.length == 0)
             return [s];
-        return s.split(patternOptions.regex.lineSeparator);
+        return s.split(this.patternOptions.regex.lineSeparator);
     };
     /**
      * Indents lines within text and trims trailing whitespace.
@@ -534,7 +549,7 @@ var JsTypeCommander = Class.create();
      * @param {string} indent Characters to use for indentation.
      * @returns {string} Text with lines indented.
      */
-    tProto.indentText = function (text, indent) {
+    prototypeObj.indentText = function (text, indent) {
         var _this = this;
         var i = this.toString(indent, "\t");
         var arr;
@@ -556,7 +571,7 @@ var JsTypeCommander = Class.create();
             if (s.length == 0)
                 return s;
             return i + s;
-        }).join(patternOptions.newLineSequence);
+        }).join(this.patternOptions.newLineSequence);
     };
     /**
      * Indents lines of text and trim trailing whitespace.
@@ -564,7 +579,7 @@ var JsTypeCommander = Class.create();
      * @param {string} indent Characters to use for indentation.
      * @returns {string} Array containing indented lines.
      */
-    tProto.indentLines = function (text, indent) {
+    prototypeObj.indentLines = function (text, indent) {
         var _this = this;
         var i = this.toString(indent, "\t");
         var arr;
@@ -596,19 +611,19 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is boolean; otherwise false.
      */
-    tProto.isBoolean = function (obj) { return typeof (obj) == "boolean"; };
+    prototypeObj.isBoolean = function (obj) { return typeof (obj) == "boolean"; };
     /**
      * Determines whether a value is boolean or undefined.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is boolean or undefined; otherwise false.
      */
-    tProto.isBooleanIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "boolean"; };
+    prototypeObj.isBooleanIfDef = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "boolean"; };
     /**
      * Determines whether a value is boolean or null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is boolean or null; otherwise false.
      */
-    tProto.isBooleanOrNull = function (obj) {
+    prototypeObj.isBooleanOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenBoolean: true,
@@ -620,7 +635,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is boolean, null or undefined; otherwise false.
      */
-    tProto.isBooleanOrNil = function (obj) {
+    prototypeObj.isBooleanOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -634,7 +649,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
      * @returns {boolean|null|undefined} Value converted to a boolean or the default value.
      */
-    tProto.asBoolean = function (obj, defaultValue) {
+    prototypeObj.asBoolean = function (obj, defaultValue) {
         var _this = this;
         var bs = this.mapByTypeValue(obj, {
             whenUndefined: function (b) { return b; },
@@ -674,7 +689,7 @@ var JsTypeCommander = Class.create();
             whenBoolean: function (b) { return b; },
             whenString: function (s) {
                 if ((s = s.trim()).length > 0) {
-                    var m = patternOptions.regex.booleanText.exec(s);
+                    var m = _this.patternOptions.regex.booleanText.exec(s);
                     if (!_this.isNil(m))
                         return _this.isNil(m[2]);
                 }
@@ -705,7 +720,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
      * @returns {boolean} Value converted to a boolean or the default value. If the default value is nil, then a false value will be returned.
      */
-    tProto.toBoolean = function (obj, defaultValue) {
+    prototypeObj.toBoolean = function (obj, defaultValue) {
         var b = this.asBoolean(obj, defaultValue);
         return this.isBoolean(b) && b;
     };
@@ -714,7 +729,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a finite number; otherwise false.
      */
-    tProto.isNumber = function (obj) {
+    prototypeObj.isNumber = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: false,
             whenUndefined: false,
@@ -729,7 +744,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is finite number or undefined; otherwise false.
      */
-    tProto.isNumberIfDef = function (obj) {
+    prototypeObj.isNumberIfDef = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: false,
             whenUndefined: true,
@@ -744,7 +759,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a finite number or null; otherwise false.
      */
-    tProto.isNumberOrNull = function (obj) {
+    prototypeObj.isNumberOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenNumber: true,
@@ -758,7 +773,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a number or null; otherwise false.
      */
-    tProto.isNumberNaNorNull = function (obj) {
+    prototypeObj.isNumberNaNorNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenNumber: true,
@@ -772,7 +787,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is a finite number, null or undefined; otherwise false.
      */
-    tProto.isNumberOrNil = function (obj) {
+    prototypeObj.isNumberOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -787,7 +802,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an infinite number; otherwise false.
      */
-    tProto.isInfinite = function (obj) {
+    prototypeObj.isInfinite = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: false,
             whenNull: false,
@@ -804,7 +819,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean} [allowNaN] If true, then NaN and infinite values count as numbers.
      * @returns {number|null|undefined} Value converted to a number or the default value.
      */
-    tProto.asNumber = function (obj, defaultValue, allowNaN) {
+    prototypeObj.asNumber = function (obj, defaultValue, allowNaN) {
         var _this = this;
         var ns = this.mapByTypeValue(obj, {
             whenUndefined: function (b) { return b; },
@@ -874,7 +889,7 @@ var JsTypeCommander = Class.create();
      * @param {boolean} [allowNaN] If true, then NaN and infinite values count as numbers.
      * @returns {number} Value converted to a number or the default value. If the default value is nil, then a zero value will be returned.
      */
-    tProto.toNumber = function (obj, defaultValue, allowNaN) {
+    prototypeObj.toNumber = function (obj, defaultValue, allowNaN) {
         var i = this.asNumber(obj, defaultValue, allowNaN);
         if (this.isNumber(i))
             return i;
@@ -887,19 +902,19 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is function; otherwise false.
      */
-    tProto.isFunction = function (obj) { return typeof (obj) === "function"; };
+    prototypeObj.isFunction = function (obj) { return typeof (obj) === "function"; };
     /**
      * Determines whether a value is function or undefined.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is function or undefined; otherwise false.
      */
-    tProto.isFunctionIfDef = function (obj) { return typeof (obj) === "undefined" || typeof (obj) === "function"; };
+    prototypeObj.isFunctionIfDef = function (obj) { return typeof (obj) === "undefined" || typeof (obj) === "function"; };
     /**
      * Determines whether a value is function or null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is function or null; otherwise false.
      */
-    tProto.isFunctionOrNull = function (obj) {
+    prototypeObj.isFunctionOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenFunction: true,
@@ -911,7 +926,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is function, null or undefined; otherwise false.
      */
-    tProto.isFunctionOrNil = function (obj) {
+    prototypeObj.isFunctionOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -924,13 +939,13 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if the value's type is "object" and it is not null; otherwise false.
      */
-    tProto.isObjectType = function (obj) { return typeof (obj) == "object" && obj !== null; };
+    prototypeObj.isObjectType = function (obj) { return typeof (obj) == "object" && obj !== null; };
     /**
      * Determines whether a value is undefined or its type is "object" and it is not null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if the value is undefined or its type is "object" and it is not null; otherwise false.
      */
-    tProto.isObjectTypeIfDef = function (obj) {
+    prototypeObj.isObjectTypeIfDef = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: false,
@@ -943,13 +958,13 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if the value is null, or its type is "object"; otherwise false.
      */
-    tProto.isObjectTypeOrNull = function (obj) { return typeof (obj) == "object"; };
+    prototypeObj.isObjectTypeOrNull = function (obj) { return typeof (obj) == "object"; };
     /**
      * Determines whether a value is undefined, null, or its type is "object".
      * @param {*} obj Object to test.
      * @returns {boolean} True if the value is undefined, null, or its type is "object"; otherwise false.
      */
-    tProto.isObjectTypeOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
+    prototypeObj.isObjectTypeOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
     /**
      * Determines whether a value is an object and it is not null.
      * @param {*} obj Object to test.
@@ -957,7 +972,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isNonArrayObject() and isPlainObject().
      * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
      */
-    tProto.isObject = function (obj) { return typeof (obj) == "object" && obj !== null; };
+    prototypeObj.isObject = function (obj) { return typeof (obj) == "object" && obj !== null; };
     /**
      * Determines whether a value undefined or it is an object and it is not null.
      * @param {*} obj Object to test.
@@ -965,7 +980,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isNonArrayObjectIfDef() and isPlainObjectIfDef().
      * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
      */
-    tProto.isObjectIfDef = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && obj !== null); };
+    prototypeObj.isObjectIfDef = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && obj !== null); };
     /**
      * Determines whether a value null or it is an object.
      * @param {*} obj Object to test.
@@ -973,7 +988,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isNonArrayObjectOrNull() and isPlainObjectOrNull().
      * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
      */
-    tProto.isObjectOrNull = function (obj) { return typeof (obj) == "object"; };
+    prototypeObj.isObjectOrNull = function (obj) { return typeof (obj) == "object"; };
     /**
      * Determines whether a value undefined, null, or it is an object.
      * @param {*} obj Object to test.
@@ -981,7 +996,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isNonArrayObjectOrNil() and isPlainObjectOrNil().
      * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
      */
-    tProto.isObjectOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
+    prototypeObj.isObjectOrNil = function (obj) { return typeof (obj) == "undefined" || typeof (obj) == "object"; };
     /**
      * Determines whether a value is an object, but not an array.
      * @param {*} obj Object to test.
@@ -989,7 +1004,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObject() and isPlainObject().
      * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
      */
-    tProto.isNonArrayObject = function (obj) { return typeof (obj) == "object" && obj !== null && !Array.isArray(obj); };
+    prototypeObj.isNonArrayObject = function (obj) { return typeof (obj) == "object" && obj !== null && !Array.isArray(obj); };
     /**
      * Determines whether a value is an object or undefined, and not an array.
      * @param {*} obj Object to test.
@@ -997,7 +1012,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectIfDef() and isPlainObjectIfDef().
      * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
      */
-    tProto.isNonArrayObjectIfDef = function (obj) {
+    prototypeObj.isNonArrayObjectIfDef = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: false,
@@ -1013,7 +1028,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectOrNull() and isPlainObjectOrNull().
      * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
      */
-    tProto.isNonArrayObjectOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || !Array.isArray(obj)); };
+    prototypeObj.isNonArrayObjectOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || !Array.isArray(obj)); };
     /**
      * Determines whether a value is an object, null or undefined, and not an array.
      * @param {*} obj Object to test.
@@ -1021,7 +1036,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectOrNil() and isPlainObjectOrNil().
      * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
      */
-    tProto.isNonArrayObjectOrNil = function (obj) {
+    prototypeObj.isNonArrayObjectOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -1037,7 +1052,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObject() and isNonArrayObject().
      * The difference is that this returns false if the value is not constructed directly from Object.
      */
-    tProto.isPlainObject = function (obj) {
+    prototypeObj.isPlainObject = function (obj) {
         if (typeof (obj) != "object" || obj === null)
             return false;
         var proto = Object.getPrototypeOf(obj);
@@ -1050,7 +1065,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectIfDef() and isNonArrayObjectIfDef().
      * The difference is that this returns false if the value is not constructed directly from Object.
      */
-    tProto.isPlainObjectIfDef = function (obj) {
+    prototypeObj.isPlainObjectIfDef = function (obj) {
         var t = typeof (obj);
         if (t == "undefined")
             return true;
@@ -1066,7 +1081,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectOrNull() and isNonArrayObjectOrNull().
      * The difference is that this returns false if the value is not constructed directly from Object.
      */
-    tProto.isPlainObjectOrNull = function (obj) {
+    prototypeObj.isPlainObjectOrNull = function (obj) {
         if (typeof (obj) != "object")
             return false;
         if (obj === null)
@@ -1081,7 +1096,7 @@ var JsTypeCommander = Class.create();
      * @description As a type guard, this behaves the same as isObjectOrNil() and isNonArrayObjectOrNil().
      * The difference is that this returns false if the value is not constructed directly from Object.
      */
-    tProto.isPlainObjectOrNil = function (obj) {
+    prototypeObj.isPlainObjectOrNil = function (obj) {
         var t = typeof (obj);
         if (t == "undefined")
             return true;
@@ -1097,31 +1112,31 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an array; otherwise false.
      */
-    tProto.isArray = function (obj) { return this.isObject(obj) && Array.isArray(obj); };
+    prototypeObj.isArray = function (obj) { return this.isObject(obj) && Array.isArray(obj); };
     /**
      * Determines whether a value is an array or undefined.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an array or undefined; otherwise false.
      */
-    tProto.isArrayIfDef = function (obj) { return typeof (obj) == "undefined" || this.isArray(obj); };
+    prototypeObj.isArrayIfDef = function (obj) { return typeof (obj) == "undefined" || this.isArray(obj); };
     /**
      * Determines whether a value is an array or null.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an array or null; otherwise false.
      */
-    tProto.isArrayOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || Array.isArray(obj)); };
+    prototypeObj.isArrayOrNull = function (obj) { return typeof (obj) == "object" && (obj === null || Array.isArray(obj)); };
     /**
      * Determines whether a value is an array, null or undefined.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an array, null or undefined; otherwise false.
      */
-    tProto.isArrayOrNil = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && (obj === null || Array.isArray(obj))); };
+    prototypeObj.isArrayOrNil = function (obj) { return typeof (obj) == "undefined" || (typeof (obj) == "object" && (obj === null || Array.isArray(obj))); };
     /**
      * Determines whether a value is an empty array.
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty array; otherwise false.
      */
-    tProto.isEmptyArray = function (obj) {
+    prototypeObj.isEmptyArray = function (obj) {
         return this.mapByTypeValue(obj, {
             whenArray: function (a) { return a.length == 0; },
             otherwise: false
@@ -1132,7 +1147,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty array or undefined; otherwise false.
      */
-    tProto.isEmptyArrayIfDef = function (obj) {
+    prototypeObj.isEmptyArrayIfDef = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenArray: function (a) { return a.length == 0; },
@@ -1144,7 +1159,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty array or null; otherwise false.
      */
-    tProto.isEmptyArrayOrNull = function (obj) {
+    prototypeObj.isEmptyArrayOrNull = function (obj) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenArray: function (a) { return a.length == 0; },
@@ -1156,7 +1171,7 @@ var JsTypeCommander = Class.create();
      * @param {*} obj Object to test.
      * @returns {boolean} True if object is an empty array, null or undefined; otherwise false.
      */
-    tProto.isEmptyArrayOrNil = function (obj) {
+    prototypeObj.isEmptyArrayOrNil = function (obj) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -1171,7 +1186,7 @@ var JsTypeCommander = Class.create();
      * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
      * @see {@link https://github.com/Microsoft/TypeScript/blob/530d7e9358ee95d2101a619e73356867b617cd95/lib/lib.es5.d.ts}
      */
-    tProto.isArrayLike = function (obj, checkElements) {
+    prototypeObj.isArrayLike = function (obj, checkElements) {
         if (!this.isObject(obj))
             return false;
         if (Array.isArray(obj))
@@ -1197,7 +1212,7 @@ var JsTypeCommander = Class.create();
      * but can result in false positives for non-array objects which have a numeric "length" property.
      * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
      */
-    tProto.isArrayLikeIfDef = function (obj, simpleCheck) {
+    prototypeObj.isArrayLikeIfDef = function (obj, simpleCheck) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenArrayLike: true,
@@ -1212,7 +1227,7 @@ var JsTypeCommander = Class.create();
      * but can result in false positives for non-array objects which have a numeric "length" property.
      * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
      */
-    tProto.isArrayLikeOrNull = function (obj, simpleCheck) {
+    prototypeObj.isArrayLikeOrNull = function (obj, simpleCheck) {
         return this.mapByTypeValue(obj, {
             whenNull: true,
             whenArrayLike: true,
@@ -1227,7 +1242,7 @@ var JsTypeCommander = Class.create();
      * but can result in false positives for non-array objects which have a numeric "length" property.
      * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
      */
-    tProto.isArrayLikeOrNil = function (obj, simpleCheck) {
+    prototypeObj.isArrayLikeOrNil = function (obj, simpleCheck) {
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
             whenNull: true,
@@ -1245,8 +1260,40 @@ var JsTypeCommander = Class.create();
      * If the value is an actual array, then the object itself is returned;
      * If the object is Array-like, an array is returned with values taken from each of its indexed values.
      * Otherwise, an array with a single element containing the value is returned.
+     * @example
+     * JavaScript:
+     *     var util = new x_44813_util.JsTypeCommander();
+     *     var myVar = 7;
+     *     var arrayObj = util.toArray(myVar);
+     *     // returns: [7]
+     *     myVar = { 0: "a", 1: 7, length: 2 };
+     *     arrayObj = util.toArray(myVar);
+     *     // returns: ["a", 7]
+     *     myVar = { 0: "a", 2: 7, length: 3 };
+     *     arrayObj = util.toArray(myVar);
+     *     // returns: ["a", undefined, 7]
+     *     myVar = { 0: "a", 2: 7, length: 3 };
+     *     arrayObj = util.toArray(myVar, true);
+     *     // returns: [{ 0: "a", 2: 7, length: 3 }]
+     * TypeScript:
+     *     import { x_44813_util } from 'JsTypeCommander';
+     *     let util: x_44813_util.JsTypeCommander = new x_44813_util.JsTypeCommander();
+     *     let myVar: any = 7;
+     *     let arrayObj = util.toArray(myVar);
+     *     // returns: [7]
+     *     myVar = { 0: "a", 1: 7, length: 2 };
+     *     arrayObj = util.toArray(myVar);
+     *     // returns: ["a", 7]
+     *     myVar = { 0: "a", 2: 7, length: 3 };
+     *     arrayObj = util.toArray(myVar);
+     *     // returns: ["a", undefined, 7]
+     *     myVar = { 0: "a", 2: 7, length: 3 };
+     *     arrayObj = util.toArray(myVar, true);
+     *     // returns: [{ 0: "a", 2: 7, length: 3 }]
      */
-    tProto.toArray = function (obj, checkElements) {
+    prototypeObj.toArray = function (obj, checkElements) {
+        if (arguments.length == 0)
+            return [];
         if (this.isArray(obj))
             return obj;
         if (this.isArrayLike(obj, checkElements)) {
@@ -1255,17 +1302,28 @@ var JsTypeCommander = Class.create();
                 result.push(obj[i]);
             return result;
         }
-        if (this.notDefined(obj))
-            return [];
         return [obj];
     };
     /**
-     * Searches the value's inherited prototype chain for a matching constructor function.
-     * @param obj Value to test.
+     * Searches the object's inherited prototype chain for a matching constructor function.
+     * @param {*} obj Object to test.
      * @param {AnyFunction} classConstructor Constructor function to look for.
-     * @returns {boolean} True if the value is determined to inherit from the specified class; otherwise false.
+     * @returns {boolean} True if the object is determined to inherit from the specified class; otherwise false.
+     * @example The following example demonstrates testing whether an object was constructed from a specific constructor.
+     * var util = new x_44813_util.JsTypeCommander();
+     * let objToTest: any = new Error("My Error");
+     * let result: boolean = util.derivesFrom(objToTest, Error);
+     * // result === true
+     * result = util.derivesFrom(objToTest, RangeError);
+     * // result === false (Error does not inherit from RangeError)
+     * objToTest = new RangeError();
+     * result = util.derivesFrom(objToTest, Error);
+     * // result === true
+     * objToTest = { message: "My Error", name: "Error" };
+     * result = util.derivesFrom(objToTest, Error);
+     * // result === false
      */
-    tProto.derivesFrom = function (obj, classConstructor) {
+    prototypeObj.derivesFrom = function (obj, classConstructor) {
         if (this.notDefined(obj))
             return this.notDefined(classConstructor);
         if (this.notDefined(classConstructor))
@@ -1322,28 +1380,28 @@ var JsTypeCommander = Class.create();
                 valueConstructor = valueProto.constructor;
             } while (this.isNil(valueConstructor));
         } while (!this.isNil(valueConstructor));
-        for (var i = 0; i < constructorChain.length; i++) {
-            if (constructorChain[i] === classConstructor)
+        for (var i_1 = 0; i_1 < constructorChain.length; i_1++) {
+            if (constructorChain[i_1] === classConstructor)
                 return true;
         }
         return false;
     };
     /**
-     * If defined, Searches the value's inherited prototype chain for a matching constructor function.
-     * @param value Value to test.
+     * If defined, Searches the object's inherited prototype chain for a matching constructor function.
+     * @param {*} obj Object to test.
      * @param {AnyFunction} classConstructor Constructor function to look for.
-     * @returns {boolean} True if the value is not defined or if it is determined to inherit from the specified class; otherwise false.
+     * @returns {boolean} True if the object is not defined or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.derivesFromIfDef = function (obj, classConstructor) {
+    prototypeObj.derivesFromIfDef = function (obj, classConstructor) {
         return typeof (obj) == "undefined" || this.derivesFrom(obj, classConstructor);
     };
     /**
-     * If not null, Searches the value's inherited prototype chain for a matching constructor function.
-     * @param value Value to test.
+     * If not null, Searches the object's inherited prototype chain for a matching constructor function.
+     * @param {*} obj Object to test.
      * @param {AnyFunction} classConstructor Constructor function to look for.
-     * @returns {boolean} True if the value is null or if it is determined to inherit from the specified class; otherwise false.
+     * @returns {boolean} True if the object is null or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.derivesFromOrNull = function (obj, classConstructor) {
+    prototypeObj.derivesFromOrNull = function (obj, classConstructor) {
         var _this = this;
         return this.mapByTypeValue(obj, {
             whenUndefined: false,
@@ -1352,12 +1410,12 @@ var JsTypeCommander = Class.create();
         });
     };
     /**
-     * If defined and not null, Searches the value's inherited prototype chain for a matching constructor function.
-     * @param value Value to test.
+     * If defined and not null, Searches the object's inherited prototype chain for a matching constructor function.
+     * @param {*} obj Object to test.
      * @param {AnyFunction} classConstructor Constructor function to look for.
-     * @returns {boolean} True if the value is null, not defined or if it is determined to inherit from the specified class; otherwise false.
+     * @returns {boolean} True if the object is null, not defined or if it is determined to inherit from the specified class; otherwise false.
      */
-    tProto.derivesFromOrNil = function (obj, classConstructor) {
+    prototypeObj.derivesFromOrNil = function (obj, classConstructor) {
         var _this = this;
         return this.mapByTypeValue(obj, {
             whenUndefined: true,
@@ -1367,10 +1425,24 @@ var JsTypeCommander = Class.create();
     };
     /**
      * Determines if an object has properties similar to an Error object.
-     * @param {*} obj Value to test
+     * @param {*} obj Object to test
      * @returns {boolean} True if the object has properties similar to an Error object; otherwise, false.
+     * @example The following example demonstrates testing various object to see if they are error-like.
+     * var util = new x_44813_util.JsTypeCommander();
+     * objToTest = new Error("My Error");
+     * result = util.isErrorLike(objToTest);
+     * // result === true
+     * objToTest = new RangeError();
+     * result = util.isErrorLike(objToTest);
+     * // result === true
+     * objToTest = { message: "My Error" };
+     * result = util.isErrorLike(objToTest);
+     * // result === true
+     * objToTest = { message: "My Error", number: true };
+     * result = util.isErrorLike(objToTest);
+     * // result === false (typeof(number) !== "number"))
      */
-    tProto.isErrorLike = function (obj) {
+    prototypeObj.isErrorLike = function (obj) {
         if (!this.isNonArrayObject(obj))
             return false;
         if (this.derivesFrom(obj, Error))
@@ -1391,11 +1463,11 @@ var JsTypeCommander = Class.create();
      * @returns {ErrorLike|null|undefined} Object with properties similar to an error objecst. If the object is null or emtpy, then the object is returned.
      * @description This can be useful for serializing error objects when logging.
      */
-    tProto.asErrorLike = function (obj) {
+    prototypeObj.asErrorLike = function (obj) {
         if (this.isNil(obj))
             return obj;
         if (this.isErrorLike(obj)) {
-            var result = { message: obj.message, name: (typeof (obj.name) == "string") ? obj.name : "ErrorLike" };
+            var result = { message: obj.message, name: (typeof (obj.name) == "string" && obj.name.trim().length > 0) ? obj.name : "ErrorLike" };
             if (typeof (obj.description) == "string") {
                 if (typeof (obj.message) != "string" || obj.message.trim().length == 0)
                     result.message = obj.description;
@@ -1410,27 +1482,86 @@ var JsTypeCommander = Class.create();
                 result.lineNumber = obj.lineNumber;
             if (typeof (obj.stack) == "string")
                 result.stack = obj.stack;
+            if (typeof (result.message) != "string" || result.message.trim().length == 0) {
+                if (typeof (result.number) == "number")
+                    result.message = "Error " + result.number;
+                else if (typeof (result.fileName) == "string" && result.fileName.trim().length > 0) {
+                    if (typeof (result.lineNumber) == "number")
+                        result.message = "Error in " + result.fileName + " at line " + result.lineNumber;
+                    else if (typeof (result.fileName) == "string")
+                        result.message = "Error in " + result.fileName;
+                }
+                else
+                    result.message = "Error";
+            }
             return result;
         }
         if (this.isNumber(obj))
-            return { message: obj.toString(), number: obj, name: "ErrorLike" };
+            return { message: "Error " + obj.toString(), number: obj, name: "ErrorLike" };
         var s = this.toString(obj);
-        if (this.isString(s))
-            return { message: s, name: "ErrorLike" };
-        return s;
+        if (!this.isString(s))
+            s = obj + "";
+        return { message: (s.trim().length == 0) ? "Error" : s, name: "ErrorLike" };
     };
     /**
      * Recursively maps an object or array.
      * @param {*} obj Object to recursively map
-     * @param {{ (current: any|null|undefined, key?: number|string): any|null|undefined; }} callbackfn Call-back function for each iteration.
+     * @param {{ (current: any|null|undefined, key?: number|string): any|null|undefined; }} callbackFn Call-back function for each iteration which returns the mapped value.
      * @param options Recursive Iteration options.
      * @returns {*} Mapped object or array.
+     * @description If the mapped value returned from callbackFn a string, number, symbol, boolean value or function, then the corresponding source element will not be recursed into.
+     * This means that if the current argument for callbackFn is an array and you wish to recurse into that array, then callbackFn should return a new array. Likewise,
+     * if the current argument is an object (other than a string, number, symbol, boolean value or function) and you wish to recurse into its properties,
+     * then callbackFn should return an object that is neither a string, number, symbol, boolean value or function.
+     * @example The following examples effectively deep clone the source array to create an array of objects compatible with JSON.stringify.
+     * JavaScript:
+     *     var util = new x_44813_util.JsTypeCommander();
+     *     // interface RecursiveMapCallbackFn
+     *     var source = [{ a: 1, b: 2 }, 3, 4, ["Eins", "Svein", "Drei"]];
+     *     var myCallback = function(current, key, source, target) {
+     *         if (util.notDefined(source) || util.isArray(current))
+     *             return [];
+     *         return (util.isObject(current)) ? { } : current;
+     *     };
+     *     var deepClone = util.mapInto(source, myCallback);
+     *     var myOptions = { thisObj: { count: 0 } };
+     *     myCallback = function(current, key, source, target) {
+     *         this.count++;
+     *         if (util.notDefined(source) || util.isArray(current))
+     *             return [];
+     *         return (util.isObject(current)) ? { } : current;
+     *     };
+     *     deepClone = util.mapInto(source, myCallback, myOptions);
+     *     // myOptions.thisObj.count === 9
+     * 
+     * TypeScript:
+     *     import { x_44813_util } from 'JsTypeCommander';
+     *     let util: x_44813_util.JsTypeCommander = new x_44813_util.JsTypeCommander();
+     *     let source: any[] = [{a: 1, b: 2}, 3, 4, ["Eins", "Svein", "Drei"]];
+     *     let deepClone = util.mapInto(source, (current?: any, key?: number|string, source?: any[]|object, target?: any[]|object) => {
+     *         if (util.notDefined(source) || util.isArray(current))
+     *             return [];
+     *         return (util.isObject(current)) ? { } : current;
+     *     });
+     *
+     *     interface IMyThis { count: number }
+     *     let myOptions: util.MapIntoOptions = { thisObj: <IMyThis> { count: 0 } };
+     *     function myCallback(this: IMyThis, current?: any, key?: number|string, source?: any[]|object, target?: any[]|object) {
+     *         this.count++;
+     *         if (util.notDefined(source) || util.isArray(current))
+     *             return [];
+     *         return (util.isObject(current)) ? { } : current;
+     *     }
+     *     deepClone = util.mapInto(source, myCallback, myOptions);
+     *     // myOptions.thisObj.count === 9
      */
-    tProto.mapInto = function (obj, callbackfn, options) {
-        var i = new limitingIterator(callbackfn, options);
+    prototypeObj.mapInto = function (obj, callbackFn, options) {
+        var i = new limitingIterator(this, callbackFn, options);
         return i.iterateInto(i.maxDepth, obj, undefined, undefined, undefined);
     };
-    tProto.name = "JsTypeCommander";
-    JsTypeCommander.prototype = tProto;
+
+    prototypeObj.type = "JsTypeCommander";
+    JsTypeCommander.prototype = prototypeObj;
+    
     return JsTypeCommander;
 }(JsTypeCommander));

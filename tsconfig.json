@@ -16,7 +16,6 @@
     "exclude": [
         "./src/**/test-*.ts",
         "./src/**/testLib.ts",
-        "./src/sn_mock_old.ts",
-        "./src/sec_clsif/test.ts"
+        "./src/sn_mock_old.ts"
     ]
 }

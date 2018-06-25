@@ -1,99 +1,374 @@
 export namespace x_44813_util {
-    export module JsTypeCommander {
-        export const name = "JsTypeCommander";
+    /**
+     * Defines regular expressions used in the current module.
+     */
+    export interface IJsTypeCommanderRegex {
         /**
-         * Defines regular expressions used in the current module.
+         * Pattern which matches one or more consecutive whitespace characters.
          */
-        export interface IJsTypeCommanderRegex {
-            /**
-             * Pattern which matches one or more consecutive whitespace characters.
-             */
-            onlyWhitespace: RegExp;
-            /**
-             * Pattern which captures text from the first non-whitespace character to the end of the string in group index 1 or fails if there are no non-whitespace characters.
-             */
-            trimStart: RegExp;
-            /**
-             * Pattern which captures text in group at index 1, omitting trailing whitespace characters, or fails if there are no non-whitespace characters.
-             */
-            trimEnd: RegExp;
-            /**
-             * Pattern which matches a single character sequence which separates 2 lines of text.
-             */
-            lineSeparator: RegExp;
-            /**
-             * Pattern which captures text that can represent a boolean value, with true values being a successful match at group index 1,
-             * and false values being a successful match at group index 2.
-             */
-            booleanText: RegExp;
-            /**
-             * Pattern which captures text that can be used for capitalizing text.
-             * @description The group at index 1 captures all leading text which is not a letter or digit, and will fail if there are no such leading characters.
-             * The group at index 1 captures the first letter to be capitalized, and will never fail unless the whole pattern fails.
-             * The group at index 2 captures remaining text following the capitalized letter, and will fail if there are no remaining characters.
-             * If there are no letter characters or if the first letter is already capitalized, then the entire match will fail.
-             */
-            firstLetterLc: RegExp;
-            /**
-             * Pattern which matches consecutive whitespace characters except for single space (' ') characters that are not next to other whitespace characters.
-             */
-            abnormalWhitespace: RegExp;
+        onlyWhitespace: RegExp;
+        /**
+         * Pattern which captures text from the first non-whitespace character to the end of the string in group index 1 or fails if there are no non-whitespace characters.
+         */
+        trimStart: RegExp;
+        /**
+         * Pattern which captures text in group at index 1, omitting trailing whitespace characters, or fails if there are no non-whitespace characters.
+         */
+        trimEnd: RegExp;
+        /**
+         * Pattern which matches a single character sequence which separates 2 lines of text.
+         */
+        lineSeparator: RegExp;
+        /**
+         * Pattern which captures text that can represent a boolean value, with true values being a successful match at group index 1,
+         * and false values being a successful match at group index 2.
+         */
+        booleanText: RegExp;
+        /**
+         * Pattern which captures text that can be used for capitalizing text.
+         * @description The group at index 1 captures all leading text which is not a letter or digit, and will fail if there are no such leading characters.
+         * The group at index 1 captures the first letter to be capitalized, and will never fail unless the whole pattern fails.
+         * The group at index 2 captures remaining text following the capitalized letter, and will fail if there are no remaining characters.
+         * If there are no letter characters or if the first letter is already capitalized, then the entire match will fail.
+         */
+        firstLetterLc: RegExp;
+        /**
+         * Pattern which matches consecutive whitespace characters except for single space (' ') characters that are not next to other whitespace characters.
+         */
+        abnormalWhitespace: RegExp;
+    }
+
+    /**
+     * Defines options for updating regular expressions used in the current module.
+     */
+    export interface IJsTypeCommanderRegexOpt {
+        // TODO: Allow properties to be regular expressions or strings
+        /**
+         * Pattern which matches one or more consecutive whitespace characters.
+         */
+        onlyWhitespace?: RegExp;
+        /**
+         * Pattern which captures text from the first non-whitespace character to the end of the string in group index 1 or fails if there are no non-whitespace characters.
+         */
+        trimStart?: RegExp;
+        /**
+         * Pattern which captures text in group at index 1, omitting trailing whitespace characters, or fails if there are no non-whitespace characters.
+         */
+        trimEnd?: RegExp;
+        /**
+         * Pattern which matches a single character sequence which separates 2 lines of text.
+         */
+        lineSeparator?: RegExp;
+        /**
+         * Pattern which captures text that can represent a boolean value, with true values being a successful match at group index 1,
+         * and false values being a successful match at group index 2.
+         */
+        booleanText?: RegExp;
+        /**
+         * Pattern which captures text that can be used for capitalizing text.
+         * @description The group at index 1 captures all leading text which is not a letter or digit, and will fail if there are no such leading characters.
+         * The group at index 1 captures the first letter to be capitalized, and will never fail unless the whole pattern fails.
+         * The group at index 2 captures remaining text following the capitalized letter, and will fail if there are no remaining characters.
+         * If there are no letter characters or if the first letter is already capitalized, then the entire match will fail.
+         */
+        firstLetterLc?: RegExp;
+        /**
+         * Pattern which matches consecutive whitespace characters except for single space (' ') characters that are not next to other whitespace characters.
+         */
+        abnormalWhitespace?: RegExp;
+    }
+    
+    /**
+     * Names of settings which can be used to reference regular expression patters used in the current module.
+     */
+    export type PatternSettingsName = "onlyWhitespace"|"trimStart"|"trimEnd"|"lineSeparator"|"booleanText"|"firstLetterLc"|"abnormalWhitespace";
+    
+    /**
+     * Alias for a type that is defined.
+     * @description This is intended to represent any defined value at all when strictNullChecks is turned on.
+     */
+    export type TDefined = any|null;
+
+    /**
+     * Alias for a type that includes null and undefined.
+     * @description This is intended for use when strictNullChecks is turned on.
+     */
+    export type Nilable<T> = T|null|undefined;
+    
+    /**
+     * Alias for any type, including null and undefined.
+     * @description This is intended to represent any value at all when strictNullChecks is turned on.
+     */
+    export type AnyNilable = any|null|undefined;
+
+    /**
+     * Alias for a type that includes null and undefined.
+     * @description This is intended to include nulls in a type when strictNullChecks is turned on.
+     */
+    export type Nullable<T> = T|null;
+
+    /**
+     * Alias for any type or null.
+     * @description This is intended for use when strictNullChecks is turned on.
+     */
+    export type AnyNullable = any|null;
+
+    /** Represents an object which can contained arbitrarily named properties. */
+    export interface IStringKeyedObject { [key: string]: AnyNilable }
+    
+    /**
+     * Represents an object which contains both named properties and indexed elements.
+     */
+    export interface ICompoundArrayObject extends IStringKeyedObject, ArrayLike<AnyNilable> {
+        readonly [key: string]: AnyNilable
+    }
+        
+    /**
+     * Represents an object which contains properties that are similar to Error objects.
+     * @description Properties described in this interface are an aggregation of selectred reference information provided by
+     * [Microsoft]{@link https://docs.microsoft.com/en-us/scripting/javascript/reference/stack-property-error-javascript} and
+     * the [Mozilla Developer Network]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error}.
+     */
+    export interface ErrorLike {
+        /**
+         * Brief string that describes the error.
+         * @type {string}
+         */
+        message: string,
+        /**
+         * String describing the error.
+         * @description This can be used in lieu of the {@link ErrorLike.message} property or it can contain more detailed descriptive information.
+         * @type {string}
+         */
+        description?: string,
+        /**
+         * Numeric value assigned to the error.
+         * @type {number}
+         */
+        number?: number,
+        /**
+         * The name for the type of error.
+         * @type {string}
+         */
+        name?: string,
+        /**
+         * The name of the file associated with the error.
+         * @type {string}
+         */
+        fileName?: string,
+        /**
+         * The line number associated with the error.
+         * @type {number}
+         */
+        lineNumber?: number,
+        /**
+         * Contains stack trace information when error is thrown.
+         * 
+         */
+        stack?: string
+    }
+    
+    /**
+     * Function to get mapped value according to a source value.
+     * @param {*} value Source value.
+     * @returns {*} Mapped value.
+     */
+    export interface MapFromValueCallback<TSource, TResult> { (value: TSource): TResult; }
+    
+    /**
+     * Represents supported return values from the <code>typeof</code> funciton.
+     */
+    export type ObjectTypeString = "boolean"|"function"|"number"|"object"|"string"|"symbol"|"undefined";
+    
+    export type ReservedClassPropertyName = "Arguments"|"Array"|"Boolean"|"Date"|"Error"|"Function"|"JSON"|"Math"|"Number"|"Object"|"RegExp"|"String";
+    /**
+     * Defines a set of values and/or {@link MapFromValueCallback} which will determine the mapped value according to a source value's type.
+     */
+    export interface TypeGuardResultSpecs<TSource, TResult> {
+        /**
+         * If defined, will be the "this" variable when callbacks defined in this interface are invoked.
+         */
+        thisObj?: any;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"boolean"</code>.
+         * @description If the source value is <code>"boolean"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenBoolean?: MapFromValueCallback<boolean, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"function"</code>.
+         * @description If the source value is a <code>"function"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenFunction?: MapFromValueCallback<Function, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is an infinite value.
+         * @description If the source value is an infinite value and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
+         */
+        whenInfinity?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is <code>NaN</code>.
+         * @description If the source value is <code>NaN/code> and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
+         */
+        whenNaN?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code>.
+         * @description If the source value is a <code>"number"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         * If the source value is an infinite value, and {@link TypeGuardResultSpecs#whenInfinity} is defined, then that property will determine the mapped value, instead.
+         * Likewise, if the source value is <code>NaN</code>, and {@link TypeGuardResultSpecs#whenNaN} is defined, then that property will determine the mapped value, instead.
+         */
+        whenNumber?: MapFromValueCallback<number, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value derrives from <code>Array</code>.
+         * @description If the source value derrives from <code>Array</code> and this property is not defined, then {@link TypeGuardResultSpecs#whenArrayLike} will be next in line to determine the mapped value.
+         */
+        whenArray?: MapFromValueCallback<AnyNilable[], TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source appears to implement the <code>ArrayLike</code> interface.
+         * @description If this property is not defined then the following rules apply:
+         * If the source value derrives from <code>Array</code> and {@link TypeGuardResultSpecs#whenArrayLike} is defined, then {@link TypeGuardResultSpecs#whenArrayLike} will determine the mapped value.
+         * Otherwise, {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
+         */
+        whenArrayLike?: MapFromValueCallback<ArrayLike<AnyNilable>, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value does not derrive from <code>Array</code> and does not appear to implement the <code>ArrayLike</code> interface.
+         * @description If the source value is an object and this property is not defined, then {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
+         */
+        whenNotArrayLike?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"string"</code>.
+         * @description If the source value is a <code>"string"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenString?: MapFromValueCallback<string, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"symbol"</code>.
+         * @description If the source value is a <code>"symbol"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenSymbol?: MapFromValueCallback<symbol, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is equal to <code>null</code>.
+         * @description If the source value is null and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenNull?: MapFromValueCallback<null, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"undefined"</code>.
+         * @description If the source value is <code>"undefined"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
+         */
+        whenUndefined?: MapFromValueCallback<undefined, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is not equal to <code>null</code>.
+         * @description If the source value is array-like and either {@link TypeGuardResultSpecs#whenArray} or {@link TypeGuardResultSpecs#whenArrayLike} are defined, then those methods will determine the mapped value, instead.
+         */
+        whenObject?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
+
+        /**
+         * This determines the mapped value when the associated type-based property was not defined.
+         */
+        otherwise: MapFromValueCallback<TSource, TResult>|TResult;
+    }
+    
+    const patternDefaults = {
+        newLineSequence: "\n",
+        regex: <IJsTypeCommanderRegex> {
+            onlyWhitespace: /^[\s\r\n]+$/,
+            trimStart: /^[\s\r\n]*(\S(?:.|[\r\n])*)$/,
+            trimEnd: /^([\s\r\n]*\S+(?:[\s\r\n]+[^\s\r\n]+)*)/,
+            lineSeparator: /\r\n?|\n/,
+            booleanText: /^[\s\r\n]*(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))[\s\r\n]*$/i,
+            firstLetterLc: /^([^a-zA-Z\d]+)?([a-z])((?:.|[\r\n])+)?$/,
+            abnormalWhitespace: /(?:(?=[^ ])[\s\r\n]+|[\s\r\n]{2,})/
         }
+    };
+        
+    /**
+     * @callback
+     * Similar to Array.map, recursively iterate through nested arrays and named object properties to map result values.
+     * @param {*} current The current item being interated. This can be null or undefined, according to the current element or property being iterated.
+     * @param {number|string|undefined} key The array element index or object property name of the current item.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @param {*[]|object|undefined} source The source object containing the element or property currently being iterated.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @param {*[]|object|undefined} target The target object which will contain the element or property containing return value of this callback function.
+     * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
+     * @returns {*} The value to replace the current value. Null and undefined values will be accepted.
+     * @description Each element on the parent array is iterated, as well as for each named named property on objects. The only exception is the "count" property on arrays, which will be ignored.
+     * If the current item is an array, then the return value must also be an array in order for the current value to be recursively iterated.
+     * Likewise,if the curren item is an object, then the return value must a non-null value of type "object" in order for the current value to be recursively iterated.
+     * If an empty array is returned, elements will be pushed onto the end of the target array as needed, otherwise, they values at the current index will be replaced.
+     * If an object with no properties is returned, property values will be added or replaced on the target according to the current property name.
+     * @example The following examples effectively deep clone the source array to create an array of objects compatible with JSON.stringify.
+     * TypeScript:
+     *     import { JsTypeCommander } from 'JsTypeCommander';
+     *     let source: any[] = [{a: 1, b: 2}, 3, 4, ["Eins", "Svein", "Drei"]];
+     *     let deepClone = JsTypeCommander.mapInto(source, (current?: any, key?: number|string, source?: any[]|object, target?: any[]|object) => {
+     *         if (JsTypeCommander.notDefined(source) || JsTypeCommander.isArray(current))
+     *             return [];
+     *         return (JsTypeCommander.isObject(current)) ? { } : current;
+     *     });
+     *     // JSON.stringify(deepClone) == "[{\"a\":1,\"b\":2},3,4,[\"Eins\",\"Svein\",\"Drei\"]]"
+     * 
+     * JavaScript:
+     *     var JsTypeCommander = require("JsTypeCommander").JsTypeCommander;
+     *     var source = [{ a: 1, b: 2 }, 3, 4, ["Eins", "Svein", "Drei"]];
+     *     function myCallback(current, key, source, target) {
+     *         if (JsTypeCommander.notDefined(source) || JsTypeCommander.isArray(current))
+     *             return [];
+     *         return (JsTypeCommander.isObject(current)) ? { } : current;
+     *     }
+     *     var deepClone = JsTypeCommander.mapInto(source, myCallback);
+     *     // JSON.stringify(deepClone) == "[{\"a\":1,\"b\":2},3,4,[\"Eins\",\"Svein\",\"Drei\"]]"
+     */
+    export interface RecursiveMapCallbackFn {
+        (current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined, target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable;
+    }
+    
+    /**
+     * Represents options for the JsTypeCommander.mapInto function.
+     */
+    export interface MapIntoOptions {
+        /**
+         * If defined, this becomes the 'this' object when the callback function is invoked.
+         * @type {*}
+         */
+        thisObj?: any;
+        
+        /**
+         * Maximum number of items that will be iterated before all iteration is aborted.
+         * @type {number=8192}
+         * @description A value less than one wil prevent iteration.
+         */
+        totalMaxItems?: number;
+        
+        /**
+         * Maximum number of elements or properties that will be added to target objects.
+         * @type {number=1024}
+         * @description A value less than one wil prevent iteration.
+         */
+        maxItemsInObject?: number;
     
         /**
-         * Defines options for updating regular expressions used in the current module.
+         * Maximum recursion depth for recursing. This helps to prevent endless loops, should there be any circular references.
+         * @type {number=32}
+         * @description A value less than one wil prevent recursion.
          */
-        export interface IJsTypeCommanderRegexOpt {
-            // TODO: Allow properties to be regular expressions or strings
-            /**
-             * Pattern which matches one or more consecutive whitespace characters.
-             */
-            onlyWhitespace?: RegExp;
-            /**
-             * Pattern which captures text from the first non-whitespace character to the end of the string in group index 1 or fails if there are no non-whitespace characters.
-             */
-            trimStart?: RegExp;
-            /**
-             * Pattern which captures text in group at index 1, omitting trailing whitespace characters, or fails if there are no non-whitespace characters.
-             */
-            trimEnd?: RegExp;
-            /**
-             * Pattern which matches a single character sequence which separates 2 lines of text.
-             */
-            lineSeparator?: RegExp;
-            /**
-             * Pattern which captures text that can represent a boolean value, with true values being a successful match at group index 1,
-             * and false values being a successful match at group index 2.
-             */
-            booleanText?: RegExp;
-            /**
-             * Pattern which captures text that can be used for capitalizing text.
-             * @description The group at index 1 captures all leading text which is not a letter or digit, and will fail if there are no such leading characters.
-             * The group at index 1 captures the first letter to be capitalized, and will never fail unless the whole pattern fails.
-             * The group at index 2 captures remaining text following the capitalized letter, and will fail if there are no remaining characters.
-             * If there are no letter characters or if the first letter is already capitalized, then the entire match will fail.
-             */
-            firstLetterLc?: RegExp;
-            /**
-             * Pattern which matches consecutive whitespace characters except for single space (' ') characters that are not next to other whitespace characters.
-             */
-            abnormalWhitespace?: RegExp;
-        }
+        maxDepth?: number;
+    }
+
+    export class JsTypeCommander {
+        readonly type = "JsTypeCommander";
     
-        const patternDefaults = {
-            newLineSequence: "\n",
-            regex: <IJsTypeCommanderRegex> {
-                onlyWhitespace: /^[\s\r\n]+$/,
-                trimStart: /^[\s\r\n]*(\S(?:.|[\r\n])*)$/,
-                trimEnd: /^([\s\r\n]*\S+(?:[\s\r\n]+[^\s\r\n]+)*)/,
-                lineSeparator: /\r\n?|\n/,
-                booleanText: /^[\s\r\n]*(?:(t(?:rue)?|y(?:es)?|[+-]?(?:0*[1-9]\d*(?:\.\d+)?|0+\.0*[1-9]\d*)|\+)|(f(?:alse)?|no?|[+-]?0+(?:\.0+)?|-))[\s\r\n]*$/i,
-                firstLetterLc: /^([^a-zA-Z\d]+)?([a-z])((?:.|[\r\n])+)?$/,
-                abnormalWhitespace: /(?:(?=[^ ])[\s\r\n]+|[\s\r\n]{2,})/
-            }
-        };
-    
-        const patternOptions = {
+        private patternOptions = {
             newLineSequence: patternDefaults.newLineSequence,
             regex: <IJsTypeCommanderRegex> {
                 onlyWhitespace: patternDefaults.regex.onlyWhitespace,
@@ -107,224 +382,24 @@ export namespace x_44813_util {
         };
     
         /**
-         * Names of settings which can be used to reference regular expression patters used in the current module.
-         */
-        export type PatternSettingsName = "onlyWhitespace"|"trimStart"|"trimEnd"|"lineSeparator"|"booleanText"|"firstLetterLc"|"abnormalWhitespace";
-        
-        /**
-         * Alias for a type that is defined.
-         * @description This is intended to represent any defined value at all when strictNullChecks is turned on.
-         */
-        export type TDefined = any|null;
-    
-        /**
-         * Alias for a type that includes null and undefined.
-         * @description This is intended for use when strictNullChecks is turned on.
-         */
-        export type Nilable<T> = T|null|undefined;
-    
-        /**
-         * Alias for any type, including null and undefined.
-         * @description This is intended to represent any value at all when strictNullChecks is turned on.
-         */
-        export type AnyNilable = any|null|undefined;
-    
-        /**
-         * Alias for a type that includes null and undefined.
-         * @description This is intended to include nulls in a type when strictNullChecks is turned on.
-         */
-        export type Nullable<T> = T|null;
-    
-        /**
-         * Alias for any type or null.
-         * @description This is intended for use when strictNullChecks is turned on.
-         */
-        export type AnyNullable = any|null;
-    
-        /** Represents an object which can contained arbitrarily named properties. */
-        export interface IStringKeyedObject { [key: string]: AnyNilable }
-        
-        /**
-         * Represents an object which contains both named properties and indexed elements.
-         */
-        export interface ICompoundArrayObject extends IStringKeyedObject, ArrayLike<AnyNilable> {
-            readonly [key: string]: AnyNilable
-        }
-        
-        /**
-         * Represents an object which contains properties that are similar to Error objects.
-         * @description Properties described in this interface are an aggregation of selectred reference information provided by
-         * [Microsoft]{@link https://docs.microsoft.com/en-us/scripting/javascript/reference/stack-property-error-javascript} and
-         * the [Mozilla Developer Network]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error}.
-         */
-        export interface ErrorLike {
-            /**
-             * Brief string that describes the error.
-             * @type {string}
-             */
-            message: string,
-            /**
-             * String describing the error.
-             * @description This can be used in lieu of the {@link ErrorLike.message} property or it can contain more detailed descriptive information.
-             * @type {string}
-             */
-            description?: string,
-            /**
-             * Numeric value assigned to the error.
-             * @type {number}
-             */
-            number?: number,
-            /**
-             * The name for the type of error.
-             * @type {string}
-             */
-            name?: string,
-            /**
-             * The name of the file associated with the error.
-             * @type {string}
-             */
-            fileName?: string,
-            /**
-             * The line number associated with the error.
-             * @type {number}
-             */
-            lineNumber?: number,
-            /**
-             * Contains stack trace information when error is thrown.
-             * 
-             */
-            stack?: string
-        }
-        
-        /**
-         * Function to get mapped value according to a source value.
-         * @param {*} value Source value.
-         * @returns {*} Mapped value.
-         */
-        export interface MapFromValueCallback<TSource, TResult> { (value: TSource): TResult; }
-        
-        /**
-         * Represents supported return values from the <code>typeof</code> funciton.
-         */
-        export type ObjectTypeString = "boolean"|"function"|"number"|"object"|"string"|"symbol"|"undefined";
-        
-        export type ReservedClassPropertyName = "Arguments"|"Array"|"Boolean"|"Date"|"Error"|"Function"|"JSON"|"Math"|"Number"|"Object"|"RegExp"|"String";
-        /**
-         * Defines a set of values and/or {@link MapFromValueCallback} which will determine the mapped value according to a source value's type.
-         */
-        export interface TypeGuardResultSpecs<TSource, TResult> {
-            /**
-             * If defined, will be the "this" variable when callbacks defined in this interface are invoked.
-             */
-            thisObj?: any;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"boolean"</code>.
-             * @description If the source value is <code>"boolean"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenBoolean?: MapFromValueCallback<boolean, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"function"</code>.
-             * @description If the source value is a <code>"function"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenFunction?: MapFromValueCallback<Function, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is an infinite value.
-             * @description If the source value is an infinite value and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
-             */
-            whenInfinity?: MapFromValueCallback<number, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code> and the source value is <code>NaN</code>.
-             * @description If the source value is <code>NaN/code> and this property is not defined, then {@link TypeGuardResultSpecs#whenNumber} will be next in line to determine the mapped value.
-             */
-            whenNaN?: MapFromValueCallback<number, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"number"</code>.
-             * @description If the source value is a <code>"number"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             * If the source value is an infinite value, and {@link TypeGuardResultSpecs#whenInfinity} is defined, then that property will determine the mapped value, instead.
-             * Likewise, if the source value is <code>NaN</code>, and {@link TypeGuardResultSpecs#whenNaN} is defined, then that property will determine the mapped value, instead.
-             */
-            whenNumber?: MapFromValueCallback<number, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value derrives from <code>Array</code>.
-             * @description If the source value derrives from <code>Array</code> and this property is not defined, then {@link TypeGuardResultSpecs#whenArrayLike} will be next in line to determine the mapped value.
-             */
-            whenArray?: MapFromValueCallback<AnyNilable[], TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source appears to implement the <code>ArrayLike</code> interface.
-             * @description If this property is not defined then the following rules apply:
-             * If the source value derrives from <code>Array</code> and {@link TypeGuardResultSpecs#whenArrayLike} is defined, then {@link TypeGuardResultSpecs#whenArrayLike} will determine the mapped value.
-             * Otherwise, {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
-             */
-            whenArrayLike?: MapFromValueCallback<ArrayLike<AnyNilable>, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and the source value does not derrive from <code>Array</code> and does not appear to implement the <code>ArrayLike</code> interface.
-             * @description If the source value is an object and this property is not defined, then {@link TypeGuardResultSpecs#whenObject} will be next in line to determine the mapped value.
-             */
-            whenNotArrayLike?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"string"</code>.
-             * @description If the source value is a <code>"string"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenString?: MapFromValueCallback<string, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"symbol"</code>.
-             * @description If the source value is a <code>"symbol"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenSymbol?: MapFromValueCallback<symbol, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is equal to <code>null</code>.
-             * @description If the source value is null and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenNull?: MapFromValueCallback<null, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"undefined"</code>.
-             * @description If the source value is <code>"undefined"</code> and this property is not defined, then {@link TypeGuardResultSpecs#otherwise} will determine the mapped value.
-             */
-            whenUndefined?: MapFromValueCallback<undefined, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when <code>typeof(<em>sourceValue</em>)</code> returns <code>"object"</code> and it is not equal to <code>null</code>.
-             * @description If the source value is array-like and either {@link TypeGuardResultSpecs#whenArray} or {@link TypeGuardResultSpecs#whenArrayLike} are defined, then those methods will determine the mapped value, instead.
-             */
-            whenObject?: MapFromValueCallback<IStringKeyedObject, TResult>|TResult;
-    
-            /**
-             * This determines the mapped value when the associated type-based property was not defined.
-             */
-            otherwise: MapFromValueCallback<TSource, TResult>|TResult;
-        }
-    
-        /**
          * Gets the default character sequence that will be used when joining lines of text.
          * @returns {string} The default character sequence that will be used when joining lines of text.
          */
-        export function getDefaultLineSeparatorSequence(): string { return patternOptions.newLineSequence; }
+        getDefaultLineSeparatorSequence(): string { return this.patternOptions.newLineSequence; }
     
         /**
          * Gets regular expression patterns used internally by this module.
          * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns used internally by this module.
          */
-        export function getPatternOptions(): IJsTypeCommanderRegex {
+        getPatternOptions(): IJsTypeCommanderRegex {
             return <IJsTypeCommanderRegex> {
-                onlyWhitespace: patternOptions.regex.onlyWhitespace,
-                trimStart: patternOptions.regex.trimStart,
-                trimEnd: patternOptions.regex.trimEnd,
-                lineSeparator: patternOptions.regex.lineSeparator,
-                booleanText: patternOptions.regex.booleanText,
-                firstLetterLc: patternOptions.regex.firstLetterLc,
-                abnormalWhitespace: patternOptions.regex.abnormalWhitespace
+                onlyWhitespace: this.patternOptions.regex.onlyWhitespace,
+                trimStart: this.patternOptions.regex.trimStart,
+                trimEnd: this.patternOptions.regex.trimEnd,
+                lineSeparator: this.patternOptions.regex.lineSeparator,
+                booleanText: this.patternOptions.regex.booleanText,
+                firstLetterLc: this.patternOptions.regex.firstLetterLc,
+                abnormalWhitespace: this.patternOptions.regex.abnormalWhitespace
             };
         }
     
@@ -334,33 +409,33 @@ export namespace x_44813_util {
          * Undefined properties will not be changed. If this parameter is not defined, then the default pattern options will be restored.
          * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns now being used internally by this module.
          */
-        export function setPatternOptions(settings?: IJsTypeCommanderRegexOpt): IJsTypeCommanderRegex {
+        setPatternOptions(settings?: IJsTypeCommanderRegexOpt): IJsTypeCommanderRegex {
             if (typeof(settings) == "undefined" || settings === null) {
-                patternOptions.regex.onlyWhitespace = patternDefaults.regex.onlyWhitespace;
-                patternOptions.regex.trimStart = patternDefaults.regex.trimStart;
-                patternOptions.regex.trimEnd = patternDefaults.regex.trimEnd;
-                patternOptions.regex.lineSeparator = patternDefaults.regex.lineSeparator;
-                patternOptions.regex.booleanText = patternDefaults.regex.booleanText;
-                patternOptions.regex.firstLetterLc = patternDefaults.regex.firstLetterLc;
-                patternOptions.regex.abnormalWhitespace = patternDefaults.regex.abnormalWhitespace;
+                this.patternOptions.regex.onlyWhitespace = patternDefaults.regex.onlyWhitespace;
+                this.patternOptions.regex.trimStart = patternDefaults.regex.trimStart;
+                this.patternOptions.regex.trimEnd = patternDefaults.regex.trimEnd;
+                this.patternOptions.regex.lineSeparator = patternDefaults.regex.lineSeparator;
+                this.patternOptions.regex.booleanText = patternDefaults.regex.booleanText;
+                this.patternOptions.regex.firstLetterLc = patternDefaults.regex.firstLetterLc;
+                this.patternOptions.regex.abnormalWhitespace = patternDefaults.regex.abnormalWhitespace;
             } else if (typeof(settings) == "object") {
                 // TODO: Test individual settings to see if they are regular expressions or strings
-                if (!isNil(settings.onlyWhitespace))
-                    patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
-                if (!isNil(settings.trimStart))
-                    patternOptions.regex.trimStart = settings.trimStart;
-                if (!isNil(settings.trimEnd))
-                    patternOptions.regex.trimEnd = settings.trimEnd;
-                if (!isNil(settings.lineSeparator))
-                    patternOptions.regex.lineSeparator = settings.lineSeparator;
-                if (!isNil(settings.booleanText))
-                    patternOptions.regex.booleanText = settings.booleanText;
-                if (!isNil(settings.firstLetterLc))
-                    patternOptions.regex.firstLetterLc = settings.firstLetterLc;
-                if (!isNil(settings.abnormalWhitespace))
-                    patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
+                if (!this.isNil(settings.onlyWhitespace))
+                    this.patternOptions.regex.onlyWhitespace = settings.onlyWhitespace;
+                if (!this.isNil(settings.trimStart))
+                    this.patternOptions.regex.trimStart = settings.trimStart;
+                if (!this.isNil(settings.trimEnd))
+                    this.patternOptions.regex.trimEnd = settings.trimEnd;
+                if (!this.isNil(settings.lineSeparator))
+                    this.patternOptions.regex.lineSeparator = settings.lineSeparator;
+                if (!this.isNil(settings.booleanText))
+                    this.patternOptions.regex.booleanText = settings.booleanText;
+                if (!this.isNil(settings.firstLetterLc))
+                    this.patternOptions.regex.firstLetterLc = settings.firstLetterLc;
+                if (!this.isNil(settings.abnormalWhitespace))
+                    this.patternOptions.regex.abnormalWhitespace = settings.abnormalWhitespace;
             }
-            return getPatternOptions();
+            return this.getPatternOptions();
         }
     
         /**
@@ -368,16 +443,16 @@ export namespace x_44813_util {
          * @param s The default character sequence to use when joining lines of text. If this parameter is not defined, then the default character sequence will be restored.
          * @returns {string} The default character sequence that will now be used when joining lines of text.
          */
-        export function setDefaultLineSeparatorSequence(s?: string): string {
-            if (isNil(s))
-                patternOptions.newLineSequence = patternDefaults.newLineSequence;
+        setDefaultLineSeparatorSequence(s?: string): string {
+            if (this.isNil(s))
+                this.patternOptions.newLineSequence = patternDefaults.newLineSequence;
             else {
-                let t = toString(s, "");
+                let t = this.toString(s, "");
                 if (t.length == 0)
                     throw new Error("Line separator sequence cannot be empty.");
-                patternOptions.newLineSequence = t;
+                this.patternOptions.newLineSequence = t;
             }
-            return patternOptions.newLineSequence;
+            return this.patternOptions.newLineSequence;
         }
     
         /**
@@ -387,7 +462,7 @@ export namespace x_44813_util {
          * @param checkElements When checking whether an object is <code>ArrayLike</code> and this is set true, then the existance of each element index is checked, which makes it slower, but more accurate.
          * @returns {*} Value returned from the matching callback.
          */
-        export function mapByTypeValue<TSource, TResult>(target: Nilable<TSource>, callbacks: TypeGuardResultSpecs<Nilable<TSource>, TResult>, checkElements?: boolean): TResult {
+        mapByTypeValue<TSource, TResult>(target: Nilable<TSource>, callbacks: TypeGuardResultSpecs<Nilable<TSource>, TResult>, checkElements?: boolean): TResult {
             let selectedCallback: Function|TResult|undefined;
     
             switch (typeof(target)) {
@@ -423,7 +498,7 @@ export namespace x_44813_util {
                             selectedCallback = callbacks.whenArray;
                         else
                             selectedCallback = (typeof(callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
-                    } else if (isArrayLike(target, checkElements))
+                    } else if (this.isArrayLike(target, checkElements))
                         selectedCallback = (typeof(callbacks.whenArrayLike) !== "undefined") ? callbacks.whenArrayLike : callbacks.whenObject;
                     else
                         selectedCallback = (typeof(callbacks.whenNotArrayLike) !== "undefined") ? callbacks.whenNotArrayLike : callbacks.whenObject;
@@ -444,7 +519,7 @@ export namespace x_44813_util {
          * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
          * @returns {*} Mapped value according to whether the object is defined and optionally by target object type.
          */
-        export function mapByDefined<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
+        mapByDefined<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
                 otherwise: { (): TResult; }|TResult, thisObj?: any) : TResult {
             if (typeof(target) != "undefined") {
                 if (typeof(whenTrue) == "function")
@@ -465,7 +540,7 @@ export namespace x_44813_util {
          * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
          * @returns {*} Mapped value according to whether the object is not defined or not null and optionally by defined target object type.
          */
-        export function mapByNotNull<TSource, TResult>(target: TSource, whenTrue: MapFromValueCallback<TSource, TResult>|TResult, otherwise: { (): TResult; }|TResult, thisObj?: any) : TResult {
+        mapByNotNull<TSource, TResult>(target: TSource, whenTrue: MapFromValueCallback<TSource, TResult>|TResult, otherwise: { (): TResult; }|TResult, thisObj?: any) : TResult {
             if (typeof(target) == "object" && target == null) {
                 if (typeof(otherwise) == "function")
                     return otherwise.call(thisObj);
@@ -485,7 +560,7 @@ export namespace x_44813_util {
          * @param thisObj Object which becomes the <code>this</code> variable when callbacks are invoked.
          * @returns {*} Mapped value according to whether the object is defined and not null and optionally by defined target object type.
          */
-        export function mapByNotNil<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
+        mapByNotNil<TSource, TResult>(target: TSource|undefined, whenTrue: MapFromValueCallback<TSource, TResult>|TResult,
                 otherwise: MapFromValueCallback<AnyNilable, TResult>|TResult, thisObj?: any) : TResult {
             if (typeof(target) == "undefined" || (typeof(target) == "object" && target === null)) {
                 if (typeof(otherwise) == "function")
@@ -503,43 +578,43 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is undefined; otherwise, false.
          */
-        export function notDefined(obj?: TDefined): obj is undefined { return typeof(obj) == "undefined"; }
+        notDefined(obj?: TDefined): obj is undefined { return typeof(obj) == "undefined"; }
         
         /**
          * Determines wether an object is undefined or null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is undefined or null; otherwise, false.
          */
-        export function isNil(obj?: TDefined): obj is null|undefined { return typeof(obj) == "undefined" || obj === null; }
+        isNil(obj?: TDefined): obj is null|undefined { return typeof(obj) == "undefined" || obj === null; }
         
         /**
          * Determines whether an object is null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is null; otherwise false (not defined or not null).
          */
-        export function isNull(obj?: TDefined): obj is null { return typeof(obj) == "object" && obj === null; }
+        isNull(obj?: TDefined): obj is null { return typeof(obj) == "object" && obj === null; }
         
         /**
          * Determines whether a value is a string.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a string; otherwise false.
          */
-        export function isString(obj?: TDefined): obj is string { return typeof(obj) == "string"; }
+        isString(obj?: TDefined): obj is string { return typeof(obj) == "string"; }
         
         /**
          * Determines whether a value is a string or undefined.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a string or undefined; otherwise false.
          */
-        export function isStringIfDef(obj?: TDefined): obj is string|undefined { return typeof(obj) == "undefined" || typeof(obj) == "string"; }
+        isStringIfDef(obj?: TDefined): obj is string|undefined { return typeof(obj) == "undefined" || typeof(obj) == "string"; }
         
         /**
          * Determines whether a value is a string or null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a string or null; otherwise false.
          */
-        export function isStringOrNull(obj?: TDefined): obj is Nullable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isStringOrNull(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenString: true,
                 otherwise: false
@@ -551,8 +626,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a string, null or undefined; otherwise false.
          */
-        export function isStringOrNil(obj?: TDefined): obj is Nilable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isStringOrNil(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenUndefined: true,
                 whenString: true,
@@ -565,8 +640,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string; otherwise false.
          */
-        export function isEmptyString(obj?: TDefined): obj is string {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyString(obj?: TDefined): obj is string {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenString: (s) => s.length == 0,
                 otherwise: false
             });
@@ -577,8 +652,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string undefined; otherwise false.
          */
-        export function isEmptyStringIfDef(obj?: TDefined): obj is string|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyStringIfDef(obj?: TDefined): obj is string|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenString: (s) => s.length == 0,
                 otherwise: false
@@ -590,8 +665,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string or null; otherwise false.
          */
-        export function isEmptyStringOrNull(obj?: TDefined): obj is Nullable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyStringOrNull(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenString: (s) => s.length == 0,
                 otherwise: false
@@ -603,8 +678,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string, null or undefined; otherwise false.
          */
-        export function isEmptyStringOrNil(obj?: TDefined): obj is Nilable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyStringOrNil(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenString: (s) => s.length == 0,
@@ -617,9 +692,9 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string or contains only whitespace characters; otherwise false.
          */
-        export function isEmptyOrWhitespace(obj?: TDefined): obj is string {
-            return mapByTypeValue<any, boolean>(obj, {
-                whenString: (s) => s.length == 0 || patternOptions.regex.onlyWhitespace.test(s),
+        isEmptyOrWhitespace(obj?: TDefined): obj is string {
+            return this.mapByTypeValue<any, boolean>(obj, {
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
                 otherwise: false
             });
         }
@@ -629,10 +704,10 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is undefined; otherwise false.
          */
-        export function isEmptyOrWhitespaceIfDef(obj?: TDefined): obj is string|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyOrWhitespaceIfDef(obj?: TDefined): obj is string|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
-                whenString: (s) => s.length == 0 || patternOptions.regex.onlyWhitespace.test(s),
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
                 otherwise: false
             });
         }
@@ -642,10 +717,10 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null; otherwise false.
          */
-        export function isNullOrWhitespace(obj?: TDefined): obj is Nullable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNullOrWhitespace(obj?: TDefined): obj is Nullable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
-                whenString: (s) => s.length == 0 || patternOptions.regex.onlyWhitespace.test(s),
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
                 otherwise: false
             });
         }
@@ -655,11 +730,11 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty string, contains only whitespace characters, or is null or undefined; otherwise false.
          */
-        export function isNilOrWhitespace(obj?: TDefined): obj is Nilable<string> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNilOrWhitespace(obj?: TDefined): obj is Nilable<string> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
-                whenString: (s) => s.length == 0 || patternOptions.regex.onlyWhitespace.test(s),
+                whenString: (s) => s.length == 0 || this.patternOptions.regex.onlyWhitespace.test(s),
                 otherwise: false
             });
         }
@@ -671,13 +746,13 @@ export namespace x_44813_util {
          * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
          * @returns {string|null|undefined} Value converted to a string or the default value.
          */
-        export function asString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): Nilable<string> {
-            let str: Nilable<string> = mapByTypeValue<any, Nilable<string>>(obj, {
+        asString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): Nilable<string> {
+            let str: Nilable<string> = this.mapByTypeValue<any, Nilable<string>>(obj, {
                 whenUndefined: (s) => s,
                 whenNull: (s) => s,
                 whenString: (s) => s,
                 whenArray: (a) => (a.length == 0) ? "" : a.map(o => {
-                    if (isNil(o))
+                    if (this.isNil(o))
                         return "";
                     return (typeof(o) == "string") ? o : o.toString();
                 }).join(","),
@@ -688,12 +763,12 @@ export namespace x_44813_util {
             });
             if (typeof(str) == "string" && (!ifWhitespace || str.trim().length > 0))
                 return str;
-            return mapByTypeValue<any, Nilable<string>>(defaultValue, {
+            return this.mapByTypeValue<any, Nilable<string>>(defaultValue, {
                 whenUndefined: (s) => str,
                 whenNull: (s) => (typeof(str) == "string") ? str : s,
                 whenString: (s) => s,
                 whenArray: (a) => (a.length == 0) ? "" : a.map(o => {
-                    if (isNil(o))
+                    if (this.isNil(o))
                         return "";
                     return (typeof(o) == "string") ? o : o.toString();
                 }).join(","),
@@ -711,10 +786,10 @@ export namespace x_44813_util {
          * @param {boolean} [ifWhitespace] Return default value if converted value is empty or only whitespace.
          * @returns {string} Value converted to a string or the default value. If the default value is nil, then an empty string will be returned.
          */
-        export function toString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): string
+        toString(obj?: TDefined, defaultValue?: Nullable<string>, ifWhitespace?: boolean): string
         {
-            let s = asString(obj, defaultValue, ifWhitespace);
-            if (isString(s))
+            let s = this.asString(obj, defaultValue, ifWhitespace);
+            if (this.isString(s))
                 return s;
             return "";
         }
@@ -724,10 +799,10 @@ export namespace x_44813_util {
          * @param text Text to trim.
          * @returns {string} Text with leading whitespace removed.
          */
-        export function trimStart(text: string): string {
-            let s = toString(text, "");
-            let m = patternOptions.regex.trimStart.exec(s);
-            return (isNil(m)) ? "" : m[1];
+        trimStart(text: string): string {
+            let s = this.toString(text, "");
+            let m = this.patternOptions.regex.trimStart.exec(s);
+            return (this.isNil(m)) ? "" : m[1];
         }
         
         /**
@@ -735,10 +810,10 @@ export namespace x_44813_util {
          * @param text Text to trim.
          * @returns {string} Text with trailing whitespace removed.
          */
-        export function trimEnd(text: string): string {
-            let s = toString(text, "");
-            let m = patternOptions.regex.trimEnd.exec(s);
-            return (isNil(m)) ? "" : m[1];
+        trimEnd(text: string): string {
+            let s = this.toString(text, "");
+            let m = this.patternOptions.regex.trimEnd.exec(s);
+            return (this.isNil(m)) ? "" : m[1];
         }
         
         /**
@@ -746,11 +821,11 @@ export namespace x_44813_util {
          * @param text Text to trim.
          * @returns {string} Text with outer whitespace removed and inner whitespace normalized.
          */
-        export function asNormalizedWs(text: string): string {
-            let s = toString(text, "").trim();
+        asNormalizedWs(text: string): string {
+            let s = this.toString(text, "").trim();
             if (s.length == 0)
                 return s;
-            return s.replace(patternOptions.regex.abnormalWhitespace, " ");
+            return s.replace(this.patternOptions.regex.abnormalWhitespace, " ");
         }
         
         /**
@@ -758,19 +833,19 @@ export namespace x_44813_util {
          * @param {string} text Text to capitalize.
          * @returns {string} Capitalizes the first letter in text, skipping over any leading characters that are not letters or digits.
          */
-        export function ucFirst(text: string): string {
-            let s = toString(text, "");
+        ucFirst(text: string): string {
+            let s = this.toString(text, "");
             if (s.length < 2)
                 return s.toUpperCase();
-            let m = patternOptions.regex.firstLetterLc.exec(s);
-            if (isNil(m))
+            let m = this.patternOptions.regex.firstLetterLc.exec(s);
+            if (this.isNil(m))
                 return s;
-            if (isString(m[1])) {
-                if (isString(m[3]))
+            if (this.isString(m[1])) {
+                if (this.isString(m[3]))
                     return m[1] + m[2].toUpperCase() + m[3];
                 return m[1] + m[2].toUpperCase();
             }
-            if (isString(m[3]))
+            if (this.isString(m[3]))
                 return m[2].toUpperCase() + m[3];
             return m[2].toUpperCase();
         }
@@ -780,11 +855,11 @@ export namespace x_44813_util {
          * @param {string} text Text to split.
          * @returns {string[]} Array containing individual lines of text.
          */
-        export function splitLines(text: string): string[] {
-            let s = toString(text, "");
+        splitLines(text: string): string[] {
+            let s = this.toString(text, "");
             if (s.length == 0)
                 return [s];
-            return s.split(patternOptions.regex.lineSeparator);
+            return s.split(this.patternOptions.regex.lineSeparator);
         }
         
         /**
@@ -793,28 +868,28 @@ export namespace x_44813_util {
          * @param {string} indent Characters to use for indentation.
          * @returns {string} Text with lines indented.
          */
-        export function indentText(text: string|string[], indent?: string): string {
-            let i = toString(indent, "\t");
+        indentText(text: string|string[], indent?: string): string {
+            let i = this.toString(indent, "\t");
             let arr: string[];
             if (Array.isArray(text)) {
                 if (text.length == 0)
                     arr = text;
                 else if (text.length == 1)
-                    arr = splitLines(text[0]);
+                    arr = this.splitLines(text[0]);
                 else {
                     arr = [];
-                    text.forEach(s => splitLines(s).forEach(l => arr.push(l)));
+                    text.forEach(s => this.splitLines(s).forEach(l => arr.push(l)));
                 }
             } else
-                arr = splitLines(text);
+                arr = this.splitLines(text);
             if (arr.length == 0 || (arr.length == 1 && arr[0].length == 0))
                 return "";
         
-            return arr.map(s => trimEnd(s)).map(s => {
+            return arr.map(s => this.trimEnd(s)).map(s => {
                 if (s.length == 0)
                     return s;
                 return i + s;
-            }).join(patternOptions.newLineSequence);
+            }).join(this.patternOptions.newLineSequence);
         }
         
         /**
@@ -823,23 +898,23 @@ export namespace x_44813_util {
          * @param {string} indent Characters to use for indentation.
          * @returns {string} Array containing indented lines.
          */
-        export function indentLines(text: string[]|string, indent?: string): string[] {
-            let i = toString(indent, "\t");
+        indentLines(text: string[]|string, indent?: string): string[] {
+            let i = this.toString(indent, "\t");
             let arr: string[];
             if (Array.isArray(text)) {
                 if (text.length == 0)
                     arr = text;
                 else if (text.length == 1)
-                    arr = splitLines(text[0]);
+                    arr = this.splitLines(text[0]);
                 else {
                     arr = [];
-                    text.forEach(s => splitLines(s).forEach(l => arr.push(l)));
+                    text.forEach(s => this.splitLines(s).forEach(l => arr.push(l)));
                 }
             } else
-                arr = splitLines(text);
+                arr = this.splitLines(text);
             if (arr.length == 0 || (arr.length == 1 && arr[0].length == 0))
                 return arr;
-            arr = arr.map(s => trimEnd(s));
+            arr = arr.map(s => this.trimEnd(s));
         
             if (i.length == 0)
                 return arr;
@@ -856,22 +931,22 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is boolean; otherwise false.
          */
-        export function isBoolean(obj?: TDefined): obj is boolean { return typeof(obj) == "boolean"; }
+        isBoolean(obj?: TDefined): obj is boolean { return typeof(obj) == "boolean"; }
         
         /**
          * Determines whether a value is boolean or undefined.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is boolean or undefined; otherwise false.
          */
-        export function isBooleanIfDef(obj?: TDefined): obj is boolean|undefined { return typeof(obj) == "undefined" || typeof(obj) == "boolean"; }
+        isBooleanIfDef(obj?: TDefined): obj is boolean|undefined { return typeof(obj) == "undefined" || typeof(obj) == "boolean"; }
         
         /**
          * Determines whether a value is boolean or null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is boolean or null; otherwise false.
          */
-        export function isBooleanOrNull(obj?: TDefined): obj is Nullable<boolean> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isBooleanOrNull(obj?: TDefined): obj is Nullable<boolean> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenBoolean: true,
                 otherwise: false
@@ -883,8 +958,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is boolean, null or undefined; otherwise false.
          */
-        export function isBooleanOrNil(obj?: TDefined): obj is Nilable<boolean> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isBooleanOrNil(obj?: TDefined): obj is Nilable<boolean> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenBoolean: true,
@@ -898,18 +973,18 @@ export namespace x_44813_util {
          * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
          * @returns {boolean|null|undefined} Value converted to a boolean or the default value.
          */
-        export function asBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): Nilable<boolean> {
-            let bs: Nilable<boolean|string> = mapByTypeValue<any, Nilable<boolean|string>>(obj, {
+        asBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): Nilable<boolean> {
+            let bs: Nilable<boolean|string> = this.mapByTypeValue<any, Nilable<boolean|string>>(obj, {
                 whenUndefined: (b) => b,
                 whenNull: (b) => b,
                 whenBoolean: (b) => b,
                 whenString: (s) => s,
                 whenNaN: false,
                 whenNumber: (n) => n != 0,
-                whenArray: (a) => (a.length == 0) ? undefined : (isNil(a[0]) ? a[0] : ((isObject(a[0])) ? undefined : asBoolean(a[0]))),
+                whenArray: (a) => (a.length == 0) ? undefined : (this.isNil(a[0]) ? a[0] : ((this.isObject(a[0])) ? undefined : this.asBoolean(a[0]))),
                 otherwise: (o) => {
                     try {
-                        return mapByTypeValue<any, Nilable<boolean|string>>(o.valueOf(), {
+                        return this.mapByTypeValue<any, Nilable<boolean|string>>(o.valueOf(), {
                             whenUndefined: (b) => o.toString(),
                             whenNull: (b) => o.toString(),
                             whenBoolean: (b) => b,
@@ -926,32 +1001,32 @@ export namespace x_44813_util {
                     return o + "";
                 }
             });
-            return mapByTypeValue<Nilable<boolean|string>, Nilable<boolean>>(bs, {
+            return this.mapByTypeValue<Nilable<boolean|string>, Nilable<boolean>>(bs, {
                 whenBoolean: (b) => b,
                 whenString: (s) => {
                     if ((s = s.trim()).length > 0) {
-                        let m = patternOptions.regex.booleanText.exec(s);
-                        if (!isNil(m))
-                            return isNil(m[2]);
+                        let m = this.patternOptions.regex.booleanText.exec(s);
+                        if (!this.isNil(m))
+                            return this.isNil(m[2]);
                     }
-                    return mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                    return this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
                         whenUndefined: (o) => o,
                         whenNull: (o) => o,
                         whenBoolean: (b) => b,
-                        otherwise: (o) =>  asBoolean(o)
+                        otherwise: (o) =>  this.asBoolean(o)
                     });
                 },
-                whenNull: (o) => mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                whenNull: (o) => this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
                     whenUndefined: (d) => o,
                     whenNull: (d) => d,
                     whenBoolean: (b) => b,
-                    otherwise: (d) =>  asBoolean(d)
+                    otherwise: (d) =>  this.asBoolean(d)
                 }),
-                otherwise: (o) => mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
+                otherwise: (o) => this.mapByTypeValue<any, Nilable<boolean>>(defaultValue, {
                     whenUndefined: (d) => d,
                     whenNull: (d) => d,
                     whenBoolean: (b) => b,
-                    otherwise: (d) =>  asBoolean(d)
+                    otherwise: (d) =>  this.asBoolean(d)
                 })
             });
         }
@@ -962,10 +1037,10 @@ export namespace x_44813_util {
          * @param {boolean|null} [defaultValue] Default value if object could not be converted to a boolean.
          * @returns {boolean} Value converted to a boolean or the default value. If the default value is nil, then a false value will be returned.
          */
-        export function toBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): boolean
+        toBoolean(obj?: TDefined, defaultValue?: Nullable<boolean>): boolean
         {
-            let b = asBoolean(obj, defaultValue);
-            return isBoolean(b) && b;
+            let b = this.asBoolean(obj, defaultValue);
+            return this.isBoolean(b) && b;
         }
         
         /**
@@ -973,8 +1048,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a finite number; otherwise false.
          */
-        export function isNumber(obj?: TDefined): obj is number {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNumber(obj?: TDefined): obj is number {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: false,
                 whenUndefined: false,
                 whenNumber: true,
@@ -989,8 +1064,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is finite number or undefined; otherwise false.
          */
-        export function isNumberIfDef(obj?: TDefined): obj is number|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNumberIfDef(obj?: TDefined): obj is number|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: false,
                 whenUndefined: true,
                 whenNumber: true,
@@ -1005,8 +1080,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a finite number or null; otherwise false.
          */
-        export function isNumberOrNull(obj?: TDefined): obj is Nullable<number> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNumberOrNull(obj?: TDefined): obj is Nullable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenNumber: true,
                 whenInfinity: false,
@@ -1020,8 +1095,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a number or null; otherwise false.
          */
-        export function isNumberNaNorNull(obj?: TDefined): obj is Nullable<number> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNumberNaNorNull(obj?: TDefined): obj is Nullable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenNumber: true,
                 whenInfinity: true,
@@ -1035,8 +1110,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is a finite number, null or undefined; otherwise false.
          */
-        export function isNumberOrNil(obj?: TDefined): obj is Nilable<number> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNumberOrNil(obj?: TDefined): obj is Nilable<number> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenNumber: true,
@@ -1051,8 +1126,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an infinite number; otherwise false.
          */
-        export function isInfinite(obj?: TDefined): obj is number {
-            return mapByTypeValue<any, boolean>(obj, {
+        isInfinite(obj?: TDefined): obj is number {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: false,
                 whenNull: false,
                 whenNumber: false,
@@ -1069,9 +1144,9 @@ export namespace x_44813_util {
          * @param {boolean} [allowNaN] If true, then NaN and infinite values count as numbers.
          * @returns {number|null|undefined} Value converted to a number or the default value.
          */
-        export function asNumber(obj?: TDefined, defaultValue?: Nullable<number>, allowNaN?: boolean): Nilable<number>
+        asNumber(obj?: TDefined, defaultValue?: Nullable<number>, allowNaN?: boolean): Nilable<number>
         {
-            let ns: Nilable<number> = mapByTypeValue<any, Nilable<number>>(obj, {
+            let ns: Nilable<number> = this.mapByTypeValue<any, Nilable<number>>(obj, {
                 whenUndefined: (b) => b,
                 whenNull: (b) => b,
                 whenBoolean: (b) => (b) ? 1 : 0,
@@ -1083,10 +1158,10 @@ export namespace x_44813_util {
                 whenNaN: (allowNaN === true) ? NaN : null,
                 whenInfinity: (allowNaN === true) ? ((n) => n) : null,
                 whenNumber: (n) => n,
-                whenArray: (a) => (a.length == 0) ? undefined : (isNil(a[0]) ? a[0] : ((isObject(a[0])) ? undefined : asNumber(a[0], undefined, allowNaN))),
+                whenArray: (a) => (a.length == 0) ? undefined : (this.isNil(a[0]) ? a[0] : ((this.isObject(a[0])) ? undefined : this.asNumber(a[0], undefined, allowNaN))),
                 otherwise: (o) => {
                     try {
-                        return mapByTypeValue<any, Nilable<number>>(o.valueOf(), {
+                        return this.mapByTypeValue<any, Nilable<number>>(o.valueOf(), {
                             whenUndefined: (b) => o.toString(),
                             whenNull: (b) => o.toString(),
                             whenBoolean: (b) => (b) ? 1 : 0,
@@ -1113,14 +1188,14 @@ export namespace x_44813_util {
                 return ns;
     
             if (typeof(ns) == "number") {
-                if (isNaN(ns) || isInfinite(ns)) {
+                if (isNaN(ns) || this.isInfinite(ns)) {
                     if (allowNaN === true)
                         return ns;
                 } else
                     return ns;
             }
             
-            return mapByTypeValue<Nilable<number>,Nilable<number>>(asNumber(defaultValue), {
+            return this.mapByTypeValue<Nilable<number>,Nilable<number>>(this.asNumber(defaultValue), {
                 whenUndefined: d => (allowNaN === true) ? ns : d,
                 whenInfinity: d => (typeof(ns) != "number" || isNaN(ns)) ? d : ns,
                 whenNumber: d => d,
@@ -1135,10 +1210,10 @@ export namespace x_44813_util {
          * @param {boolean} [allowNaN] If true, then NaN and infinite values count as numbers.
          * @returns {number} Value converted to a number or the default value. If the default value is nil, then a zero value will be returned.
          */
-        export function toNumber(obj?: TDefined, defaultValue?: Nullable<number>, allowNaN?: boolean): number
+        toNumber(obj?: TDefined, defaultValue?: Nullable<number>, allowNaN?: boolean): number
         {
-            let i = asNumber(obj, defaultValue, allowNaN);
-            if (isNumber(i))
+            let i = this.asNumber(obj, defaultValue, allowNaN);
+            if (this.isNumber(i))
                 return i;
             else if (allowNaN === true && typeof(obj) == "number")
                 return obj;
@@ -1150,22 +1225,22 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is function; otherwise false.
          */
-        export function isFunction(obj?: TDefined) : obj is Function { return typeof(obj) === "function"; }
+        isFunction(obj?: TDefined) : obj is Function { return typeof(obj) === "function"; }
         
         /**
          * Determines whether a value is function or undefined.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is function or undefined; otherwise false.
          */
-        export function isFunctionIfDef(obj?: TDefined) : obj is Function|undefined { return typeof(obj) === "undefined" || typeof(obj) === "function"; }
+        isFunctionIfDef(obj?: TDefined) : obj is Function|undefined { return typeof(obj) === "undefined" || typeof(obj) === "function"; }
         
         /**
          * Determines whether a value is function or null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is function or null; otherwise false.
          */
-        export function isFunctionOrNull(obj?: TDefined) : obj is Nullable<Function> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isFunctionOrNull(obj?: TDefined) : obj is Nullable<Function> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenFunction: true,
                 otherwise: false
@@ -1177,8 +1252,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is function, null or undefined; otherwise false.
          */
-        export function isFunctionOrNil(obj?: TDefined) : obj is Nilable<Function> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isFunctionOrNil(obj?: TDefined) : obj is Nilable<Function> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenFunction: true,
@@ -1191,15 +1266,15 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if the value's type is "object" and it is not null; otherwise false.
          */
-        export function isObjectType(obj?: TDefined): obj is object { return typeof(obj) == "object" && obj !== null; }
+        isObjectType(obj?: TDefined): obj is object { return typeof(obj) == "object" && obj !== null; }
         
         /**
          * Determines whether a value is undefined or its type is "object" and it is not null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if the value is undefined or its type is "object" and it is not null; otherwise false.
          */
-        export function isObjectTypeIfDef(obj?: TDefined): obj is object|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isObjectTypeIfDef(obj?: TDefined): obj is object|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: false,
                 whenObject: true,
@@ -1212,14 +1287,14 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if the value is null, or its type is "object"; otherwise false.
          */
-        export function isObjectTypeOrNull(obj?: TDefined): obj is Nullable<object> { return typeof(obj) == "object"; }
+        isObjectTypeOrNull(obj?: TDefined): obj is Nullable<object> { return typeof(obj) == "object"; }
         
         /**
          * Determines whether a value is undefined, null, or its type is "object".
          * @param {*} obj Object to test.
          * @returns {boolean} True if the value is undefined, null, or its type is "object"; otherwise false.
          */
-        export function isObjectTypeOrNil(obj?: TDefined): obj is Nilable<object> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
+        isObjectTypeOrNil(obj?: TDefined): obj is Nilable<object> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
         
         /**
          * Determines whether a value is an object and it is not null.
@@ -1228,7 +1303,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isNonArrayObject() and isPlainObject().
          * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
          */
-        export function isObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null; }
+        isObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null; }
         
         /**
          * Determines whether a value undefined or it is an object and it is not null.
@@ -1237,7 +1312,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isNonArrayObjectIfDef() and isPlainObjectIfDef().
          * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
          */
-        export function isObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined { return typeof(obj) == "undefined" || (typeof(obj) == "object" && obj !== null); }
+        isObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined { return typeof(obj) == "undefined" || (typeof(obj) == "object" && obj !== null); }
         
         /**
          * Determines whether a value null or it is an object.
@@ -1246,7 +1321,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isNonArrayObjectOrNull() and isPlainObjectOrNull().
          * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
          */
-        export function isObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object"; }
+        isObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object"; }
         
         /**
          * Determines whether a value undefined, null, or it is an object.
@@ -1255,7 +1330,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isNonArrayObjectOrNil() and isPlainObjectOrNil().
          * The difference is that this always returns true if the type is "object", even if the value is an actual Array.
          */
-        export function isObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
+        isObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> { return typeof(obj) == "undefined" || typeof(obj) == "object"; }
         
         /**
          * Determines whether a value is an object, but not an array.
@@ -1264,7 +1339,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObject() and isPlainObject().
          * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
          */
-        export function isNonArrayObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null && !Array.isArray(obj); }
+        isNonArrayObject(obj?: TDefined): obj is IStringKeyedObject { return typeof(obj) == "object" && obj !== null && !Array.isArray(obj); }
         
         /**
          * Determines whether a value is an object or undefined, and not an array.
@@ -1273,8 +1348,8 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectIfDef() and isPlainObjectIfDef().
          * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
          */
-        export function isNonArrayObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNonArrayObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: false,
                 whenObject: true,
@@ -1290,7 +1365,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectOrNull() and isPlainObjectOrNull().
          * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
          */
-        export function isNonArrayObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object" && (obj === null || !Array.isArray(obj)); }
+        isNonArrayObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> { return typeof(obj) == "object" && (obj === null || !Array.isArray(obj)); }
         
         /**
          * Determines whether a value is an object, null or undefined, and not an array.
@@ -1299,8 +1374,8 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectOrNil() and isPlainObjectOrNil().
          * The difference is that this returns false if the value is an actual Array. Also, it will return true even if the value was not constructed directly from Object.
          */
-        export function isNonArrayObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isNonArrayObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenObject: true,
@@ -1316,11 +1391,11 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObject() and isNonArrayObject().
          * The difference is that this returns false if the value is not constructed directly from Object.
          */
-        export function isPlainObject(obj?: TDefined): obj is IStringKeyedObject {
+        isPlainObject(obj?: TDefined): obj is IStringKeyedObject {
             if (typeof(obj) != "object" || obj === null)
                 return false;
             let proto = Object.getPrototypeOf(obj);
-            return isNil(proto) || proto.constructor === Object;
+            return this.isNil(proto) || proto.constructor === Object;
         }
         
         /**
@@ -1330,14 +1405,14 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectIfDef() and isNonArrayObjectIfDef().
          * The difference is that this returns false if the value is not constructed directly from Object.
          */
-        export function isPlainObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
+        isPlainObjectIfDef(obj?: TDefined): obj is IStringKeyedObject|undefined {
             let t = typeof(obj);
             if (t == "undefined")
                 return true;
             if (t != "object" || obj === null)
                 return false;
             let proto = Object.getPrototypeOf(obj);
-            return isNil(proto) || proto.constructor === Object;
+            return this.isNil(proto) || proto.constructor === Object;
         }
         
         /**
@@ -1347,13 +1422,13 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectOrNull() and isNonArrayObjectOrNull().
          * The difference is that this returns false if the value is not constructed directly from Object.
          */
-        export function isPlainObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> {
+        isPlainObjectOrNull(obj?: TDefined): obj is Nullable<IStringKeyedObject> {
             if (typeof(obj) != "object")
                 return false;
             if (obj === null)
                 return true;
             let proto = Object.getPrototypeOf(obj);
-            return isNil(proto) || proto.constructor === Object;
+            return this.isNil(proto) || proto.constructor === Object;
         }
         
         /**
@@ -1363,7 +1438,7 @@ export namespace x_44813_util {
          * @description As a type guard, this behaves the same as isObjectOrNil() and isNonArrayObjectOrNil().
          * The difference is that this returns false if the value is not constructed directly from Object.
          */
-        export function isPlainObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
+        isPlainObjectOrNil(obj?: TDefined): obj is Nilable<IStringKeyedObject> {
             let t = typeof(obj);
             if (t == "undefined")
                 return true;
@@ -1372,7 +1447,7 @@ export namespace x_44813_util {
             if (obj === null)
                 return true;
             let proto = Object.getPrototypeOf(obj);
-            return isNil(proto) || proto.constructor === Object;
+            return this.isNil(proto) || proto.constructor === Object;
         }
         
         /**
@@ -1380,36 +1455,36 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an array; otherwise false.
          */
-        export function isArray(obj?: TDefined): obj is AnyNilable[] { return isObject(obj) && Array.isArray(obj); }
+        isArray(obj?: TDefined): obj is AnyNilable[] { return this.isObject(obj) && Array.isArray(obj); }
         
         /**
          * Determines whether a value is an array or undefined.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an array or undefined; otherwise false.
          */
-        export function isArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined { return typeof(obj) == "undefined" || isArray(obj); }
+        isArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined { return typeof(obj) == "undefined" || this.isArray(obj); }
         
         /**
          * Determines whether a value is an array or null.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an array or null; otherwise false.
          */
-        export function isArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> { return typeof(obj) == "object" && (obj === null || Array.isArray(obj)); }
+        isArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> { return typeof(obj) == "object" && (obj === null || Array.isArray(obj)); }
         
         /**
          * Determines whether a value is an array, null or undefined.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an array, null or undefined; otherwise false.
          */
-        export function isArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> { return typeof(obj) == "undefined" || (typeof(obj) == "object" && (obj === null || Array.isArray(obj))); }
+        isArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> { return typeof(obj) == "undefined" || (typeof(obj) == "object" && (obj === null || Array.isArray(obj))); }
         
         /**
          * Determines whether a value is an empty array.
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty array; otherwise false.
          */
-        export function isEmptyArray(obj?: TDefined): obj is AnyNilable[] {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyArray(obj?: TDefined): obj is AnyNilable[] {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenArray: (a) => a.length == 0,
                 otherwise: false
             });
@@ -1420,8 +1495,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty array or undefined; otherwise false.
          */
-        export function isEmptyArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyArrayIfDef(obj?: TDefined): obj is AnyNilable[]|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenArray: (a) => a.length == 0,
                 otherwise: false
@@ -1433,8 +1508,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty array or null; otherwise false.
          */
-        export function isEmptyArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyArrayOrNull(obj?: TDefined): obj is Nullable<AnyNilable[]> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenArray: (a) => a.length == 0,
                 otherwise: false
@@ -1446,8 +1521,8 @@ export namespace x_44813_util {
          * @param {*} obj Object to test.
          * @returns {boolean} True if object is an empty array, null or undefined; otherwise false.
          */
-        export function isEmptyArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isEmptyArrayOrNil(obj?: TDefined): obj is Nilable<AnyNilable[]> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenArray: (a) => a.length == 0,
@@ -1462,12 +1537,12 @@ export namespace x_44813_util {
          * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
          * @see {@link https://github.com/Microsoft/TypeScript/blob/530d7e9358ee95d2101a619e73356867b617cd95/lib/lib.es5.d.ts}
          */
-        export function isArrayLike(obj?: TDefined, checkElements?: boolean): obj is ArrayLike<AnyNilable> {
-            if (!isObject(obj))
+        isArrayLike(obj?: TDefined, checkElements?: boolean): obj is ArrayLike<AnyNilable> {
+            if (!this.isObject(obj))
                 return false;
             if (Array.isArray(obj))
                 return true;
-            if (!isNumber(obj.length) || isNaN(obj.length) || obj.length < 0 || obj.length == Infinity || obj.length == -Infinity)
+            if (!this.isNumber(obj.length) || isNaN(obj.length) || obj.length < 0 || obj.length == Infinity || obj.length == -Infinity)
                 return false;
             if (!checkElements || obj.length == 0)
                 return true;
@@ -1489,8 +1564,8 @@ export namespace x_44813_util {
          * but can result in false positives for non-array objects which have a numeric "length" property.
          * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
          */
-        export function isArrayLikeIfDef(obj?: TDefined, simpleCheck?: boolean): obj is ArrayLike<AnyNilable>|undefined {
-            return mapByTypeValue<any, boolean>(obj, {
+        isArrayLikeIfDef(obj?: TDefined, simpleCheck?: boolean): obj is ArrayLike<AnyNilable>|undefined {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenArrayLike: true,
                 whenArray: true,
@@ -1505,8 +1580,8 @@ export namespace x_44813_util {
          * but can result in false positives for non-array objects which have a numeric "length" property.
          * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
          */
-        export function isArrayLikeOrNull(obj?: TDefined, simpleCheck?: boolean): obj is Nullable<ArrayLike<AnyNilable>> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isArrayLikeOrNull(obj?: TDefined, simpleCheck?: boolean): obj is Nullable<ArrayLike<AnyNilable>> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenNull: true,
                 whenArrayLike: true,
                 whenArray: true,
@@ -1521,8 +1596,8 @@ export namespace x_44813_util {
          * but can result in false positives for non-array objects which have a numeric "length" property.
          * @returns {boolean} True if the object has properties which indiciates it behaves like an array; otherwise false.
          */
-        export function isArrayLikeOrNil(obj?: TDefined, simpleCheck?: boolean): obj is Nilable<ArrayLike<AnyNilable>> {
-            return mapByTypeValue<any, boolean>(obj, {
+        isArrayLikeOrNil(obj?: TDefined, simpleCheck?: boolean): obj is Nilable<ArrayLike<AnyNilable>> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
                 whenArrayLike: true,
@@ -1559,14 +1634,14 @@ export namespace x_44813_util {
          * JavaScript:
          *     var JsTypeCommander = require("JsTypeCommander").JsTypeCommander;
          */
-        export function toArray(obj?: TDefined, checkElements?: boolean): AnyNilable[] {
+        toArray(obj?: TDefined, checkElements?: boolean): AnyNilable[] {
             if (arguments.length == 0)
                 return [];
             
-            if (isArray(obj))
+            if (this.isArray(obj))
                 return obj;
             
-            if (isArrayLike(obj, checkElements)) {
+            if (this.isArrayLike(obj, checkElements)) {
                 let result: AnyNilable[] = [];
                 for (var i = 0; i < obj.length; i++)
                     result.push(obj[i]);
@@ -1594,64 +1669,64 @@ export namespace x_44813_util {
          * result = JsTypeCommander.derivesFrom(objToTest, Error);
          * // result === false
          */
-        export function derivesFrom<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T {
-            if (notDefined(obj))
-                return notDefined(classConstructor);
-            if (notDefined(classConstructor))
+        derivesFrom<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T {
+            if (this.notDefined(obj))
+                return this.notDefined(classConstructor);
+            if (this.notDefined(classConstructor))
                 return false;
             if (obj === null)
                 return classConstructor === null;
             let classProto;
-            if (isFunction(classConstructor)) {
+            if (this.isFunction(classConstructor)) {
                 classProto = classConstructor.prototype;
             } else {
                 classProto = Object.getPrototypeOf(classConstructor);
                 classConstructor = classProto.constructor;
-                while (!isFunction(classConstructor)) {
+                while (!this.isFunction(classConstructor)) {
                     classProto = Object.getPrototypeOf(classProto);
-                    if (isNil(classProto))
+                    if (this.isNil(classProto))
                         break;
                     classConstructor = classProto.constructor;
                 }
             }
         
-            if (isFunction(classConstructor) && obj instanceof classConstructor)
+            if (this.isFunction(classConstructor) && obj instanceof classConstructor)
                 return true;
                 
             let valueProto, valueConstructor;
-            if (isFunction(obj)) {
+            if (this.isFunction(obj)) {
                 valueConstructor = obj;
                 valueProto = obj.prototype;
             } else {
                 valueProto = Object.getPrototypeOf(obj);
                 valueConstructor = valueProto.constructor;
-                while (!isFunction(valueConstructor)) {
+                while (!this.isFunction(valueConstructor)) {
                     valueProto = Object.getPrototypeOf(valueProto);
-                    if (isNil(valueProto))
+                    if (this.isNil(valueProto))
                         break;
                     valueConstructor = valueProto.constructor;
                 }
             }
-            if (isNil(valueConstructor))
-                return (isNil(classConstructor) && isNil(classProto) == isNil(valueProto));
+            if (this.isNil(valueConstructor))
+                return (this.isNil(classConstructor) && this.isNil(classProto) == this.isNil(valueProto));
             if (valueConstructor === classConstructor)
                 return true;
-            if (isNil(valueProto))
-                return (isNil(classProto) && valueConstructor === classConstructor);
+            if (this.isNil(valueProto))
+                return (this.isNil(classProto) && valueConstructor === classConstructor);
             
             let constructorChain = [];
             do {
-                if (isFunction(classConstructor) && valueProto instanceof classConstructor)
+                if (this.isFunction(classConstructor) && valueProto instanceof classConstructor)
                     return true;
                 constructorChain.push(valueConstructor);
                 valueConstructor = null;
                 do {
                     valueProto = Object.getPrototypeOf(valueProto);
-                    if (isNil(valueProto))
+                    if (this.isNil(valueProto))
                         break;
                     valueConstructor = valueProto.constructor;
-                } while (isNil(valueConstructor));
-            } while (!isNil(valueConstructor));
+                } while (this.isNil(valueConstructor));
+            } while (!this.isNil(valueConstructor));
             for (let i = 0; i < constructorChain.length; i++) {
                 if (constructorChain[i] === classConstructor)
                     return true;
@@ -1665,8 +1740,8 @@ export namespace x_44813_util {
          * @param {AnyFunction} classConstructor Constructor function to look for.
          * @returns {boolean} True if the object is not defined or if it is determined to inherit from the specified class; otherwise false.
          */
-        export function derivesFromIfDef<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T|undefined {
-            return typeof(obj) == "undefined" || derivesFrom<T>(obj, classConstructor);
+        derivesFromIfDef<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is T|undefined {
+            return typeof(obj) == "undefined" || this.derivesFrom<T>(obj, classConstructor);
         }
         
         /**
@@ -1675,11 +1750,11 @@ export namespace x_44813_util {
          * @param {AnyFunction} classConstructor Constructor function to look for.
          * @returns {boolean} True if the object is null or if it is determined to inherit from the specified class; otherwise false.
          */
-        export function derivesFromOrNull<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nullable<T> {
-            return mapByTypeValue<any, boolean>(obj, {
+        derivesFromOrNull<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nullable<T> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: false,
                 whenNull: true,
-                otherwise: (o) => derivesFrom<T>(obj, classConstructor)
+                otherwise: (o) => this.derivesFrom<T>(obj, classConstructor)
             });
         }
         
@@ -1689,11 +1764,11 @@ export namespace x_44813_util {
          * @param {AnyFunction} classConstructor Constructor function to look for.
          * @returns {boolean} True if the object is null, not defined or if it is determined to inherit from the specified class; otherwise false.
          */
-        export function derivesFromOrNil<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nilable<T> {
-            return mapByTypeValue<any, boolean>(obj, {
+        derivesFromOrNil<T>(obj?: TDefined, classConstructor?: { new(...args: AnyNilable[]): T; }) : obj is Nilable<T> {
+            return this.mapByTypeValue<any, boolean>(obj, {
                 whenUndefined: true,
                 whenNull: true,
-                otherwise: (o) => derivesFrom<T>(obj, classConstructor)
+                otherwise: (o) => this.derivesFrom<T>(obj, classConstructor)
             });
         }
         
@@ -1715,20 +1790,20 @@ export namespace x_44813_util {
          * result = JsTypeCommander.isErrorLike(objToTest);
          * // result === false (typeof(number) !== "number"))
          */
-        export function isErrorLike(obj?: TDefined): obj is ErrorLike {
-            if (!isNonArrayObject(obj))
+        isErrorLike(obj?: TDefined): obj is ErrorLike {
+            if (!this.isNonArrayObject(obj))
                 return false;
-            if (derivesFrom<Error>(obj, Error))
+            if (this.derivesFrom<Error>(obj, Error))
                 return true;
-            if (isString(obj.message))
-                return isStringIfDef(obj.name) && isStringIfDef(obj.description) && isStringIfDef(obj.fileName) && isStringIfDef(obj.stack) && isNumberIfDef(obj.number) &&
-                    isNumberIfDef(obj.lineNumber);
-            if (isString(obj.description))
-                return isStringIfDef(obj.name) && isStringIfDef(obj.fileName) && isStringIfDef(obj.stack) && isNumberIfDef(obj.number) &&
-                    isNumberIfDef(obj.lineNumber);
-            if (!(notDefined(obj.message) && notDefined(obj.description)))
+            if (this.isString(obj.message))
+                return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.description) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                this.isNumberIfDef(obj.lineNumber);
+            if (this.isString(obj.description))
+                return this.isStringIfDef(obj.name) && this.isStringIfDef(obj.fileName) && this.isStringIfDef(obj.stack) && this.isNumberIfDef(obj.number) &&
+                this.isNumberIfDef(obj.lineNumber);
+            if (!(this.notDefined(obj.message) && this.notDefined(obj.description)))
                 return false;
-            return isString(obj.stack) && isStringIfDef(obj.name);
+            return this.isString(obj.stack) && this.isStringIfDef(obj.name);
         }
         
         /**
@@ -1737,10 +1812,10 @@ export namespace x_44813_util {
          * @returns {ErrorLike|null|undefined} Object with properties similar to an error objecst. If the object is null or emtpy, then the object is returned.
          * @description This can be useful for serializing error objects when logging.
          */
-        export function asErrorLike(obj?: TDefined): Nilable<ErrorLike> {
-            if (isNil(obj))
+        asErrorLike(obj?: TDefined): Nilable<ErrorLike> {
+            if (this.isNil(obj))
                 return obj;
-            if (isErrorLike(obj)) {
+            if (this.isErrorLike(obj)) {
                 let result: ErrorLike = { message: obj.message, name: (typeof(obj.name) == "string" && obj.name.trim().length > 0) ? obj.name : "ErrorLike" };
                 if (typeof(obj.description) == "string") {
                     if (typeof(obj.message) != "string" || obj.message.trim().length == 0)
@@ -1769,146 +1844,12 @@ export namespace x_44813_util {
                 }
                 return result;
             }
-            if (isNumber(obj))
+            if (this.isNumber(obj))
                 return { message: "Error " + obj.toString(), number: obj, name: "ErrorLike" };
-            let s: string = toString(obj);
-            if (!isString(s))
+            let s: string = this.toString(obj);
+            if (!this.isString(s))
                 s = obj + "";
             return { message: (s.trim().length == 0) ? "Error" : s, name: "ErrorLike" };
-        }
-        
-        /**
-         * @callback
-         * Similar to Array.map, recursively iterate through nested arrays and named object properties to map result values.
-         * @param {*} current The current item being interated. This can be null or undefined, according to the current element or property being iterated.
-         * @param {number|string|undefined} key The array element index or object property name of the current item.
-         * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
-         * @param {*[]|object|undefined} source The source object containing the element or property currently being iterated.
-         * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
-         * @param {*[]|object|undefined} target The target object which will contain the element or property containing return value of this callback function.
-         * If this is not defined, then it can be assumed that the current item is the initial (base) object being iterated through.
-         * @returns {*} The value to replace the current value. Null and undefined values will be accepted.
-         * @description Each element on the parent array is iterated, as well as for each named named property on objects. The only exception is the "count" property on arrays, which will be ignored.
-         * If the current item is an array, then the return value must also be an array in order for the current value to be recursively iterated.
-         * Likewise,if the curren item is an object, then the return value must a non-null value of type "object" in order for the current value to be recursively iterated.
-         * If an empty array is returned, elements will be pushed onto the end of the target array as needed, otherwise, they values at the current index will be replaced.
-         * If an object with no properties is returned, property values will be added or replaced on the target according to the current property name.
-         * @example The following examples effectively deep clone the source array to create an array of objects compatible with JSON.stringify.
-         * TypeScript:
-         *     import { JsTypeCommander } from 'JsTypeCommander';
-         *     let source: any[] = [{a: 1, b: 2}, 3, 4, ["Eins", "Svein", "Drei"]];
-         *     let deepClone = JsTypeCommander.mapInto(source, (current?: any, key?: number|string, source?: any[]|object, target?: any[]|object) => {
-         *         if (JsTypeCommander.notDefined(source) || JsTypeCommander.isArray(current))
-         *             return [];
-         *         return (JsTypeCommander.isObject(current)) ? { } : current;
-         *     });
-         *     // JSON.stringify(deepClone) == "[{\"a\":1,\"b\":2},3,4,[\"Eins\",\"Svein\",\"Drei\"]]"
-         * 
-         * JavaScript:
-         *     var JsTypeCommander = require("JsTypeCommander").JsTypeCommander;
-         *     var source = [{ a: 1, b: 2 }, 3, 4, ["Eins", "Svein", "Drei"]];
-         *     function myCallback(current, key, source, target) {
-         *         if (JsTypeCommander.notDefined(source) || JsTypeCommander.isArray(current))
-         *             return [];
-         *         return (JsTypeCommander.isObject(current)) ? { } : current;
-         *     }
-         *     var deepClone = JsTypeCommander.mapInto(source, myCallback);
-         *     // JSON.stringify(deepClone) == "[{\"a\":1,\"b\":2},3,4,[\"Eins\",\"Svein\",\"Drei\"]]"
-         */
-        export interface RecursiveMapCallbackFn {
-            (current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined, target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable;
-        }
-    
-        class limitingIterator implements MapIntoOptions {
-            callbackfn: RecursiveMapCallbackFn;
-            totalMaxItems: number = 8192;
-            currentTotalItems: number = 0;
-            maxItemsInObject: number = 1024;
-            maxDepth: number = 32;
-            thisObj?: any;
-        
-            constructor(callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
-                this.callbackfn = callbackfn;
-                if (typeof(options) == "object") {
-                    this.totalMaxItems = toNumber(options.totalMaxItems, this.totalMaxItems);
-                    this.maxItemsInObject = toNumber(options.maxItemsInObject, this.maxItemsInObject);
-                    this.maxDepth = toNumber(options.maxDepth, this.maxDepth);
-                    this.thisObj = options.thisObj;
-                }
-            }
-        
-            iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
-                    target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
-                if (maxDepth < 1 || this.totalMaxItems < 1)
-                    return current;
-                target = (isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key, source, target);
-                if (!isNil(source)) {
-                    this.currentTotalItems++;
-                    if (!isObject(source))
-                        return target;
-                }
-                if (this.currentTotalItems >= this.totalMaxItems || !isObject(target))
-                    return target;
-    
-                source = current;
-                if (isArray(target)) {
-                    if (!isArray(current))
-                        return target;
-                    for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
-                        var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
-                        if (index < target.length)
-                            target[index] = t;
-                        else
-                            target.push(t);
-                        if (this.currentTotalItems >= this.totalMaxItems)
-                            break;
-                    }
-                } else {
-                    let count: number = 0;
-                    for (var n in current) {
-                        count++;
-                        if (count > this.maxItemsInObject)
-                            break;
-                        target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
-                        if (this.currentTotalItems >= this.totalMaxItems)
-                            break;
-                    }
-                }
-        
-                return target;
-            }
-        }
-        
-        /**
-         * Represents options for the JsTypeCommander.mapInto function.
-         */
-        export interface MapIntoOptions {
-            /**
-             * If defined, this becomes the 'this' object when the callback function is invoked.
-             * @type {*}
-             */
-            thisObj?: any;
-            
-            /**
-             * Maximum number of items that will be iterated before all iteration is aborted.
-             * @type {number=8192}
-             * @description A value less than one wil prevent iteration.
-             */
-            totalMaxItems?: number;
-            
-            /**
-             * Maximum number of elements or properties that will be added to target objects.
-             * @type {number=1024}
-             * @description A value less than one wil prevent iteration.
-             */
-            maxItemsInObject?: number;
-        
-            /**
-             * Maximum recursion depth for recursing. This helps to prevent endless loops, should there be any circular references.
-             * @type {number=32}
-             * @description A value less than one wil prevent recursion.
-             */
-            maxDepth?: number;
         }
         
         /**
@@ -1962,9 +1903,71 @@ export namespace x_44813_util {
          *     deepClone = JsTypeCommander.mapInto(source, myCallback, myOptions);
          *     // myOptions.thisObj.count === 9
          */
-        export function mapInto(obj: any, callbackFn: RecursiveMapCallbackFn, options?: MapIntoOptions): any {
-            let i: limitingIterator = new limitingIterator(callbackFn, options);
+        mapInto(obj: any, callbackFn: RecursiveMapCallbackFn, options?: MapIntoOptions): any {
+            let i: limitingIterator = new limitingIterator(this, callbackFn, options);
             return i.iterateInto(i.maxDepth, obj, undefined, undefined, undefined);
+        }
+    }
+
+    class limitingIterator implements MapIntoOptions {
+        callbackfn: RecursiveMapCallbackFn;
+        totalMaxItems: number = 8192;
+        currentTotalItems: number = 0;
+        maxItemsInObject: number = 1024;
+        maxDepth: number = 32;
+        thisObj?: any;
+        private _util: JsTypeCommander;
+    
+        constructor(util: JsTypeCommander, callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
+            this._util = util;
+            this.callbackfn = callbackfn;
+            if (typeof(options) == "object") {
+                this.totalMaxItems = this._util.toNumber(options.totalMaxItems, this.totalMaxItems);
+                this.maxItemsInObject = this._util.toNumber(options.maxItemsInObject, this.maxItemsInObject);
+                this.maxDepth = this._util.toNumber(options.maxDepth, this.maxDepth);
+                this.thisObj = options.thisObj;
+            }
+        }
+    
+        iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
+                target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
+            if (maxDepth < 1 || this.totalMaxItems < 1)
+                return current;
+            target = (this._util.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key, source, target);
+            if (!this._util.isNil(source)) {
+                this.currentTotalItems++;
+                if (!this._util.isObject(source))
+                    return target;
+            }
+            if (this.currentTotalItems >= this.totalMaxItems || !this._util.isObject(target))
+                return target;
+
+            source = current;
+            if (this._util.isArray(target)) {
+                if (!this._util.isArray(current))
+                    return target;
+                for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
+                    var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
+                    if (index < target.length)
+                        target[index] = t;
+                    else
+                        target.push(t);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            } else {
+                let count: number = 0;
+                for (var n in current) {
+                    count++;
+                    if (count > this.maxItemsInObject)
+                        break;
+                    target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            }
+    
+            return target;
         }
     }
 }
