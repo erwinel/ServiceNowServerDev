@@ -10,7 +10,9 @@ declare class NativeObject  {
 	static toString(cx: any, thisObj: any): string;
 	static valueOf(thisObj: any): any;
 }
+
 declare type QueryConditionOperator = "="|"!="|">"|">="|"<"|"<="|"IN"|"NOT IN"|"STARTSWITH"|"ENDSWITH"|"CONTAINS"|"DOES NOT CONTAIN"|"INSTANCEOF"
+
 declare interface GlideQueryCondition {
     /**
      * Adds an AND condition to the current condition.
@@ -55,6 +57,7 @@ declare interface GlideQueryCondition {
      */
 	addOrCondition(queryCondition: GlideQueryCondition): GlideQueryCondition;
 }
+
 declare interface GlideElementDescriptor  {
     getAttachmentEncryptionType(): string;
     getEncryptionType(): string;
@@ -69,6 +72,7 @@ declare interface GlideElementDescriptor  {
     isEdgeEncrypted(): boolean;
     isVirtual(): boolean;
 }
+
 declare interface GlideElement {
     /**
      * Determines if the user's role permits the creation of new records in this field.
@@ -215,6 +219,7 @@ declare interface GlideElement {
      */
     toString(): string;
 }
+
 declare class GlideRecord {
     constructor(tableName: string);
 
@@ -541,6 +546,7 @@ declare class GlideRecord {
      */
     updateMultiple(): void;
 }
+
 declare interface GlideSession {
     isInteractive(): boolean;
     isLoggedIn(): boolean;
@@ -553,6 +559,7 @@ declare interface GlideSession {
     getUrlOnStack(): string;
     putClientData(paramName: string, paramValue: string): void;
 }
+
 declare interface GlideUser {
     /**
      * Returns the current user's company sys_id.
@@ -636,11 +643,12 @@ declare interface GlideUser {
      */
     savePreference(name: string, value: string): void;
 }
+
 declare interface Class {
     create(): any;
 }
 
-declare class GlideUri {
+declare class GlideURI {
     constructor();
 
     /**
@@ -670,6 +678,7 @@ declare class GlideUri {
      */
     toString(path: string): string;
 }
+
 /**
  * The scoped GlideSystem (referred to by the variable name 'gs' in any server-side JavaScript) API provides a number of
  * convenient methods to get information about the system, the current logged in user, etc.
@@ -898,9 +907,9 @@ declare interface GlideSystem {
      * Alerts the user if event was not scheduled. Does nothing if the event is scheduled.
      * @param {string} name - Name of the event being queued.
      * @param {GlideRecord} instance - A GlideRecord object, such as "current".
-     * @param {string} parm1 - Saved with the instance if specified.
-     * @param {string} parm2 - Saved with the instance if specified.
-     * @param {object} expiration - When the event expires.
+     * @param {string} [parm1] - Saved with the instance if specified.
+     * @param {string} [parm2] - Saved with the instance if specified.
+     * @param {object} [expiration] - When the event expires.
      */
     eventQueueScheduled(name: string, instance: GlideRecord, parm1?: string, parm2?: string, expiration?: Object): void;
 
@@ -951,7 +960,7 @@ declare interface GlideSystem {
     /**
      * Retrieves a message from UI messages with HTML special characters replaced with escape sequences, for example, & becomes &amp;.
      * @param id The ID of the message.
-     * @param args A list of strings or other values defined by java.text.MessageFormat, which allows you to produce language-neutral messages for display to users.
+     * @param {*[]} [args] A list of strings or other values defined by java.text.MessageFormat, which allows you to produce language-neutral messages for display to users.
      * @returns {string} The UI message with HTML special characters replaced with escape sequences.
      */
     getEscapedMessage(id: string, args?: any[]): string;
@@ -959,17 +968,24 @@ declare interface GlideSystem {
     /**
      * Retrieves a message from UI messages.
      * @param id The ID of the message.
-     * @param args A list of strings or other values defined by java.text.MessageFormat, which allows you to produce language-neutral messages for display to users.
+     * @param {*[]} [args] A list of strings or other values defined by java.text.MessageFormat, which allows you to produce language-neutral messages for display to users.
      * @returns {string} The UI message.
      */
     getMessage(id: string, args?: any[]): string;
     /**
+     *Gets the specified user preference value for the current user.
+     * @param key The name of the preference.
+     * @param {string} [defaultValue] Default value if preference not defined.
+     * @returns {string|null|undefined} The GlideRecord object
+     */
+    getPreference(key: string, defaultValue?: string): string|null|undefined;
+    /**
      * Gets the value of a Glide property. If the property is not found, returns an alternate value.
      * @param {string} id The key for the property whose value should be returned.
      * @param {string} [alt] Alternate object to return if the property is not found.
-     * @returns {string} The value of the Glide property, or the alternate object defined above.
+     * @returns {*} The value of the Glide property, or the alternate object defined above.
      */
-    getProperty<T>(key: string, altObject?: T): T;
+    getProperty<T>(key: string, altObject?: T): T|null|undefined;
 
     /**
      * Gets a reference to the current Glide session.
@@ -1135,9 +1151,9 @@ declare interface GlideSystem {
     /**
      * Queries an object and returns true if the object is null, undefined, or contains an empty string.
      * @param {*} o The object to be checked.
-     * @returns {string} True if the object is null, undefined, or contains an empty string; otherwise, returns false.
+     * @returns {boolean} True if the object is null, undefined, or contains an empty string; otherwise, returns false.
      */
-    nil(o: any): string;
+    nil(o: any|undefined): o is string|number|boolean|symbol|object;
     
     /**
      * Returns the date and time for the last day of the quarter for a specified number of quarters ago.
@@ -1163,9 +1179,9 @@ declare interface GlideSystem {
     
     /**
      * Sets the redirect URI for this transaction, which then determines the next page the user will see.
-     * @param {string|GlideUri} o URI object or URI string to set as the redirect.
+     * @param {string|GlideURI} o URI object or URI string to set as the redirect.
      */
-    setRedirect(o: string|GlideUri): void;
+    setRedirect(o: string|GlideURI): void;
     
     /**
      * Determines if a database table exists.
@@ -1219,6 +1235,7 @@ declare interface GlideSystem {
      */
     yesterday(): string;
 }
+
 declare interface GlidePlugin  {
 	getDescription(): any;
 	getDisplayName(): string;
@@ -1226,9 +1243,11 @@ declare interface GlidePlugin  {
 	getPath(): string;
 	refreshArtifacts(): void;
 }
+
 declare interface GlideExtensionPoint  {
 	getAttribute(name: string): string;
 }
+
 declare class GlidePluginManager  {
     constructor();
     
@@ -1239,16 +1258,20 @@ declare class GlidePluginManager  {
      */
 	static isActive(plugin_id: string): boolean;
 }
+
 declare interface ScriptedProgressWorkerCallback {
     process(...args: any[]): void;
 }
+
 declare interface IServerClass {
     intialize(...args: (any|null|undefined)[]): void;
     type: string;
 }
+
 declare interface IBackgroundProgressWorkerHandler extends IServerClass {
     process(...args: (any|null|undefined)[]): void;
 }
+
 // TestSMTPConnectionWorker, TestPOP3ConnectionWorker, TestIMAPConnectionWorker, UpdateSetPreviewer, TransferAuditToRotations2
 /*
   var worker = new GlideScriptedProgressWorker();
@@ -1275,6 +1298,7 @@ declare interface IBackgroundProgressWorkerHandler extends IServerClass {
 		worker.setProgressStateCode("error");
 		worker.addMessage(msg);
 */
+
 declare class GlideProgressWorker  {
 	constructor();
 	getProgressID(): string;
@@ -1287,6 +1311,7 @@ declare class GlideProgressWorker  {
     setBackground(isBackground: boolean): void;
     start(): void;
 }
+
 declare class GlideScriptedProgressWorker extends GlideProgressWorker {
 	addMessage(message: string): void;
 	addNonEscapedParameter(parm: string): void;
@@ -1294,8 +1319,911 @@ declare class GlideScriptedProgressWorker extends GlideProgressWorker {
 	constructor();
 	setName(name: string): void;
 }
+
 declare class GlidePluginManagerWorker extends GlideProgressWorker {
     setPluginId(id: string): void;
     setIncludeDemoData(includeDemoData: boolean): void;
 }
+
+declare class GlideChoice  {
+	// constructor(value: string, label: string);
+	// constructor(value: string, label: string, sysId: string);
+	constructor(value: string, label: string, sysId?: string);
+	getId(): string;
+	getImage(): string;
+	getLabel(): string;
+	getParameter(name: string): any;
+	getSelected(): boolean;
+	getValue(): string;
+	setId(sysId: string): void;
+	setImage(image: string): void;
+	setLabel(string_1: string): void;
+	setParameter(name: string, value: any): void;
+	setSelected(selected: boolean): void;
+	setValue(string_1: string): void;
+}
+
+declare class GlideScriptEvaluator  {
+	constructor();
+	evaluateGeneratedString(expression: string, returnError: boolean): any;
+	// evaluateString(expression: string, returnError: boolean): any;
+	// evaluateString(expression: string, identifierKey: string, returnError: boolean): any;
+	evaluateString(expression: string, returnError_OR_identifierKey: boolean|string, returnError?: boolean): any;
+	haveError(): boolean;
+	setEnforceSecurity(enforce: boolean): void;
+}
+
+declare class GlideEvaluator extends GlideScriptEvaluator {
+	// constructor();
+	// constructor(inter: boolean);
+	// constructor(inter: boolean, strict: boolean);
+	constructor(inter?: boolean, strict?: boolean);
+	static evaluateCondition(condition: string): boolean;
+	// evaluateString(expression: string, returnError: boolean): any;
+	// evaluateString(expression: string, identifierKey: string, returnError: boolean): any;
+	// static evaluateString(expression: string): any;
+	evaluateString(expression: string, returnError_OR_identifierKey?: boolean|string, returnError?: boolean): any;
+	static evaluateStringWithGlobals(expression: string, globals: { [key: string]: any; }): any;
+	// static interpretGeneratedString(expression: string): any;
+	// static interpretGeneratedString(expression: string, returnError: boolean): any;
+	static interpretGeneratedString(expression: string, returnError?: boolean): any;
+	// static interpretString(expression: string): any;
+	// static interpretString(expression: string, returnError: boolean): any;
+	static interpretString(expression: string, returnError?: boolean): any;
+}
+
+declare class GlideLRUCache  {
+	// constructor();
+	// constructor(initialCapacity: number, loadFactor: number);
+	// constructor(initialCapacity: number);
+	constructor(initialCapacity?: number, loadFactor?: number);
+	get(key: any): any;
+}
+
+declare class GlideController extends GlideEvaluator {
+	// constructor();
+	// constructor(global: any);
+	constructor(global?: any);
+	// evaluateAsObject(expression: string): any;
+	// evaluateAsObject(expression: string, ed: GlideElementDescriptor): any;
+	evaluateAsObject(expression: string, ed?: GlideElementDescriptor): any;
+	static exists(name: string): any;
+	static getCache(): GlideLRUCache;
+	static getGlobal(name: string): any;
+	static getSandboxGlobal(name: string): any;
+	static putGlobal(name: string, value: any): void;
+	static removeGlobal(string_1: string): void;
+}
+
+declare class GlideXMLDocument  {
+	// constructor();
+	// constructor(d: any);
+	// constructor(rootName: string);
+	// constructor(file: any);
+	constructor(d_OR_rootName_OR_file?: any|string);
+	createCDATAElement(name: string, value: string): any;
+	createComment(msg: string): any;
+	// createElement(name: string, value: string): any;
+	// createElement(name: string): any;
+	createElement(name: string, value?: string): any;
+	getChildTextByTagName(parent: any, tagName: string): string;
+	getDocument(): any;
+	getDocumentElement(): any;
+	getElementByTagName(tagName: string): any;
+	getElementValueByTagName(tagName: string): string;
+	importElement(e: any): any;
+	importElementToParent(e: any, parent: any): any;
+	isNamespaceAware(): boolean;
+	isValid(): boolean;
+	parse(xml: string): boolean;
+	pop(): void;
+	selectNodes(xpath: string): any;
+	// selectSingleNode(xpath: string): any;
+	// selectSingleNode(currentNode: any, xpath: string): any;
+	selectSingleNode(xpath_OR_currentNode: string|any, xpath?: string): any;
+	selectSingleNodeText(xpath: string): string;
+	setAttribute(name: string, value: string): void;
+	setCurrent(e: any): void;
+	// setDocument(document: any): void;
+	// setDocument(document: string): void;
+	setDocument(document: any|string): void;
+	setNamespaceAware(nsAware: boolean): void;
+	setText(e: any, text: string): void;
+	toIndentedString(): string;
+	toString(): string;
+}
+
+declare class GlideChoiceList  {
+	// add(choice: GlideChoice): boolean;
+	// add(value: string, label: string): GlideChoice;
+	add(choice_OR_value: GlideChoice|string, label?: string): boolean;
+	addAll(cl: GlideChoiceList): void;
+	addFirst(value: string, label: string): void;
+	addNone(): GlideChoice;
+	constructor();
+	// getChoice(index: number): GlideChoice;
+	// getChoice(value: string): GlideChoice;
+	getChoice(index_OR_value: number|string): GlideChoice;
+	static getChoiceList(tableName: string, fieldName: string): GlideChoiceList;
+	getChoiceNoTrim(value: string): GlideChoice;
+	getLabelOf(value: string): string;
+	getNullOverride(gc: GlideController): string;
+	getSelectedIndex(): number;
+	getSize(): number;
+	getValueOf(label: string): string;
+	// removeChoice(value: string): GlideChoice;
+	// removeChoice(i: number): GlideChoice;
+	removeChoice(value_OR_i: string|number): GlideChoice;
+	removeNone(): void;
+	sort(): void;
+	toJSON(): any;
+	toXML(x: GlideXMLDocument): void;
+}
+
+declare class GlideSysForm  {
+	// constructor(tableName: string);
+	// constructor(tableName: string, viewName: string);
+	// constructor();
+	constructor(tableName?: string, viewName?: string);
+	createDefaultBaselineVersion(record: GlideRecord): void;
+	static generateDefaultForm(tableName: string): string;
+	static getRelatedTables(tableName: string): GlideChoiceList;
+	getSuggestedFields(): Array<string>;
+	getTableName(): string;
+	save(): void;
+	setAvailable(available: string): void;
+	setCollection(s: string): void;
+	setForm(form: string): void;
+	setName(name: string): void;
+	setPackageID(packageID: string): void;
+	setScopeID(scopeID: string): void;
+	setSelected(selected: string): void;
+	setTablePackageID(): void;
+	setTableScopeID(): void;
+	setView(viewName: string): void;
+	setViewName(viewName: string): void;
+}
+
+declare class GlideChoiceListSet  {
+	constructor();
+	getColumns(): GlideChoiceList;
+	getSelected(): GlideChoiceList;
+	setColumns(clColumns: GlideChoiceList): void;
+	setSelected(clSelected: GlideChoiceList): void;
+	sortColumns(): void;
+	toXML(): any;
+}
+
+declare class GlideSysList extends GlideSysForm {
+	InsertListElements(fields: Array<any>): void;
+	// constructor(tableName: string);
+	// constructor(tableName: string, parentName: string);
+	constructor(tableName: string, parentName?: string);
+	createDefaultBaseline(): void;
+	getAccessList(collectionKey: string): Array<string>;
+	getListColumns(): GlideChoiceList;
+	getListRecords(): Array<string>;
+	getListSet(): GlideChoiceListSet;
+	getRecordSet(): GlideRecord;
+	getStandardListID(): string;
+	isUserList(): boolean;
+	// save(): void;
+	// save(fields: string): void;
+	save(fields?: string): void;
+	saveForUser(fields: string): void;
+	setIncludeFormatting(b: boolean): void;
+	setReconcileList(b: boolean): void;
+	setRelatedParentID(parentID: string): void;
+	setRelatedParentName(parentName: string): void;
+	setRelationshipID(relationshipID: string): void;
+	setUserApplies(b: boolean): void;
+}
+
+declare class GlideUpdateManager2  {
+	allowBackout(sysId: string): boolean;
+	allowVersionBackout(sysId: string): boolean;
+	// constructor();
+	// constructor(updateSetId: string);
+	constructor(updateSetId?: string);
+	getDefaultUpdateName(tableName: string, uniqueValue: string): string;
+	getUpdateName(gr: GlideRecord): string;
+	// load(updateName: string): void;
+	// load(updateName: string, directory: string): void;
+	load(updateName: string, directory?: string): void;
+	loadFile(filePath: string): void;
+	// loadFixes(updateName: string, before: boolean): void;
+	// loadFixes(updateName: string): void;
+	loadFixes(updateName: string, before?: boolean): void;
+	loadFromDatabase(category: string): void;
+	loadIntoDatabase(category: string): boolean;
+	// loadXML(xml: string): void;
+	// loadXML(xml: string, writeVersion: boolean, revertedFrom: string, sourceTable: string, sourceId: string): void;
+	loadXML(xml: string, writeVersion?: boolean, revertedFrom?: string, sourceTable?: string, sourceId?: string): void;
+	removeUpdateSet(setID: string): void;
+	saveBaselineChoiceListElements(tableName: string, fieldName: string): void;
+	saveChoiceListElements(tableName: string, fieldName: string): void;
+	saveListElements(sl: GlideSysList): void;
+	saveRecord(gr: GlideRecord): boolean;
+	setInstalling(b: boolean): void;
+}
+
+declare class GlideActionURL {
+	setRedirectURL(o: any): void;
+}
+
+/**
+ * Class for performing date operators and working with GlideDate fields.
+ */
+declare class GlideDate {
+    /**
+     * Creates a GlideDate object with the current date time.
+     */
+    constructor();
+
+    /**
+     * Gets the date in the specified date format.
+     * @param {string} format The desired date format.
+     * @returns {string} The date in the specified format.
+     */
+    getByFormat(format: string): string;
+
+    /**
+     * Gets the day of the month stored by the {@link GlideDate} object, expressed in the UTC time zone.
+     * @returns {number} The day of the month in the UTC time zone, from 1 to 31.
+     */
+    getDayOfMonthNoTZ(): number;
+
+    /**
+     * Gets the date in the current user's display format and time zone.
+     * @returns {string} The date in the user's format and time zone.
+     * @description Keep in mind when designing business rules or script includes that this method may return values in different formats for different users.
+     */
+    getDisplayValue(): string;
+
+    /**
+     * Gets the display value in the internal format (yyyy-MM-dd).
+     * @returns {string} The date values for the {@link GlideDate} object in the current user's time zone and the internal time format of yyyy-MM-dd.
+     */
+    getDisplayValueInternal(): string;
+
+    /**
+     * Gets the month stored by the {@link GlideDate} object, expressed in the UTC time zone.
+     * @returns {number} The numerical value of the month from 1 to 12.
+     */
+    getMonthNoTZ(): number;
+
+    /**
+     * Gets the date value stored in the database by the {@link GlideDate} object in the internal format, yyyy-MM-dd, and the system time zone, UTC by default.
+     * @returns {string} The date value in the internal format and system time zone.
+     */
+    getValue(): string;
+
+    /**
+     * Gets the year stored by the {@link GlideDate} object, expressed in the UTC time zone.
+     * @returns {number} The numerical value of the year.
+     */
+    getYearNoTZ(): number;
+
+    /**
+     * Sets a date value using the current user's display format and time zone.
+     * @param {string} asDisplayed The date in the current user's display format and time zone.
+     * @description The parameter must be formatted using the current user's preferred display format, such as yyyy-MM-dd.
+     */
+    setDisplayValue(asDisplayed: string): void;
+
+    /**
+     * Sets the date of the {@link GlideDate} object.
+     * @param {string} o The date and time to use.
+     */
+    setValue(o: string): void;
+
+    /**
+     * Gets the duration difference between two {@link GlideDate} values.
+     * @param {GlideDate} start The start value.
+     * @param {GlideDate} end The end value.
+     * @returns {GlideDate} The {@link GlideDate|duration} between the two values.
+     */
+    static subtract(start: GlideDate, end: GlideDate): GlideDate;
+}
+
+/**
+ * Class for performing time operations and working with GlideTime fields.
+ */
+declare class GlideTime {
+    /**
+     * Instantiates a GlideTime object
+     * @param {number} [milliseconds] The time in milliseconds.
+     * @description If a parameter is passed, the object is initialized with the specified number of seconds. Otherwise, it is initiated with the current time.
+     */
+    constructor(milliseconds?: number);
+
+    /**
+     * Gets the time in the specified format.
+     * @param {string} format The time format.
+     * @returns {string} The time in the specified format.
+     */
+    getByFormat(format: string): string;
+
+    /**
+     * Gets the time in the current user's display format and time zone.
+     * @returns {string} The time in the user's format and time zone.
+     * @description When designing business rules or script includes remember that this method may return values in different formats for different users.
+     */
+    getDisplayValue(): string;
+
+    /**
+     * Gets the display value in the current user's time zone and the internal format (HH:mm:ss).
+     * @returns {string} The time value for the GlideTime object in the current user's time zone and the internal time format of HH:mm:ss.
+     */
+    getDisplayValueInternal(): string;
+
+    /**
+     * Returns the hours part of the time using the local time zone.
+     * @returns {number} The hours using the local time zone.
+     */
+    getHourLocalTime(): number;
+
+    /**
+     * Returns the hours part of the time using the local time zone.
+     * @returns {number} The hours using the local time zone.
+     * @description The number of hours is based on a 24 hour clock.
+     */
+    getHourOfDayLocalTime(): number;
+
+    /**
+     * Returns the hours part of the time using the UTC time zone.
+     * @returns {number} The hours using the UTC time zone.
+     * @description The number of hours is based on a 24 hour clock.
+     */
+    getHourOfDayUTC(): number;
+
+    /**
+     * Returns the hours part of the time using the UTC time zone.
+     * @returns {number} The hours using the UTC time zone.
+     * @description The number of hours is based on a 12 hour clock. Noon and midnight are represented by 0, not 12.
+     */
+    getHourUTC(): number;
+
+    /**
+     * Returns the number of minutes using the local time zone.
+     * @returns {number} The number of minutes using the local time zone.
+     */
+    getMinutesLocalTime(): number;
+
+    /**
+     * Returns the number of minutes in the hour based on the UTC time zone.
+     * @returns {number} The number of minutes in the hour using the UTC time zone.
+     */
+    getMinutesUTC(): number;
+    
+    /**
+     * Returns the number of seconds in the current minute.
+     * @returns {number} The number of seconds in the minute.
+     */
+    getSeconds(): number;
+
+    /**
+     * Gets the time value stored in the database by the GlideTime object in the internal format, HH:mm:ss, and the system time zone.
+     * @returns {string} The time value in the internal fomat and system time zone.
+     */
+    getValue(): string;
+
+    /**
+     * Sets a time value using the current user's display format and time zone.
+     * @param {string} asDisplayed The time in the current user's display format and time zone.
+     * @description The parameter must be formatted using the current user's preferred display format, such as HH:mm:ss.
+     */
+    setDisplayValue(asDisplayed: string): void;
+
+    /**
+     * Sets the time of the GlideTime object in the internal time zone.
+     * @param {string} o The time in hh:mm:ss format.
+     */
+    setValue(o: string): void;
+
+    /**
+     * Gets the duration difference between two GlideTime object values.
+     * @param {GlideTime} startTime The start value.
+     * @param {GlideTime} endTime The end value.
+     * @returns {GlideTime} The duration between the two values.
+     */
+    static subtract(startTime: GlideTime, endTime: GlideTime): GlideTime;
+}
+
+/**
+ * Class for working with spans of time or durations.
+ * @description GlideDuration objects store the duration as a date and time from January 1, 1970, 00:00:00.
+ * As a result, {@link GlideDuration#setValue|setValue()} and {@link GlideDuration#getValue|getValue()} use the scoped GlideDateTime object for parameters and return values.
+ */
+declare class GlideDuration {
+    /**
+     * Instantiates a {@link GlideDuration} object. by cloning the value of another {@link GlideDuration} object.
+     * @param {number|string|GlideDuration} [value] If a number is passed, then this is instantiated with the specified duration in milliseconds.
+     * If a string is passed, then this is initialized with the specified display value. If a {@link GlideDuration} object is passed, then this is cloned from that object.
+     */
+    constructor(value?: number|string|GlideDuration);
+    
+    /**
+     * Add the specified duration to the object.
+     * @param {GlideDuration} other The value to add to the object.
+     * @returns {GlideDuration} The sum of the current and the added duration.
+     */
+    add(other: GlideDuration): GlideDuration;
+
+    /**
+     * Gets the duration in the specified format.
+     * @param {string} format The duration format.
+     * @returns {string} The current duration in the specified format.
+     */
+    getByFormat(format: string): string;
+
+    /**
+     * Gets the number of days.
+     * @returns {number} The number of days.
+     */
+    getDayPart(): number;
+
+    /**
+     * Gets the display value of the duration in number of days, hours, and minutes.
+     * @returns {string} The number of days, hours, and minutes.
+     */
+    getDisplayValue(): string;
+
+    /**
+     * Gets the duration value in "d HH:mm:ss" format.
+     * @returns {string} The duration value.
+     */
+    getDurationValue(): string;
+
+    /**
+     * Gets the rounded number of days.
+     * @returns {number} The day part, rounded.
+     * @description If the time part is more than 12 hours, the return value is rounded up. Otherwise, it is rounded down.
+     */
+    getRoundedDayPart(): number;
+
+    /**
+     * Gets the internal value of the {@link GlideDuration} object.
+     * @returns {string} The duration in the object's internal format, which is the date and time from January 1, 1970, 00:00:00.
+     * @description {@link GlideDuration} objects store the duration as a date and time from January 1, 1970, 00:00:00.
+     */
+    getValue(): string;
+
+    /**
+     * Sets the display value.
+     * @param {string} asDisplayed The duration in "d HH:mm:ss" format.
+     */
+    setDisplayValue(asDisplayed: string): void;
+
+    /**
+     * Sets the internal value of the {@link GlideDuration} object.
+     * @param {*} o The duration in the object's internal format, which is the date and time from January 1, 1970, 00:00:00.
+     * @description {@link GlideDuration} objects store the duration as a date and time from January 1, 1970, 00:00:00.
+     */
+    setValue(o: any): void;
+
+    /**
+     * Subtracts the specified duration from the current duration.
+     * @param {GlideDuration} duration The duration to subtract.
+     */
+    subtract(duration: GlideDuration): void;
+}
+
+/**
+ * Class for performing date/time operations and working with glide_date_time fields.
+ * @description Methods in this class perform date-time operations, such as instantiating a GlideDateTime object, performing date-time calculations, formatting a date-time,
+ * or converting between date-time formats.
+ */
+declare class GlideDateTime {
+    /**
+     * Instantiates a new {@link GlideDateTime} object.
+     * @param {string|GlideDateTime} [value] {@link GlideDateTime} to initialize from or string representation of date and time value in the UTC time zone specified with the
+     * format yyyy-MM-dd HH:mm:ss. If omitted, then it is initialized with the current date and time in Greenwich Mean Time (GMT).
+     */
+    constructor(value?: string|GlideDateTime);
+
+    /**
+     * Adds a {@link GlideTime} object or milliseconds to the current {@link GlideDateTime} object
+     * @param {GlideTime|number} value {@link GlideTime|Time} or milliseconds to add.
+     */
+    add(value: GlideTime|number): void;
+
+    /**
+     * Adds a specified number of days to the current {@link GlideDateTime} object.
+     * @param {number} days The number of days to add. Use a negative value to subtract.
+     * @description A negative parameter subtracts days. The method determines the local date and time equivalent to the value stored by the {@link GlideDateTime} object,
+     * then adds or subtracts days using the local date and time values.
+     */
+    addDaysLocalTime(days: number): void;
+
+    /**
+     * Adds a specified number of days to the current {@link GlideDateTime} object.
+     * @param {number} days The number of days to add. Use a negative number to subtract.
+     * @description A negative parameter subtracts days. The method determines the UTC date and time equivalent to the value stored by the {@link GlideDateTime} object,
+     * then adds or subtracts days using the UTC date and time values.
+     */
+    addDaysUTC(days: number): void;
+
+    /**
+     * Adds a specified number of months to the current {@link GlideDateTime} object.
+     * @param {number} months 
+     * @description A negative parameter subtracts months. The method determines the local date and time equivalent to the value stored by the {@link GlideDateTime} object,
+     * then adds or subtracts months using the local date and time values.
+     */
+    addMonthsLocalTime(months: number): void;
+
+    /**
+     * Adds a specified number of months to the current {@link GlideDateTime} object.
+     * @param {number} months The number of months to add. Use a negative value to subtract.
+     * @description A negative parameter subtracts months. The method determines the UTC date and time equivalent to the value stored by the {@link GlideDateTime} object,
+     * then adds or subtracts months using the UTC date and time values.
+     */
+    addMonthsUTC(months: number): void;
+
+    /**
+     * Adds the specified number of seconds to the current {@link GlideDateTime} object.
+     * @param {number} seconds The number of seconds to add.
+     */
+    addSeconds(seconds: number): void;
+
+    /**
+     * dds a specified number of weeks to the current {@link GlideDateTime} object.
+     * @param {number} weeks The number of weeks to add. Use a negative value to subtract.
+     * @description The method determines the local date and time equivalent to the value stored by the {@link GlideDateTime} object, then adds or subtracts weeks using the
+     * local date and time values.
+     */
+    addWeeksLocalTime(weeks: number): void;
+
+    /**
+     * Adds a specified number of weeks to the current {@link GlideDateTime} object.
+     * @param {number} weeks The number of weeks to add. Use a negative value to subtract.
+     * @description A negative parameter subtracts weeks. The method determines the UTC date and time equivalent to the value stored by the {@link GlideDateTime} object,
+     * then adds or subtracts weeks using the UTC date and time values.
+     */
+    addWeeksUTC(weeks: number): void;
+
+    /**
+     * Adds a specified number of years to the current {@link GlideDateTime} object.
+     * @param {number} years The number of years to add. Use a negative value to subtract.
+     * @description The method determines the local date and time equivalent to the value stored by the {@link GlideDateTime} object, then adds or subtracts years using the
+     * local date and time values.
+     */
+    addYearsLocalTime(years: number): void;
+
+    /**
+     * Adds a specified number of years to the current {@link GlideDateTime} object.
+     * @param {number} years The number of years to add. Use a negative value to subtract.
+     * @description A negative parameter subtracts years. The date and time value stored by {@link GlideDateTime} object is interpreted as being in the UTC time zone.
+     */
+    addYearsUTC(years: number): void;
+
+    /**
+     * Determines if the {@link GlideDateTime} object occurs after the specified {@link GlideDateTime}.
+     * @param {GlideDateTime} gdt The time to check against.
+     * @returns {boolean} Returns true if the {@link GlideDateTime} object's time is after the time specified by the parameter.
+     */
+    after(gdt: GlideDateTime): boolean;
+
+    /**
+     * Determines if the {@link GlideDateTime} object occurs before the specified {@link GlideDateTime}.
+     * @param {GlideDateTime} gdt The time to check against.
+     * @returns {boolean} Returns true if the {@link GlideDateTime} object's time is before the time specified by the parameter.
+     */
+    before(gdt: GlideDateTime): boolean;
+
+    /**
+     * Compares two date and time objects to determine whether they are equivalent or one occurs before or after the other.
+     * @param {*} o Date and time object in {@link GlideDateTime} format.
+     * @returns {number} 0 = Dates are equal; 1 = The object's date is after the date specified in the parameter; -1 = The object's date is before the date specified in the
+     * parameter.
+     */
+    compareTo(o: any): number;
+
+    /**
+     * Compares a datetime with an existing value for equality.
+     * @param {GlideDateTime|string} o The datetime to compare.
+     * @returns {boolean} Returns true if they are equal; otherwise, false.
+     */
+    equals(o: any): boolean;
+
+    /**
+     * Gets the {@link GlideDate|date} stored by the {@link GlideDateTime} object, expressed in the standard format, yyyy-MM-dd, and the system time zone, UTC by default.
+     * @returns {GlideDate} The {@link GlideDate|date} in the system time zone.
+     */
+    getDate(): GlideDate;
+
+    /**
+     * Gets the day of the month stored by the {@link GlideDateTime} object, expressed in the current user's time zone.
+     * @returns {number} The day of the month in the user's time zone, from 1 to 31.
+     */
+    getDayOfMonthLocalTime(): number;
+
+    /**
+     * Gets the day of the month stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     * @returns {number} The day of the month in the UTC time zone, from 1 to 31.
+     */
+    getDayOfMonthUTC(): number;
+
+    /**
+     * Gets the day of the week stored by the {@link GlideDateTime} object, expressed in the user's time zone.
+     * @returns {number} The day of week value, in the user's time zone, from 1 to 7. Monday equals 1, Sunday equals 7.
+     */
+    getDayOfWeekLocalTime(): number;
+
+    /**
+     * Gets the day of the week stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     * @returns {number} The day of week value from 1 to 7. Monday equals 1, Sunday equals 7.
+     */
+    getDayOfWeekUTC(): number;
+
+    /**
+     * Gets the number of days in the month stored by the {@link GlideDateTime} object, expressed in the current user's time zone.
+     * @returns {number} The number of days in the current month in the user's time zone.
+     */
+    getDaysInMonthLocalTime(): number;
+
+    /**
+     * Gets the number of days in the month stored by the v object, expressed in the UTC time zone.
+     * @returns {number} The number of days in the month stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     */
+    getDaysInMonthUTC(): number;
+
+    /**
+     * Gets the date and time value in the current user's display format and time zone.
+     * @returns {string} The date and time in the user's format and time zone.
+     * @description Keep in mind when designing business rules or script includes that this method may return values in different formats for different users.
+     */
+    getDisplayValue(): string;
+
+    /**
+     * Gets the display value in the internal format (yyyy-MM-dd HH:mm:ss).
+     * @returns {string} The date and time values for the {@link GlideDateTime} object in the current user's time zone and the internal date and time format of
+     * yyyy-MM-dd HH:mm:ss.
+     */
+    getDisplayValueInternal(): string;
+
+    /**
+     * Gets the amount of time that daylight saving time is offset.
+     * @returns {number} Amount of time, in milliseconds, that daylight saving is offset. Returns 0 if there is no offset or if the time is not during daylight saving time.
+     */
+    getDSTOffset(): number;
+
+    /**
+     * Gets the current error message.
+     * @returns {string} The error message.
+     */
+    getErrorMsg(): string|null|undefined;
+
+    /**
+     * Returns the object's time in the local time zone and in the internal format.
+     * @returns {string} The object's time in the local time zone and the internal format.
+     */
+    getInternalFormattedLocalTime(): string;
+
+    /**
+     * Gets the {@link GlideDate|date} stored by the {@link GlideDateTime} object, expressed in the standard format, yyyy-MM-dd, and the current user's time zone.
+     * @returns {GlideDate} The {@link GlideDate|date} in the user's time zone.
+     */
+    getLocalDate(): GlideDate;
+
+    /**
+     * Returns a {@link GlideTime} object that represents the time portion of the {@link GlideDateTime} object in the user's time zone.
+     * @returns {GlideTime} The {@link GlideTime|time} in the user's time zone.
+     */
+    getLocalTime(): GlideTime;
+
+    /**
+     * Gets the month stored by the {@link GlideDateTime} object, expressed in the current user's time zone.
+     * @returns {number} The numerical value of the month.
+     */
+    getMonthLocalTime(): number;
+
+    /**
+     * Gets the month stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     * @returns {number} The numerical value of the month.
+     */
+    getMonthUTC(): number;
+
+    /**
+     * Gets the number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @returns {number} The number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     */
+    getNumericValue(): number;
+
+    /**
+     * Returns a {@link GlideTime} object that represents the time portion of the {@link GlideDateTime} object.
+     * @returns {GlideTime} The Unix duration stamp in system format based on GMT time.
+     */
+    getTime(): GlideTime;
+
+    /**
+     * Gets the time zone offset in milliseconds.
+     * @returns {number} The number of milliseconds of time zone offset.
+     */
+    getTZOffset(): number;
+
+    /**
+     * Returns the object's time in the local time zone and in the user's format.
+     * @returns {string} The object's time in the local time zone and in the user's format.
+     */
+    getUserFormattedLocalTime(): string;
+
+    /**
+     * Gets the date and time value stored by the {@link GlideDateTime} object in the internal format, yyyy-MM-dd HH:mm:ss, and the system time zone, UTC by default.
+     * @returns {string} The date and time value in the internal format and system time zone.
+     */
+    getValue(): string;
+
+    /**
+     * Gets the number of the week stored by the {@link GlideDateTime} object, expressed in the current user's time zone.
+     * @returns {number} The number of the current week in local time. The highest week number in a year is either 52 or 53.
+     * @description All weeks begin on Sunday. The first week of the year is the week that contains at least one day of the new year. The week beginning Sunday
+     * 2015-12-27 is considered the first week of 2016 as that week contains January 1 and 2.
+     */
+    getWeekOfYearLocalTime(): number;
+
+    /**
+     * Gets the number of the week stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     * @returns {number} The number of the current week in UTC time. The highest week number in a year is either 52 or 53.
+     * @description All weeks begin on Sunday. The first week of the year is the week that contains at least one day of the new year. The week beginning Sunday 2015-12-27
+     * is considered the first week of 2016 as that week contains January 1 and 2.
+     */
+    getWeekOfYearUTC(): number;
+
+    /**
+     * Gets the year stored by the {@link GlideDateTime} object, expressed in the current user's time zone.
+     * @returns {number} Four-digit year value in the user's time zone.
+     */
+    getYearLocalTime(): number;
+
+    /**
+     * Gets the year stored by the {@link GlideDateTime} object, expressed in the UTC time zone.
+     * @returns {number} 4-digit year value in the UTC time zone.
+     */
+    getYearUTC(): number;
+
+    /**
+     * Determines if an object's date is set.
+     * @returns {boolean} True if the object date is set; otherwise, returns false.
+     */
+    hasDate(): boolean;
+
+    /**
+     * Determines if an object's time uses a daylight saving offset.
+     * @returns {boolean} True if the time is daylight saving; otherwise, returns false.
+     */
+    isDST(): boolean;
+
+    /**
+     * Determines if a value is a valid date and time.
+     * @returns {boolean} True if value is valid; otherwise, returns false.
+     */
+    isValid(): boolean;
+
+    /**
+     * Determines if the {@link GlideDateTime} object occurs on or after the specified {@link GlideDateTime}.
+     * @param {GlideDateTime} gdt The time to check against.
+     * @returns {boolean} Returns true if the {@link GlideDateTime} object's time is on or after the time specified by the parameter.
+     */
+    onOrAfter(gdt: GlideDateTime): boolean;
+
+    /**
+     * Determines if the {@link GlideDateTime} object occurs on or before the specified {@link GlideDateTime}.
+     * @param {GlideDateTime} gdt The time to check against.
+     * @returns {boolean} Returns true if the {@link GlideDateTime} object's time is on or before the time specified by the parameter.
+     */
+    onOrBefore(gdt: GlideDateTime): boolean;
+
+    /**
+     * Sets the day of the month to a specified value in the current user's time zone.
+     * @param {number} day The day of month to change to, from 1 to 31. If this value is greater than the maximum number of days in the month, the value is set to the last
+     * day of the month.
+     */
+    setDayOfMonthLocalTime(day: number): void;
+
+    /**
+     * Sets the day of the month to a specified value in the UTC time zone.
+     * @param {number} day The day of month to change to, from 1 to 31. If this value is greater than the maximum number of days in the month, the value is set to the last
+     * day of the month.
+     */
+    setDayOfMonthUTC(day: number): void;
+
+    /**
+     * Sets a date and time value using the current user's display format and time zone.
+     * @param {string} asDisplayed The date and time in the current user's display format and time zone.
+     * @param {string} [format] The date and time format to use to parse the value parameter.
+     * @description If the 'format' parameter is used, this method throws a runtime exception if the date and time format used in the value parameter does not match the
+     * format parameter. You can retrieve the error message by calling {@link GlideDateTime#getErrorMsg|getErrorMsg()} on the {@link GlideDateTime} object after the
+     * exception is caught.
+     * If the 'format' parameter is not used, then the 'asDisplayed' parameter must be formatted using the current user's preferred display format, such as
+     * MM-dd-yyyy HH:mm:ss. To assign the current date and time to a variable in a workflow script, use
+     * variable.setDisplayValue({@link GlideSystem#nowDateTime|gs.nowDateTime});.
+     */
+    setDisplayValue(asDisplayed: string, format?: string): void;
+
+    /**
+     * Sets a date and time value using the internal format (yyyy-MM-dd HH:mm:ss) and the current user's time zone.
+     * @param {string} asDisplayed The date and time in internal format.
+     */
+    setDisplayValueInternal(asDisplayed: string): void;
+
+    /**
+     * Sets the date and time of the current object using an existing {@link GlideDateTime} object.
+     * @param {GlideDateTime} gdt The object to use for setting the datetime value.
+     * @description This method is equivalent to instantiating a new object with a {@link GlideDateTime} parameter.
+     */
+    setGlideDateTime(gdt: GlideDateTime): void;
+
+    /**
+     * Sets the month stored by the {@link GlideDateTime} object to the specified value using the current user's time zone.
+     * @param {number} month The month to change to.
+     */
+    setMonthLocalTime(month: number): void;
+
+    /**
+     * Sets the month stored by the {@link GlideDateTime} object to the specified value using the UTC time zone.
+     * @param {number} month The month to change to.
+     */
+    setMonthUTC(month: number): void;
+
+    /**
+     * Sets the date and time of the {@link GlideDateTime} object.
+     * @param {string} o The date and time to use.
+     * This parameter may be one of several types: 
+     * A string in the UTC time zone and the internal format of yyyy-MM-dd HH:mm:ss: Sets the value of the object to the specified date and time.
+     * Using the method this way is equivalent to instantiating a new {@link GlideDateTime} object using the {@link GlideDateTime|GlideDateTime(String value)} constructor.
+     * If the date and time format used does not match the internal format, the method attempts to set the date and time using other available formats.
+     * Resolving the date and time this way can lead to inaccurate data due to ambiguity in the day and month values. When using a non-standard date and time format,
+     * use {@link GlideDateTime#setValueUTC|setValueUTC(String dt, String format)} instead.
+     * -- or --
+     * A {@link GlideDateTime} object. Sets the value of the object to the date and time stored by the {@link GlideDateTime} passed in the parameter.
+     * Using the method this way is equivalent to instantiating a new {@link GlideDateTime} object using the {@link GlideDateTime|GlideDateTime(GlideDateTime g)} constructor.
+     * -- or --
+     * A JavaScript Number. Sets the value of the object using the Number value as milliseconds past January 1, 1970 00:00:00 GMT.
+     */
+    setValue(o: string): void;
+
+    /**
+     * Sets a date and time value using the UTC time zone and the specified date and time format.
+     * @param {string} dt The date and time to use.
+     * @param {string} format The date and time format to use.
+     * @description This method throws a runtime exception if the date and time format used in the dt parameter does not match the format parameter.
+     * You can retrieve the error message by calling {@link GlideDateTime#getErrorMsg|getErrorMsg()} on the {@link GlideDateTime} object after the exception is caught.
+     */
+    setValueUTC(dt: string, format: string): void;
+
+    /**
+     * Sets the year stored by the {@link GlideDateTime} object to the specified value using the current user's time zone.
+     * @param {number} year The year to change to.
+     */
+    setYearLocalTime(year: number): void;
+
+    /**
+     * Sets the year stored by the {@link GlideDateTime} object to the specified value using the UTC time zone.
+     * @param {number} year The year to change to.
+     */
+    setYearUTC(year: number): void;
+
+    /**
+     * Gets the duration difference between two {@link GlideDateTime} values.
+     * @param {GlideDateTime} start The start value.
+     * @param {GlideDateTime} end The end value.
+     * @returns {GlideDuration} The {@link GlideDuration|duration} between the two values
+     */
+    static subtract(start: GlideDateTime, end: GlideDateTime): GlideDuration;
+
+    /**
+     * Subtracts a specified amount of time from the current {@link GlideDateTime} object.
+     * @param {GlideTime|number} value The {@link GlideTime|time} value or milliseconds to subtract.
+     */
+    subtract(value: GlideTime|number): void;
+
+    /**
+     * Gets the date and time value stored by the {@link GlideDateTime} object in the internal format, yyyy-MM-dd HH:mm:ss, and the system time zone, UTC by default.
+     * @returns {string} The date and time stored by the {@link GlideDateTime} object in the system time zone and format.
+     * @description This method is equivalent to {@link GlideDateTime#getValue|getValue()}.
+     */
+    toString(): string;
+}
+
 declare var gs: GlideSystem;

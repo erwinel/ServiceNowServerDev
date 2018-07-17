@@ -1,4 +1,12 @@
-export namespace x_44813_util {
+export module x_44813_util {
+    export namespace SysPropertyDefinitions {
+        export class constants {
+            static readonly utilAppPrefix = "x_44813_util";
+            static readonly SdlcStagePropertyName: string = "x_44813_util.SN_SDLC_STAGE";
+        }
+        export type SdlcStageType = "prod"|"uat"|"test"|"dev"|"sb";
+    }
+
     /**
      * Defines regular expressions used in the current module.
      */
@@ -77,12 +85,12 @@ export namespace x_44813_util {
          */
         abnormalWhitespace?: RegExp;
     }
-    
+
     /**
      * Names of settings which can be used to reference regular expression patters used in the current module.
      */
     export type PatternSettingsName = "onlyWhitespace"|"trimStart"|"trimEnd"|"lineSeparator"|"booleanText"|"firstLetterLc"|"abnormalWhitespace";
-    
+
     /**
      * Alias for a type that is defined.
      * @description This is intended to represent any defined value at all when strictNullChecks is turned on.
@@ -94,7 +102,7 @@ export namespace x_44813_util {
      * @description This is intended for use when strictNullChecks is turned on.
      */
     export type Nilable<T> = T|null|undefined;
-    
+
     /**
      * Alias for any type, including null and undefined.
      * @description This is intended to represent any value at all when strictNullChecks is turned on.
@@ -115,7 +123,7 @@ export namespace x_44813_util {
 
     /** Represents an object which can contained arbitrarily named properties. */
     export interface IStringKeyedObject { [key: string]: AnyNilable }
-    
+
     /**
      * Represents an object which contains both named properties and indexed elements.
      */
@@ -167,19 +175,19 @@ export namespace x_44813_util {
          */
         stack?: string
     }
-    
+
     /**
      * Function to get mapped value according to a source value.
      * @param {*} value Source value.
      * @returns {*} Mapped value.
      */
     export interface MapFromValueCallback<TSource, TResult> { (value: TSource): TResult; }
-    
+
     /**
      * Represents supported return values from the <code>typeof</code> funciton.
      */
     export type ObjectTypeString = "boolean"|"function"|"number"|"object"|"string"|"symbol"|"undefined";
-    
+
     export type ReservedClassPropertyName = "Arguments"|"Array"|"Boolean"|"Date"|"Error"|"Function"|"JSON"|"Math"|"Number"|"Object"|"RegExp"|"String";
     /**
      * Defines a set of values and/or {@link MapFromValueCallback} which will determine the mapped value according to a source value's type.
@@ -277,7 +285,7 @@ export namespace x_44813_util {
          */
         otherwise: MapFromValueCallback<TSource, TResult>|TResult;
     }
-    
+
     const patternDefaults = {
         newLineSequence: "\n",
         regex: <IJsTypeCommanderRegex> {
@@ -332,7 +340,7 @@ export namespace x_44813_util {
     export interface RecursiveMapCallbackFn {
         (current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined, target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable;
     }
-    
+
     /**
      * Represents options for the JsTypeCommander.mapInto function.
      */
@@ -356,7 +364,7 @@ export namespace x_44813_util {
          * @description A value less than one wil prevent iteration.
          */
         maxItemsInObject?: number;
-    
+
         /**
          * Maximum recursion depth for recursing. This helps to prevent endless loops, should there be any circular references.
          * @type {number=32}
@@ -367,7 +375,7 @@ export namespace x_44813_util {
 
     export class JsTypeCommander {
         readonly type = "JsTypeCommander";
-    
+
         private patternOptions = {
             newLineSequence: patternDefaults.newLineSequence,
             regex: <IJsTypeCommanderRegex> {
@@ -380,13 +388,13 @@ export namespace x_44813_util {
                 abnormalWhitespace: patternDefaults.regex.abnormalWhitespace
             }
         };
-    
+
         /**
          * Gets the default character sequence that will be used when joining lines of text.
          * @returns {string} The default character sequence that will be used when joining lines of text.
          */
         getDefaultLineSeparatorSequence(): string { return this.patternOptions.newLineSequence; }
-    
+
         /**
          * Gets regular expression patterns used internally by this module.
          * @returns {IJsTypeCommanderRegex} Object whose properties contain regular expression patterns used internally by this module.
@@ -402,7 +410,7 @@ export namespace x_44813_util {
                 abnormalWhitespace: this.patternOptions.regex.abnormalWhitespace
             };
         }
-    
+
         /**
          * Sets regular expression pattern options used internally by this module.
          * @param {IJsTypeCommanderRegexOpt} settings Object whose properties contain regular expression patterns used internally by this module.
@@ -437,7 +445,7 @@ export namespace x_44813_util {
             }
             return this.getPatternOptions();
         }
-    
+
         /**
          * Sets the default character sequence that will be used when joining lines of text.
          * @param s The default character sequence to use when joining lines of text. If this parameter is not defined, then the default character sequence will be restored.
@@ -454,7 +462,7 @@ export namespace x_44813_util {
             }
             return this.patternOptions.newLineSequence;
         }
-    
+
         /**
          * Maps a source value to a new value based upon the source value's type.
          * @param target Source value to be mapped.
@@ -464,7 +472,7 @@ export namespace x_44813_util {
          */
         mapByTypeValue<TSource, TResult>(target: Nilable<TSource>, callbacks: TypeGuardResultSpecs<Nilable<TSource>, TResult>, checkElements?: boolean): TResult {
             let selectedCallback: Function|TResult|undefined;
-    
+
             switch (typeof(target)) {
                 case "boolean":
                     selectedCallback = callbacks.whenBoolean;
@@ -1186,7 +1194,7 @@ export namespace x_44813_util {
         
             if (typeof(defaultValue) == "undefined")
                 return ns;
-    
+
             if (typeof(ns) == "number") {
                 if (isNaN(ns) || this.isInfinite(ns)) {
                     if (allowNaN === true)
@@ -1917,7 +1925,7 @@ export namespace x_44813_util {
         maxDepth: number = 32;
         thisObj?: any;
         private _util: JsTypeCommander;
-    
+
         constructor(util: JsTypeCommander, callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
             this._util = util;
             this.callbackfn = callbackfn;
@@ -1928,7 +1936,7 @@ export namespace x_44813_util {
                 this.thisObj = options.thisObj;
             }
         }
-    
+
         iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
                 target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
             if (maxDepth < 1 || this.totalMaxItems < 1)
@@ -1966,7 +1974,7 @@ export namespace x_44813_util {
                         break;
                 }
             }
-    
+
             return target;
         }
     }

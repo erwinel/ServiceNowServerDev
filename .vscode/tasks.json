@@ -4,12 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build Distributable",
-            "identifier": "buildUtil",
+            "label": "Build Scoped Apps",
+            "identifier": "build-scoped-apps",
             "type": "gulp",
-            "task": "buildUtil",
-            "group": { "kind": "build", "isDefault": true },
-            "problemMatcher": [ "$tsc" ],
+            "task": "build-scoped-apps",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -18,12 +20,14 @@
             }
         },
         {
-            "label": "Re-Build Distributable",
-            "identifier": "rebuildUtil",
+            "label": "Re-Build Scoped Apps",
+            "identifier": "rebuild-scoped-apps",
             "type": "gulp",
-            "task": "rebuildUtil",
+            "task": "rebuild-scoped-apps",
             "group": "build",
-            "problemMatcher": [ "$tsc" ],
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -32,12 +36,14 @@
             }
         },
         {
-            "label": "Build Test",
-            "identifier": "buildTest",
+            "label": "Build SN Global",
+            "identifier": "build-sn-global",
             "type": "gulp",
-            "task": "buildTest",
+            "task": "build-sn-global",
             "group": "build",
-            "problemMatcher": [ "$tsc" ],
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -46,12 +52,14 @@
             }
         },
         {
-            "label": "Re-Build Test",
-            "identifier": "rebuildTest",
+            "label": "Re-Build SN Global",
+            "identifier": "rebuild-sn-global",
             "type": "gulp",
-            "task": "rebuildTest",
+            "task": "rebuild-sn-global",
             "group": "build",
-            "problemMatcher": [ "$tsc" ],
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -61,11 +69,16 @@
         },
         {
             "label": "Build All",
-            "identifier": "buildAll",
+            "identifier": "build-all",
             "type": "gulp",
-            "task": "buildAll",
-            "group": "build",
-            "problemMatcher": [ "$tsc" ],
+            "task": "build-all",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -75,11 +88,13 @@
         },
         {
             "label": "Re-Build All",
-            "identifier": "rebuildAll",
+            "identifier": "rebuild-all",
             "type": "gulp",
-            "task": "rebuildAll",
+            "task": "rebuild-all",
             "group": "build",
-            "problemMatcher": [ "$tsc" ],
+            "problemMatcher": [
+                "$tsc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",

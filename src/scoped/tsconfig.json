@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../compiled/scoped"
+    },
+    "files": [
+        "./x_44813_util.ts",
+        "./x_44813_grpnamereg.ts",
+        "./x_44813_sec_clsif.ts",
+        "../../typings/scoped/ServiceNowScopedTypes.d.ts"
+    ]
+}

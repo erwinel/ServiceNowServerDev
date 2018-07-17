@@ -1,4 +1,4 @@
-export namespace x_44813_grpnamereg {
+export module x_44813_grpnamereg {
     /**
      * Utility methods for working with the Interop Group Names registry.
      */

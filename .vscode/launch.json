@@ -4,6 +4,33 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Gulp build-all",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "build-all"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Gulp build-scoped-apps",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "build-scoped-apps"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Gulp build-sn-global",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "build-sn-global"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Jasmine Tests",
             "program": "${workspaceFolder}/node_modules/jasmine/bin/jasmine.js",
             "args": [
@@ -11,7 +38,7 @@
             ],
             "cwd": "${workspaceFolder}",
             "sourceMaps": true,
-            "preLaunchTask": "buildAll",
+            "preLaunchTask": "build-all",
             "internalConsoleOptions": "openOnSessionStart",
             "protocol": "inspector"
         }

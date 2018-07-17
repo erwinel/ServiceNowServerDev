@@ -6,44 +6,46 @@ var gutil = require('gulp-util');
 var ts = require("gulp-typescript");
 var changed = require('gulp-changed');
 
-var tsUtilProject = ts.createProject("tsconfig.json");
-var tsTestProject = ts.createProject("tsconfig-test.json");
+var scopedAppsTsProject = ts.createProject("./src/scoped/tsconfig.json");
+var globallyScopedTsProject = ts.createProject("./src/global/tsconfig.json");
 
-gulp.task('cleanUtil', function() { return del([tsUtilProject.config.compilerOptions.outDir]); });
+gulp.task('clean-scoped-apps', function() { return del([scopedAppsTsProject.options.outDir]); });
 
-gulp.task('cleanTest', function() { return del([tsTestProject.config.compilerOptions.outDir]); });
+gulp.task('clean-sn-global', function() { return del([globallyScopedTsProject.options.outDir]); });
 
-gulp.task('cleanAll', ['cleanUtil', 'cleanTest']);
+gulp.task('clean-scoped-apps-test', function() { return del([utilApplicationTestTsProject.options.outDir]); });
 
-gulp.task('buildUtil', function() {
-    return tsUtilProject.src()
-        .pipe(tsUtilProject())
-        .pipe(gulp.dest(tsUtilProject.config.compilerOptions.outDir));
+gulp.task('clean-all', ['clean-scoped-apps', 'clean-sn-global']);
+
+gulp.task('build-all', ['build-scoped-apps', 'build-sn-global']);
+
+gulp.task('rebuild-all', ['rebuild-scoped-apps', 'rebuild-sn-global']);
+
+gulp.task('build-scoped-apps', function() {
+    return scopedAppsTsProject.src()
+        .pipe(scopedAppsTsProject())
+        .pipe(gulp.dest(scopedAppsTsProject.options.outDir));
 });
 
-gulp.task('rebuildUtil', ['cleanUtil'], function() {
-    return tsUtilProject.src()
-        .pipe(tsUtilProject())
-        .pipe(gulp.dest(tsUtilProject.config.compilerOptions.outDir));
+gulp.task('rebuild-scoped-apps', ['clean-scoped-apps'], function() {
+    return scopedAppsTsProject.src()
+        .pipe(scopedAppsTsProject())
+        .pipe(gulp.dest(scopedAppsTsProject.options.outDir));
 });
 
-gulp.task('buildTest', function() {
-    return tsTestProject.src()
-        .pipe(tsTestProject())
-        .pipe(gulp.dest(tsTestProject.config.compilerOptions.outDir));
+gulp.task('build-sn-global', function() {
+    return globallyScopedTsProject.src()
+        .pipe(globallyScopedTsProject())
+        .pipe(gulp.dest(globallyScopedTsProject.options.outDir));
 });
 
-gulp.task('rebuildTest', ['cleanTest'], function() {
-    return tsTestProject.src()
-        .pipe(tsTestProject())
-        .pipe(gulp.dest(tsTestProject.config.compilerOptions.outDir));
+gulp.task('rebuild-sn-global', ['clean-sn-global'], function() {
+    return globallyScopedTsProject.src()
+        .pipe(globallyScopedTsProject())
+        .pipe(gulp.dest(globallyScopedTsProject.options.outDir));
 });
 
-gulp.task('buildAll', ['buildUtil', 'buildTest']);
-
-gulp.task('rebuildAll', ['rebuildUtil', 'rebuildTest']);
-
-gulp.task('runTests', function() {
-    return gulp.src(['test/**/+(test.js|test-)*.js'])
-      .pipe(jasmine());
-});
+//gulp.task('run-scoped-apps-tests', function() {
+//    return gulp.src(['test/applications/**/+(test.js|test-)*.js'])
+//      .pipe(jasmine());
+//});
