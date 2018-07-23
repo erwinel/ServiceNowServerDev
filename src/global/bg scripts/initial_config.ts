@@ -3,9 +3,6 @@
 import { x_44813_util } from '../../../compiled/scoped/x_44813_util';
 
 export namespace global.bg_scripts.initial_config {
-    // SDLC Stage values: sb=Sandbox; dev=Development; test=Test/UAT; prod=Production
-    let sdlc_stage: x_44813_util.SysPropertyDefinitions.SdlcStageType = "dev";
-
     interface ISysPropertyInfo {
         name: string,
         type: string,
@@ -17,10 +14,9 @@ export namespace global.bg_scripts.initial_config {
         dev: string,
         sb: string
     }
+
     // Following is an array of properties that will be configured by this script.
     let sys_properties: ISysPropertyInfo[] = [
-        { name: x_44813_util.SysPropertyDefinitions.constants.SdlcStagePropertyName, type: "string", description: "ServiceNow SDLC stage of current server.", sys_package: x_44813_util.SysPropertyDefinitions.constants.utilAppPrefix,
-            prod: "prod", uat: "uat", test: "test", dev: "dev", sb: "dev" },
         { name: "glide.sys.default.tz", type: "timezone", description: "System timezone for all users unless overridden in the user's record", sys_package: "glidesoft",
             prod: "US/Eastern", uat: "US/Eastern", test: "US/Eastern", dev: "US/Eastern", sb: "US/Eastern" },
         { name: "glide.product.name", type: "string", description: "Browser tab title", sys_package: "apps/system2",
@@ -71,60 +67,70 @@ export namespace global.bg_scripts.initial_config {
         }
         return p.sb;
     }
-    let errorCount: number = 0;
-    let updateCount: number = 0;
-    for (var i = 0; i < sys_properties.length; i++) {
-        let settingsGr: GlideRecord = new GlideRecord('sys_properties');
-        settingsGr.addQuery('name', sys_properties[i].name);
-        settingsGr.query();
-        if (settingsGr.next()) {
-            let oldValue: string = settingsGr.getValue('value');
-            if (oldValue == getStageProperty(i, sdlc_stage))
-                gs.info("Property " + sys_properties[i].name + " was already set to '" + getStageProperty(i, sdlc_stage) + "'");
-            else {
+
+    let stageName: string = gs.getProperty(x_44813_util.SysPropertyDefinitions.constants.SdlcStagePropertyName, "");
+
+    if (stageName.length == 0)
+        gs.error("SDLC stage of current server not set. Cannot continue.");
+    else if (stageName !== "prod" && stageName !== "uat" && stageName !== "test" && stageName !== "dev" && stageName !== "sb")
+        gs.error("SDLC stage of current server (" + JSON.stringify(stageName) + ") is invalid. This must be set to either \"prod\", \"uat\", \"test\", \"dev\", or \"sb\". Cannot continue.");
+    else {
+        let sdlc_stage: x_44813_util.SysPropertyDefinitions.SdlcStageType = <x_44813_util.SysPropertyDefinitions.SdlcStageType>stageName;
+        let errorCount: number = 0;
+        let updateCount: number = 0;
+        for (var i = 0; i < sys_properties.length; i++) {
+            let settingsGr: GlideRecord = new GlideRecord('sys_properties');
+            settingsGr.addQuery('name', sys_properties[i].name);
+            settingsGr.query();
+            if (settingsGr.next()) {
+                let oldValue: string = settingsGr.getValue('value');
+                if (oldValue == getStageProperty(i, sdlc_stage))
+                    gs.info("Property " + sys_properties[i].name + " was already set to '" + getStageProperty(i, sdlc_stage) + "'");
+                else {
+                    try {
+                        settingsGr.setValue('value', getStageProperty(i, sdlc_stage));
+                        settingsGr.update();
+                        gs.info("Changed " + sys_properties[i].name + " from '" + oldValue + "' to '" + getStageProperty(i, sdlc_stage) + "'");
+                        updateCount++;
+                    } catch (e) {
+                        errorCount++;
+                        gs.warn("Error changing " + sys_properties[i].name + " from '" + oldValue + "' to '" + getStageProperty(i, sdlc_stage) + "': " + e);
+                    }
+                }
+            } else {
                 try {
+                    settingsGr.initialize();
+                    settingsGr.setValue('name', sys_properties[i].name);
+                    settingsGr.setValue('sys_name', sys_properties[i].name);
+                    settingsGr.setValue('description', sys_properties[i].description);
+                    settingsGr.setValue('type', sys_properties[i].type);
+                    settingsGr.setValue('ignore_cache', false);
+                    settingsGr.setValue('is_private', false);
                     settingsGr.setValue('value', getStageProperty(i, sdlc_stage));
-                    settingsGr.update();
-                    gs.info("Changed " + sys_properties[i].name + " from '" + oldValue + "' to '" + getStageProperty(i, sdlc_stage) + "'");
+                    let packageGr: GlideRecord = new GlideRecord('sys_package');
+                    packageGr.addQuery('source', sys_properties[i].sys_package);
+                    packageGr.query();
+                    if (packageGr.next())
+                        settingsGr.setValue('sys_package', packageGr.sys_id);
+                    settingsGr.insert();
+                    gs.info("Added " + sys_properties[i].name + " with the value of '" + getStageProperty(i, sdlc_stage) + "'");
                     updateCount++;
                 } catch (e) {
                     errorCount++;
-                    gs.warn("Error changing " + sys_properties[i].name + " from '" + oldValue + "' to '" + getStageProperty(i, sdlc_stage) + "': " + e);
+                    gs.warn("Error adding " + sys_properties[i].name + " with the value of '" + getStageProperty(i, sdlc_stage) + "': " + e);
                 }
             }
-        } else {
-            try {
-                settingsGr.initialize();
-                settingsGr.setValue('name', sys_properties[i].name);
-                settingsGr.setValue('sys_name', sys_properties[i].name);
-                settingsGr.setValue('description', sys_properties[i].description);
-                settingsGr.setValue('type', sys_properties[i].type);
-                settingsGr.setValue('ignore_cache', false);
-                settingsGr.setValue('is_private', false);
-                settingsGr.setValue('value', getStageProperty(i, sdlc_stage));
-                let packageGr: GlideRecord = new GlideRecord('sys_package');
-                packageGr.addQuery('source', sys_properties[i].sys_package);
-                packageGr.query();
-                if (packageGr.next())
-                    settingsGr.setValue('sys_package', packageGr.sys_id);
-                settingsGr.insert();
-                gs.info("Added " + sys_properties[i].name + " with the value of '" + getStageProperty(i, sdlc_stage) + "'");
-                updateCount++;
-            } catch (e) {
-                errorCount++;
-                gs.warn("Error adding " + sys_properties[i].name + " with the value of '" + getStageProperty(i, sdlc_stage) + "': " + e);
-            }
         }
+    
+        if (errorCount == 0)
+            gs.info('There were no errors.');
+        else if (errorCount == 1)
+            gs.warn('1 error has occurred.');
+        else
+            gs.warn(errorCount + ' errors have occurred.');
+        if (updateCount > 0)
+            gs.info("You may need to refresh your browser to see the changes.");
+        else if (errorCount == 0)
+            gs.info("No changes were required.");
     }
-
-    if (errorCount == 0)
-        gs.info('There were no errors.');
-    else if (errorCount == 1)
-        gs.warn('1 error has occurred.');
-    else
-        gs.warn(errorCount + ' errors have occurred.');
-    if (updateCount > 0)
-        gs.info("You may need to refresh your browser to see the changes.");
-    else if (errorCount == 0)
-        gs.info("No changes were required.");
 }

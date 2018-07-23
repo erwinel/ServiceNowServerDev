@@ -32,6 +32,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         };
         stopAfter: GlideDateTime;
     }
+
     let scriptConfig: IPluginAutoActivateConfig = {
         // Array of IDs for plugins that should be activated.
         pluginIds: [
@@ -90,15 +91,14 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         }
     };
     
+    let userAddress: string|null|undefined;
     let config: IValidatedPluginAutoActivateConfig;
     try {
-        if (typeof(scriptConfig.emailNotfication.to) != "string" || scriptConfig.emailNotfication.to.trim().length == 0) {
-            let email: string|null|undefined = gs.getUser().getEmail();
-            if (typeof(email) != "string" || email.trim().length == 0)
-                throw "Setting \"emailNotfication.to\" not defined in scriptConfig script variable and current user does not have an email address.";
-            if (email == "admin@example.com")
-                throw "Setting \"emailNotfication.to\" not defined in scriptConfig script variable and current user has an out-of-the-box email address.";
-            scriptConfig.emailNotfication.to = email;
+        let currentUser: GlideUser = gs.getUser();
+        userAddress = currentUser.getEmail();
+        if (typeof(userAddress) != "string" || userAddress.trim().length == 0) {
+            userAddress = null;
+            gs.warn("Current user does not have an email address. Activation progress message won't be sent.");
         }
         if (typeof(scriptConfig.pluginIds) == "string")
             scriptConfig.pluginIds = [scriptConfig.pluginIds];
@@ -133,12 +133,6 @@ export namespace global.bg_scripts.bulk_plugin_activation {
             throw "Setting \"emailNotfication.subject.incomplete\" not defined in scriptConfig script variable.";
         if (typeof(scriptConfig.stopAfterMinutes) != "number" || isNaN(scriptConfig.stopAfterMinutes) || !Number.isFinite(scriptConfig.stopAfterMinutes))
             scriptConfig.stopAfterMinutes = 20;
-        if (typeof(scriptConfig.emailNotfication.cc) == "string")
-            scriptConfig.emailNotfication.cc = ((<string>(scriptConfig.emailNotfication.cc)).trim().length == 0) ? [] : [scriptConfig.emailNotfication.cc];
-        else if (typeof(scriptConfig.emailNotfication.cc) != "object" || scriptConfig.emailNotfication.cc == null || !Array.isArray(scriptConfig.emailNotfication.cc))
-            scriptConfig.emailNotfication.cc = []
-        else
-            scriptConfig.emailNotfication.cc = scriptConfig.emailNotfication.cc.map((s: any) => { return (typeof(s) == "string") ? s.trim() : "" }).filter((s: string) => { return s.length > 0; });
         config = <IValidatedPluginAutoActivateConfig>scriptConfig;
         config.stopAfter = new GlideDateTime();
         config.stopAfter.addSeconds(config.stopAfterMinutes * 60);
@@ -146,7 +140,6 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         gs.error("Unable to continue due to errors");
         throw err;
     }
-    let emailOutbound: GlideEmailOutbound;
     interface IPluginActivationInfo {
         id: string;
         name?: string;
@@ -239,33 +232,35 @@ export namespace global.bg_scripts.bulk_plugin_activation {
 
         let queue: IPluginActivationQueue[] = resultInfo.items.filter(isQueuedPluginActivation);
         if (queue.length > 0) {
-            emailOutbound = new GlideEmailOutbound();
-            if (typeof(config.emailNotfication.from) == "string" && config.emailNotfication.from.trim().length > 0)
-                emailOutbound.setFrom(config.emailNotfication.from);
-            emailOutbound.addRecipient(config.emailNotfication.from);
-            emailOutbound.setSubject(config.emailNotfication.subject.startNotification);
-            config.emailNotfication.cc.forEach(cc => { emailOutbound.addAddress("cc", cc); });
-            resultInfo.startTime = new GlideDateTime();
-            resultInfo.discontinueAfter = new GlideDateTime();
-            resultInfo.discontinueAfter.addSeconds(config.stopAfterMinutes * 60);
-            emailBody = [
-                "<h2>Activating " + ((queue.length == 1) ? "1 plugin" : queue.length + " plugins") + "</h2>",
-                "<table><tr>",
-                "<th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td>",
-                "<th>Discontinuing activations after:</th><td>" + resultInfo.discontinueAfter.getDisplayValue() + "</td>",
-                "<th>" + ((queue.length == 1) ? "Plugin:" : queue.length + "Plugins:") + "</th><td><ol>"
-            ];
-            for (var index = 0; index < queue.length; index++) {
-                let htmlCode: string = (typeof(queue[index].name) == "string" && queue[index].name.trim().length > 0 && queue[index].name != queue[index].id) ?
-                    queue[index].name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
-                        : queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                if (typeof(queue[index].pluginLink) == "string" && queue[index].pluginLink.trim().length > 0)
-                    htmlCode = "<a href=\"" + queue[index].pluginLink + "\">" + htmlCode + "</a>";
-                emailBody.push("<li>" + htmlCode + "</li>");
+            gs.info("Activating " + ((queue.length == 1) ? "1 plugin" : queue.length + " plugin"));
+            gs.info("Discontinuing activations after: " + resultInfo.discontinueAfter.getDisplayValue());
+            if (typeof(userAddress) == "string") {
+                let emailOutbound: GlideEmailOutbound = new GlideEmailOutbound();
+                emailOutbound.setFrom(userAddress);
+                emailOutbound.addRecipient(userAddress);
+                emailOutbound.setSubject(config.emailNotfication.subject.startNotification);
+                resultInfo.startTime = new GlideDateTime();
+                resultInfo.discontinueAfter = new GlideDateTime();
+                resultInfo.discontinueAfter.addSeconds(config.stopAfterMinutes * 60);
+                emailBody = [
+                    "<h2>Activating " + ((queue.length == 1) ? "1 plugin" : queue.length + " plugins") + "</h2>",
+                    "<table><tr>",
+                    "<th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td>",
+                    "<th>Discontinuing activations after:</th><td>" + resultInfo.discontinueAfter.getDisplayValue() + "</td>",
+                    "<th>" + ((queue.length == 1) ? "Plugin:" : queue.length + "Plugins:") + "</th><td><ol>"
+                ];
+                for (var index = 0; index < queue.length; index++) {
+                    let htmlCode: string = (typeof(queue[index].name) == "string" && queue[index].name.trim().length > 0 && queue[index].name != queue[index].id) ?
+                        queue[index].name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
+                            : queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                    if (typeof(queue[index].pluginLink) == "string" && queue[index].pluginLink.trim().length > 0)
+                        htmlCode = "<a href=\"" + queue[index].pluginLink + "\">" + htmlCode + "</a>";
+                    emailBody.push("<li>" + htmlCode + "</li>");
+                }
+                emailBody.push("</ol></td></tr></table><a href=\"" + gs.getProperty('glide.servlet.uri') + "nav_to.do?uri=%2Fsys_progress_worker_list.do\">Click here</a> to view status of progress workers.");
+                emailOutbound.setBody(emailBody.join("\n"));
+                emailOutbound.save();
             }
-            emailBody.push("</ol></td></tr></table><a href=\"" + gs.getProperty('glide.servlet.uri') + "nav_to.do?uri=%2Fsys_progress_worker_list.do\">Click here</a> to view status of progress workers.");
-            emailOutbound.setBody(emailBody.join("\n"));
-            emailOutbound.save();
 
             for (var index = 0; index < resultInfo.items.length; index++) {
                 let pluginInfo: IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult = resultInfo.items[index];
@@ -394,86 +389,143 @@ export namespace global.bg_scripts.bulk_plugin_activation {
     } finally {
         let failed: IPluginFailedResult[] = resultInfo.items.filter(isFailedPluginActivation);
         let incomplete: IPluginActivationQueue[] = resultInfo.items.filter(isQueuedPluginActivation);
-        emailOutbound = new GlideEmailOutbound();
-        if (typeof(config.emailNotfication.from) == "string" && config.emailNotfication.from.trim().length > 0)
-            emailOutbound.setFrom(config.emailNotfication.from);
-        emailOutbound.addRecipient(config.emailNotfication.from);
-        config.emailNotfication.cc.forEach(cc => { emailOutbound.addAddress("cc", cc); });
-        emailBody = [];
         if (incomplete.length > 0) {
-            emailOutbound.setSubject(config.emailNotfication.subject.incomplete);
-            emailBody.push("<h2>Alloted Activation Timeframe Expired</h2>");
+            gs.warn("Alloted Activation Timeframe Expired");
             if (failed.length == 1)
-                emailBody.push("<h3>1 error has occurred</h3>");
+                gs.error("1 error has occurred");
             else if (failed.length > 1)
-                emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
-            emailBody.push("Not all activation attempts completed before alotted timespan elapsed.\n<p>Execute background script again to activate the remaining " +
-                ((incomplete.length == 1) ? "plugin" : incomplete.length + " plugins") + "</p>");
-        } else if (failed.length > 0) {
-            emailOutbound.setSubject(config.emailNotfication.subject.finishedWithErrors);
-            emailBody.push("<h2>Activation Attempts Completed</h2>");
+            gs.error(failed.length + " errors have occurred");
+            gs.warn("Not all activation attempts completed before alotted timespan elapsed. Execute background script again to activate the remaining " +
+                ((incomplete.length == 1) ? "plugin" : incomplete.length + " plugins"));
+        } else if (failed.length > 0) {;
+            gs.error("Activation Attempts Completed");
             if (failed.length == 1)
-                emailBody.push("<h3>1 error has occurred</h3>");
+                gs.error("1 error has occurred");
             else if (failed.length > 1)
-                emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
-        } else {
-            emailBody.push("<h2>Activations Completed</h2>");
-            emailOutbound.setSubject(config.emailNotfication.subject.finishedSuccess);
-        }
-        emailBody.push("<table><tr><th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td></tr>");
-        emailBody.push("<tr><th>Completed on:</th><td>" + (new GlideDateTime()).getDisplayValue() + "</td></tr>");
-        emailBody.push("<tr><th>Already Activated:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "activated" }).length + "</td></tr>");
-        emailBody.push("<tr><th>Activations Succeeded:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "succeeded" }).length + "</td></tr>");
-        emailBody.push("<tr><th>Activations Failed:</th><td>" + failed.length + "</td></tr>");
-        emailBody.push("<tr><th>Not Activated:</th><td>" + incomplete.length + "</td></tr></table>");
-        emailBody.push("<table><tr><th>Name</th><th>Status</th><th>Details</th></tr>");
+                gs.error(failed.length + " errors have occurred");
+        } else
+            gs.error("Activations Completed");
         for (var index = 0; index < resultInfo.items.length; index++) {
             let pluginInfo: IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult = resultInfo.items[index];
-            let htmlCode: string = (typeof(pluginInfo.name) == "string" && pluginInfo.name.trim().length > 0 && pluginInfo.name != pluginInfo.id) ?
-                pluginInfo.name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
-                    : pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+            let messageText: string = (typeof(pluginInfo.name) == "string" && pluginInfo.name.trim().length > 0 && pluginInfo.name != pluginInfo.id) ?
+                pluginInfo.name + " (" + pluginInfo.id + ")</em>" : pluginInfo.id;
             if (typeof(pluginInfo.pluginLink) == "string" && pluginInfo.pluginLink.trim().length > 0)
-                htmlCode = "<a href=\"" + pluginInfo.pluginLink + "\">" + htmlCode + "</a>";
-            emailBody.push("<tr><td>" + htmlCode + "</td>");
-            let detailsCode: string[] = [];
+                messageText += " [" + pluginInfo.pluginLink + "]";
+            let detailsCode: string = "";
+            let level: number = 1;
             if (isQueuedPluginActivation(pluginInfo))
-                emailBody.push("<td>Not Activated</td>");
+                messageText += " Not Activated";
             else {
                 if (isFailedPluginActivation(pluginInfo)) {
-                    htmlCode = "Failed";
+                    level = 2;
+                    messageText += " Failed";
                 } else {
-                    htmlCode = "Activated";
+                    level = 0;
+                    messageText += " Activated";
                 }
-                if (typeof(pluginInfo.progressLink) == "string" && pluginInfo.progressLink.trim().length > 0)
-                    htmlCode = "<a href=\"" + pluginInfo.progressLink + "\">" + htmlCode + "</a>";
-                if (typeof(pluginInfo.completion_code) == "string" && pluginInfo.completion_code.length > 0) {
-                    emailBody.push("<td>" + htmlCode);
-                    emailBody.push("<div><strong>Completion Code</strong>");
-                    emailBody.push(pluginInfo.completion_code + "</div></td>");
-                } else
-                    emailBody.push("<td>" + htmlCode + "</td>");
-                let altLines: { label: string, text: string, isPre: boolean }[] = [
-                    { label: "Message", text: pluginInfo.message, isPre: false },
-                    { label: "Details", text: pluginInfo.details, isPre: true }
-                ].filter(function(a) { return (typeof(a.text) == "string" && a.text.trim().length > 0); });
-                if (altLines.length == 0)
-                    emailBody.push("<td>&nbsp;</td>");
-                else {
-                    emailBody.push("<td>");
-                    altLines.forEach(function(a) {
-                        emailBody.push("<div><strong>" + a.label + "</strong>");
-                        if (a.isPre)
-                            emailBody.push("<pre>" + a.text + "</pre></div>");
-                        else
-                            emailBody.push(a.text + "</div>");
-                    });
-                    emailBody.push("</td>");
-                }
+                if (typeof(pluginInfo.completion_code) == "string" && pluginInfo.completion_code.length > 0)
+                    messageText += "; Code: " + pluginInfo.completion_code;
+                if (typeof(pluginInfo.message) == "string" && pluginInfo.message.trim().length > 0)
+                    messageText += "; Message: " + pluginInfo.message;
+                if (typeof(pluginInfo.details) == "string" && pluginInfo.details.trim().length > 0)
+                    detailsCode = pluginInfo.details;
             }
-            emailBody.push("</tr>");
+            if (level == 0)
+                gs.info(messageText);
+            else if (level == 1)
+                gs.warn(messageText);
+            else
+                gs.error(messageText);
+            if (detailsCode.length > 0) {
+                if (level == 0)
+                    gs.info(detailsCode);
+                else if (level == 1)
+                    gs.warn(detailsCode);
+                else
+                    gs.error(detailsCode);
+            }
         }
-        emailBody.push("</table>");
-        emailOutbound.setBody(emailBody.join("\n"));
-        emailOutbound.save();
+        if (typeof(userAddress) == "string") {
+            let emailOutbound: GlideEmailOutbound = new GlideEmailOutbound();
+            emailOutbound = new GlideEmailOutbound();
+            emailOutbound.setFrom(userAddress);
+            emailOutbound.addRecipient(userAddress);
+            emailBody = [];
+            if (incomplete.length > 0) {
+                emailOutbound.setSubject(config.emailNotfication.subject.incomplete);
+                emailBody.push("<h2>Alloted Activation Timeframe Expired</h2>");
+                if (failed.length == 1)
+                    emailBody.push("<h3>1 error has occurred</h3>");
+                else if (failed.length > 1)
+                    emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
+                emailBody.push("Not all activation attempts completed before alotted timespan elapsed.\n<p>Execute background script again to activate the remaining " +
+                    ((incomplete.length == 1) ? "plugin" : incomplete.length + " plugins") + "</p>");
+            } else if (failed.length > 0) {
+                emailOutbound.setSubject(config.emailNotfication.subject.finishedWithErrors);
+                emailBody.push("<h2>Activation Attempts Completed</h2>");
+                if (failed.length == 1)
+                    emailBody.push("<h3>1 error has occurred</h3>");
+                else if (failed.length > 1)
+                    emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
+            } else {
+                emailBody.push("<h2>Activations Completed</h2>");
+                emailOutbound.setSubject(config.emailNotfication.subject.finishedSuccess);
+            }
+            emailBody.push("<table><tr><th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td></tr>");
+            emailBody.push("<tr><th>Completed on:</th><td>" + (new GlideDateTime()).getDisplayValue() + "</td></tr>");
+            emailBody.push("<tr><th>Already Activated:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "activated" }).length + "</td></tr>");
+            emailBody.push("<tr><th>Activations Succeeded:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "succeeded" }).length + "</td></tr>");
+            emailBody.push("<tr><th>Activations Failed:</th><td>" + failed.length + "</td></tr>");
+            emailBody.push("<tr><th>Not Activated:</th><td>" + incomplete.length + "</td></tr></table>");
+            emailBody.push("<table><tr><th>Name</th><th>Status</th><th>Details</th></tr>");
+            for (var index = 0; index < resultInfo.items.length; index++) {
+                let pluginInfo: IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult = resultInfo.items[index];
+                let htmlCode: string = (typeof(pluginInfo.name) == "string" && pluginInfo.name.trim().length > 0 && pluginInfo.name != pluginInfo.id) ?
+                    pluginInfo.name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
+                        : pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                if (typeof(pluginInfo.pluginLink) == "string" && pluginInfo.pluginLink.trim().length > 0)
+                    htmlCode = "<a href=\"" + pluginInfo.pluginLink + "\">" + htmlCode + "</a>";
+                emailBody.push("<tr><td>" + htmlCode + "</td>");
+                let detailsCode: string[] = [];
+                if (isQueuedPluginActivation(pluginInfo))
+                    emailBody.push("<td>Not Activated</td>");
+                else {
+                    if (isFailedPluginActivation(pluginInfo)) {
+                        htmlCode = "Failed";
+                    } else {
+                        htmlCode = "Activated";
+                    }
+                    if (typeof(pluginInfo.progressLink) == "string" && pluginInfo.progressLink.trim().length > 0)
+                        htmlCode = "<a href=\"" + pluginInfo.progressLink + "\">" + htmlCode + "</a>";
+                    if (typeof(pluginInfo.completion_code) == "string" && pluginInfo.completion_code.length > 0) {
+                        emailBody.push("<td>" + htmlCode);
+                        emailBody.push("<div><strong>Completion Code</strong>");
+                        emailBody.push(pluginInfo.completion_code + "</div></td>");
+                    } else
+                        emailBody.push("<td>" + htmlCode + "</td>");
+                    let altLines: { label: string, text: string, isPre: boolean }[] = [
+                        { label: "Message", text: pluginInfo.message, isPre: false },
+                        { label: "Details", text: pluginInfo.details, isPre: true }
+                    ].filter(function(a) { return (typeof(a.text) == "string" && a.text.trim().length > 0); });
+                    if (altLines.length == 0)
+                        emailBody.push("<td>&nbsp;</td>");
+                    else {
+                        emailBody.push("<td>");
+                        altLines.forEach(function(a) {
+                            emailBody.push("<div><strong>" + a.label + "</strong>");
+                            if (a.isPre)
+                                emailBody.push("<pre>" + a.text + "</pre></div>");
+                            else
+                                emailBody.push(a.text + "</div>");
+                        });
+                        emailBody.push("</td>");
+                    }
+                }
+                emailBody.push("</tr>");
+            }
+            emailBody.push("</table>");
+            emailOutbound.setBody(emailBody.join("\n"));
+            emailOutbound.save();
+        }
     }
 }
