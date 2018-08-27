@@ -42,6 +42,8 @@ function getStageProperty(index, stage) {
     switch (stage) {
         case "prod":
             return p.prod;
+        case "uat":
+            return p.uat;
         case "test":
             return p.test;
         case "dev":
@@ -49,7 +51,7 @@ function getStageProperty(index, stage) {
     }
     return p.sb;
 }
-var stageName = gs.getProperty(x_44813_util_1.x_44813_util.SysPropertyDefinitions.constants.SdlcStagePropertyName, "");
+var stageName = gs.getProperty('x_44813_util.SN_SDLC_STAGE', '');
 if (stageName.length == 0)
     gs.error("SDLC stage of current server not set. Cannot continue.");
 else if (stageName !== "prod" && stageName !== "uat" && stageName !== "test" && stageName !== "dev" && stageName !== "sb")

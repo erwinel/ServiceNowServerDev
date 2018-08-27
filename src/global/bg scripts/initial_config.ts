@@ -60,6 +60,8 @@ export namespace global.bg_scripts.initial_config {
         switch (stage) {
             case "prod":
                 return p.prod;
+            case "uat":
+                return p.uat;
             case "test":
                 return p.test;
             case "dev":
@@ -68,7 +70,7 @@ export namespace global.bg_scripts.initial_config {
         return p.sb;
     }
 
-    let stageName: string = gs.getProperty(x_44813_util.SysPropertyDefinitions.constants.SdlcStagePropertyName, "");
+    let stageName: string = gs.getProperty('x_44813_util.SN_SDLC_STAGE', '');
 
     if (stageName.length == 0)
         gs.error("SDLC stage of current server not set. Cannot continue.");
