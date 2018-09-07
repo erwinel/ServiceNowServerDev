@@ -1,155 +1,47 @@
 /// <reference path="../../../typings/global/ServiceNowGlobalTypes.d.ts" />
 
 export namespace global.bg_scripts.bulk_plugin_activation {
-    interface IPluginAutoActivateConfig {
-        pluginIds: string|string[];
-        stopAfterMinutes?: number;
-        emailNotfication: {
-            from: string;
-            to?: string|null;
-            cc?: string|string[]|null;
-            subject: string|{
-                startNotification: string;
-                finishedSuccess: string;
-                finishedWithErrors: string;
-                incomplete: string;
-            }
-        }
-    }
-    interface IValidatedPluginAutoActivateConfig extends IPluginAutoActivateConfig {
-        pluginIds: string[];
-        stopAfterMinutes: number;
-        emailNotfication: {
-            from: string;
-            to: string;
-            cc: string[];
-            subject: {
-                startNotification: string;
-                finishedSuccess: string;
-                finishedWithErrors: string;
-                incomplete: string;
-            }
-        };
-        stopAfter: GlideDateTime;
-    }
-
-    let scriptConfig: IPluginAutoActivateConfig = {
-        // Array of IDs for plugins that should be activated.
-        pluginIds: [
-            "com.glide.quiz_designer",
-            "com.glide.ui.list_v3",
-            "com.glide.web_service_provider_v2",
-            "com.glideapp.live_feed_v2",
-            "com.glideapp.report_statreports",
-            "com.snc.automatic_assignment",
-            "com.snc.bestpractice.bulkchange",
-            "com.snc.change_management.risk_assessment",
-            "com.snc.extended_cmdb",
-            "com.snc.field_normalization",
-            "com.snc.financial_planning_pmo",
-            "com.snc.iam",
-            "com.snc.knowledge_document",
-            "com.snc.pa.configurationgenerator",
-            "com.snc.procurement",
-            "com.snc.required_form_fields",
-            "com.snc.sc_catalog_manager",
-            "com.snc.sdlc.agile.2.0",
-            "com.snc.service_portfolio.sla",
-            "com.snc.sla.contract2",
-            "com.snc.task_activity",
-            "com.snc.treemap",
-            "com.snc.undelete",
-            "com.snc.vendor_performance",
-            "com.snc.whtp"
-        ],
-
-        // Stop activating plugins after the specified number of minutes.
-        stopAfterMinutes: 20,
-
-        // Settings for email notification.
-        emailNotfication: {
-            // "From" email address. Set to an empty string to use default.
-            from: "leonard.t.erwine.ctr@mail.mil",
-
-            // "To" email address. Set to an empty string to use same email as current user.
-            to: "lerwine@outlook.com",
-
-            cc: (<string[]>[]),
-
-            subject: {
-                startNotification: "",
-
-                // Email subject when all activations have been completed successfully.
-                finishedSuccess: "",
-
-                // Email subject to use when all activation attempts have been completed, but there were errors.
-                finishedWithErrors: "",
-
-                // Email subject to use when all activation attempts had not been started durring the alotted timeframe.
-                incomplete: ""
-            }
-        }
-    };
+    // Array of IDs for plugins that should be activated.
+    let pluginIds: string[] = [
+        "com.glide.quiz_designer",
+        "com.glide.ui.list_v3",
+        "com.glide.web_service_provider_v2",
+        "com.glideapp.live_feed_v2",
+        "com.glideapp.report_statreports",
+        "com.snc.automatic_assignment",
+        "com.snc.bestpractice.bulkchange",
+        "com.snc.change_management.risk_assessment",
+        "com.snc.extended_cmdb",
+        "com.snc.field_normalization",
+        "com.snc.financial_planning_pmo",
+        "com.snc.iam",
+        "com.snc.knowledge_document",
+        "com.snc.pa.configurationgenerator",
+        "com.snc.procurement",
+        "com.snc.required_form_fields",
+        "com.snc.sc_catalog_manager",
+        "com.snc.sdlc.agile.2.0",
+        "com.snc.service_portfolio.sla",
+        "com.snc.sla.contract2",
+        "com.snc.task_activity",
+        "com.snc.treemap",
+        "com.snc.undelete",
+        "com.snc.vendor_performance",
+        "com.snc.whtp"
+    ];
     
-    let userAddress: string|null|undefined;
-    let config: IValidatedPluginAutoActivateConfig;
-    try {
-        let currentUser: GlideUser = gs.getUser();
-        userAddress = currentUser.getEmail();
-        if (typeof(userAddress) != "string" || userAddress.trim().length == 0) {
-            userAddress = null;
-            gs.warn("Current user does not have an email address. Activation progress message won't be sent.");
-        }
-        if (typeof(scriptConfig.pluginIds) == "string")
-            scriptConfig.pluginIds = [scriptConfig.pluginIds];
-        else if (typeof(scriptConfig.pluginIds) != "object" || scriptConfig.pluginIds === null)
-            throw "Setting \"pluginIds\" not defined in scriptConfig script variable.";
-        if ((scriptConfig.pluginIds = scriptConfig.pluginIds.map((a: any): string => { return (typeof(a) == "string") ? a.trim() : "" }).filter((s: string) => { return s.length > 0; })).length == 0)
-            throw "Setting \"pluginIds\" in scriptConfig script variable does not contain any plugin IDs.";
-        if (typeof(scriptConfig.emailNotfication.subject) == "string")
-            scriptConfig.emailNotfication.subject = {
-                // Email subject when sending start notification.
-                startNotification: <string>(scriptConfig.emailNotfication.subject),
-
-                // Email subject when all activations have been completed successfully.
-                finishedSuccess: <string>(scriptConfig.emailNotfication.subject),
-
-                // Email subject to use when all activation attempts have been completed, but there were errors.
-                finishedWithErrors: <string>(scriptConfig.emailNotfication.subject),
-
-                // Email subject to use when all activation attempts had not been started durring the alotted timeframe.
-                incomplete: <string>(scriptConfig.emailNotfication.subject)
-
-            }
-        else if (typeof(scriptConfig.emailNotfication.subject) !== "object" || scriptConfig.emailNotfication.subject === null)
-            throw "Setting \"emailNotfication.subject\" not defined in scriptConfig script variable.";
-        if (typeof(scriptConfig.emailNotfication.subject.startNotification) != "string" || scriptConfig.emailNotfication.subject.startNotification.trim().length == 0)
-            throw "Setting \"emailNotfication.subject.startNotification\" not defined in scriptConfig script variable.";
-        if (typeof(scriptConfig.emailNotfication.subject.finishedSuccess) != "string" || scriptConfig.emailNotfication.subject.finishedSuccess.trim().length == 0)
-            throw "Setting \"emailNotfication.subject.finishedSuccess\" not defined in scriptConfig script variable.";
-        if (typeof(scriptConfig.emailNotfication.subject.finishedWithErrors) != "string" || scriptConfig.emailNotfication.subject.finishedWithErrors.trim().length == 0)
-            throw "Setting \"emailNotfication.subject.finishedWithErrors\" not defined in scriptConfig script variable.";
-        if (typeof(scriptConfig.emailNotfication.subject.incomplete) != "string" || scriptConfig.emailNotfication.subject.incomplete.trim().length == 0)
-            throw "Setting \"emailNotfication.subject.incomplete\" not defined in scriptConfig script variable.";
-        if (typeof(scriptConfig.stopAfterMinutes) != "number" || isNaN(scriptConfig.stopAfterMinutes) || !Number.isFinite(scriptConfig.stopAfterMinutes))
-            scriptConfig.stopAfterMinutes = 20;
-        config = <IValidatedPluginAutoActivateConfig>scriptConfig;
-        config.stopAfter = new GlideDateTime();
-        config.stopAfter.addSeconds(config.stopAfterMinutes * 60);
-    } catch (err) {
-        gs.error("Unable to continue due to errors");
-        throw err;
-    }
     interface IPluginActivationInfo {
         id: string;
         name?: string;
         status: "waiting"|"succeeded"|"activated"|"failed";
         pluginLink?: string;
     }
+
     interface IPluginActivationQueue extends IPluginActivationInfo {
         name: string;
         status: "waiting";
     }
+
     interface IPluginActivationResult extends IPluginActivationInfo {
         status: "succeeded"|"activated"|"failed";
         message: string;
@@ -158,16 +50,20 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         details?: string;
         progressLink?: string;
     }
+
     interface IPluginActivatedResult extends IPluginActivationResult {
         name: string;
         status: "succeeded"|"activated";
     }
+
     interface IPluginFailedResult extends IPluginActivationResult {
         status: "failed";
     }
+
     function isQueuedPluginActivation(obj: IPluginActivationInfo): obj is IPluginActivationQueue {
         return obj.status == "waiting";
     }
+
     function isFailedPluginActivation(obj: IPluginActivationInfo): obj is IPluginFailedResult {
         return obj.status == "failed";
     }
@@ -175,19 +71,17 @@ export namespace global.bg_scripts.bulk_plugin_activation {
     let resultInfo: {
         items: (IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult)[],
         startTime: GlideDateTime;
-        discontinueAfter: GlideDateTime;
         error?: any
     } = {
         items: [],
-        startTime: new GlideDateTime(),
-        discontinueAfter: new GlideDateTime()
+        startTime: new GlideDateTime()
     };
-    let emailBody: string[];
+    
     try {
         let gpm: GlidePluginManager = new GlidePluginManager();
 
         let servletUri: string = gs.getProperty('glide.servlet.uri');
-        resultInfo.items = config.pluginIds.map(function(this: GlidePluginManager, id: string): IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult {
+        resultInfo.items = pluginIds.map(function(this: GlidePluginManager, id: string): IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult {
             let pluginGlideRecord: GlideRecord = new GlideRecord("v_plugin");
             pluginGlideRecord.addQuery("id", id);
             try {
@@ -233,34 +127,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         let queue: IPluginActivationQueue[] = resultInfo.items.filter(isQueuedPluginActivation);
         if (queue.length > 0) {
             gs.info("Activating " + ((queue.length == 1) ? "1 plugin" : queue.length + " plugin"));
-            gs.info("Discontinuing activations after: " + resultInfo.discontinueAfter.getDisplayValue());
-            if (typeof(userAddress) == "string") {
-                let emailOutbound: GlideEmailOutbound = new GlideEmailOutbound();
-                emailOutbound.setFrom(userAddress);
-                emailOutbound.addRecipient(userAddress);
-                emailOutbound.setSubject(config.emailNotfication.subject.startNotification);
-                resultInfo.startTime = new GlideDateTime();
-                resultInfo.discontinueAfter = new GlideDateTime();
-                resultInfo.discontinueAfter.addSeconds(config.stopAfterMinutes * 60);
-                emailBody = [
-                    "<h2>Activating " + ((queue.length == 1) ? "1 plugin" : queue.length + " plugins") + "</h2>",
-                    "<table><tr>",
-                    "<th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td>",
-                    "<th>Discontinuing activations after:</th><td>" + resultInfo.discontinueAfter.getDisplayValue() + "</td>",
-                    "<th>" + ((queue.length == 1) ? "Plugin:" : queue.length + "Plugins:") + "</th><td><ol>"
-                ];
-                for (var index = 0; index < queue.length; index++) {
-                    let htmlCode: string = (typeof(queue[index].name) == "string" && queue[index].name.trim().length > 0 && queue[index].name != queue[index].id) ?
-                        queue[index].name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
-                            : queue[index].id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                    if (typeof(queue[index].pluginLink) == "string" && queue[index].pluginLink.trim().length > 0)
-                        htmlCode = "<a href=\"" + queue[index].pluginLink + "\">" + htmlCode + "</a>";
-                    emailBody.push("<li>" + htmlCode + "</li>");
-                }
-                emailBody.push("</ol></td></tr></table><a href=\"" + gs.getProperty('glide.servlet.uri') + "nav_to.do?uri=%2Fsys_progress_worker_list.do\">Click here</a> to view status of progress workers.");
-                emailOutbound.setBody(emailBody.join("\n"));
-                emailOutbound.save();
-            }
+            resultInfo.startTime = new GlideDateTime();
 
             for (var index = 0; index < resultInfo.items.length; index++) {
                 let pluginInfo: IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult = resultInfo.items[index];
@@ -276,8 +143,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
                     };
                     continue;
                 }
-                if (resultInfo.discontinueAfter.before(resultInfo.startTime))
-                    continue;
+                
                 try {
                     let worker: GlidePluginManagerWorker = new GlidePluginManagerWorker();
                     worker.setPluginId(pluginInfo.id);
@@ -300,6 +166,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
                         if (!gs.nil(c) && c.length > 0)
                             completion_code = c;
                     }
+
                     let r: string = "";
                     let success: boolean = false;
                     switch (completion_code) {
@@ -385,7 +252,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
             status: "failed",
             message: "Unhandled " + eType + "in script: " + unhandledErr,
             details: (typeof(unhandledErr.stack) == "undefined" || unhandledErr.stack === null) ? "" : ((typeof(unhandledErr.stack) == "string") ? unhandledErr.stack : unhandledErr.stack + "").trim()
-        })
+        });
     } finally {
         let failed: IPluginFailedResult[] = resultInfo.items.filter(isFailedPluginActivation);
         let incomplete: IPluginActivationQueue[] = resultInfo.items.filter(isQueuedPluginActivation);
@@ -397,7 +264,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
             gs.error(failed.length + " errors have occurred");
             gs.warn("Not all activation attempts completed before alotted timespan elapsed. Execute background script again to activate the remaining " +
                 ((incomplete.length == 1) ? "plugin" : incomplete.length + " plugins"));
-        } else if (failed.length > 0) {;
+        } else if (failed.length > 0) {
             gs.error("Activation Attempts Completed");
             if (failed.length == 1)
                 gs.error("1 error has occurred");
@@ -444,88 +311,6 @@ export namespace global.bg_scripts.bulk_plugin_activation {
                 else
                     gs.error(detailsCode);
             }
-        }
-        if (typeof(userAddress) == "string") {
-            let emailOutbound: GlideEmailOutbound = new GlideEmailOutbound();
-            emailOutbound = new GlideEmailOutbound();
-            emailOutbound.setFrom(userAddress);
-            emailOutbound.addRecipient(userAddress);
-            emailBody = [];
-            if (incomplete.length > 0) {
-                emailOutbound.setSubject(config.emailNotfication.subject.incomplete);
-                emailBody.push("<h2>Alloted Activation Timeframe Expired</h2>");
-                if (failed.length == 1)
-                    emailBody.push("<h3>1 error has occurred</h3>");
-                else if (failed.length > 1)
-                    emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
-                emailBody.push("Not all activation attempts completed before alotted timespan elapsed.\n<p>Execute background script again to activate the remaining " +
-                    ((incomplete.length == 1) ? "plugin" : incomplete.length + " plugins") + "</p>");
-            } else if (failed.length > 0) {
-                emailOutbound.setSubject(config.emailNotfication.subject.finishedWithErrors);
-                emailBody.push("<h2>Activation Attempts Completed</h2>");
-                if (failed.length == 1)
-                    emailBody.push("<h3>1 error has occurred</h3>");
-                else if (failed.length > 1)
-                    emailBody.push("<h3>" + failed.length + " errors have occurred</h3>");
-            } else {
-                emailBody.push("<h2>Activations Completed</h2>");
-                emailOutbound.setSubject(config.emailNotfication.subject.finishedSuccess);
-            }
-            emailBody.push("<table><tr><th>Started on:</th><td>" + resultInfo.startTime.getDisplayValue() + "</td></tr>");
-            emailBody.push("<tr><th>Completed on:</th><td>" + (new GlideDateTime()).getDisplayValue() + "</td></tr>");
-            emailBody.push("<tr><th>Already Activated:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "activated" }).length + "</td></tr>");
-            emailBody.push("<tr><th>Activations Succeeded:</th><td>" + resultInfo.items.filter((item: IPluginActivationInfo) => { return item.status == "succeeded" }).length + "</td></tr>");
-            emailBody.push("<tr><th>Activations Failed:</th><td>" + failed.length + "</td></tr>");
-            emailBody.push("<tr><th>Not Activated:</th><td>" + incomplete.length + "</td></tr></table>");
-            emailBody.push("<table><tr><th>Name</th><th>Status</th><th>Details</th></tr>");
-            for (var index = 0; index < resultInfo.items.length; index++) {
-                let pluginInfo: IPluginActivationQueue|IPluginActivatedResult|IPluginFailedResult = resultInfo.items[index];
-                let htmlCode: string = (typeof(pluginInfo.name) == "string" && pluginInfo.name.trim().length > 0 && pluginInfo.name != pluginInfo.id) ?
-                    pluginInfo.name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " <em>(" + pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</em>"
-                        : pluginInfo.id.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                if (typeof(pluginInfo.pluginLink) == "string" && pluginInfo.pluginLink.trim().length > 0)
-                    htmlCode = "<a href=\"" + pluginInfo.pluginLink + "\">" + htmlCode + "</a>";
-                emailBody.push("<tr><td>" + htmlCode + "</td>");
-                let detailsCode: string[] = [];
-                if (isQueuedPluginActivation(pluginInfo))
-                    emailBody.push("<td>Not Activated</td>");
-                else {
-                    if (isFailedPluginActivation(pluginInfo)) {
-                        htmlCode = "Failed";
-                    } else {
-                        htmlCode = "Activated";
-                    }
-                    if (typeof(pluginInfo.progressLink) == "string" && pluginInfo.progressLink.trim().length > 0)
-                        htmlCode = "<a href=\"" + pluginInfo.progressLink + "\">" + htmlCode + "</a>";
-                    if (typeof(pluginInfo.completion_code) == "string" && pluginInfo.completion_code.length > 0) {
-                        emailBody.push("<td>" + htmlCode);
-                        emailBody.push("<div><strong>Completion Code</strong>");
-                        emailBody.push(pluginInfo.completion_code + "</div></td>");
-                    } else
-                        emailBody.push("<td>" + htmlCode + "</td>");
-                    let altLines: { label: string, text: string, isPre: boolean }[] = [
-                        { label: "Message", text: pluginInfo.message, isPre: false },
-                        { label: "Details", text: pluginInfo.details, isPre: true }
-                    ].filter(function(a) { return (typeof(a.text) == "string" && a.text.trim().length > 0); });
-                    if (altLines.length == 0)
-                        emailBody.push("<td>&nbsp;</td>");
-                    else {
-                        emailBody.push("<td>");
-                        altLines.forEach(function(a) {
-                            emailBody.push("<div><strong>" + a.label + "</strong>");
-                            if (a.isPre)
-                                emailBody.push("<pre>" + a.text + "</pre></div>");
-                            else
-                                emailBody.push(a.text + "</div>");
-                        });
-                        emailBody.push("</td>");
-                    }
-                }
-                emailBody.push("</tr>");
-            }
-            emailBody.push("</table>");
-            emailOutbound.setBody(emailBody.join("\n"));
-            emailOutbound.save();
         }
     }
 }
