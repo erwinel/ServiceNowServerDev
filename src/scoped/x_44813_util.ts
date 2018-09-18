@@ -373,6 +373,68 @@ export module x_44813_util {
         maxDepth?: number;
     }
 
+    class limitingIterator implements MapIntoOptions {
+        callbackfn: RecursiveMapCallbackFn;
+        totalMaxItems: number = 8192;
+        currentTotalItems: number = 0;
+        maxItemsInObject: number = 1024;
+        maxDepth: number = 32;
+        thisObj?: any;
+        private _util: JsTypeCommander;
+
+        constructor(util: JsTypeCommander, callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
+            this._util = util;
+            this.callbackfn = callbackfn;
+            if (typeof(options) == "object") {
+                this.totalMaxItems = this._util.toNumber(options.totalMaxItems, this.totalMaxItems);
+                this.maxItemsInObject = this._util.toNumber(options.maxItemsInObject, this.maxItemsInObject);
+                this.maxDepth = this._util.toNumber(options.maxDepth, this.maxDepth);
+                this.thisObj = options.thisObj;
+            }
+        }
+
+        iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
+                target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
+            if (maxDepth < 1 || this.totalMaxItems < 1)
+                return current;
+            target = (this._util.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key, source, target);
+            if (!this._util.isNil(source)) {
+                this.currentTotalItems++;
+                if (!this._util.isObject(source))
+                    return target;
+            }
+            if (this.currentTotalItems >= this.totalMaxItems || !this._util.isObject(target))
+                return target;
+
+            source = current;
+            if (this._util.isArray(target)) {
+                if (!this._util.isArray(current))
+                    return target;
+                for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
+                    var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
+                    if (index < target.length)
+                        target[index] = t;
+                    else
+                        target.push(t);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            } else {
+                let count: number = 0;
+                for (var n in current) {
+                    count++;
+                    if (count > this.maxItemsInObject)
+                        break;
+                    target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
+                    if (this.currentTotalItems >= this.totalMaxItems)
+                        break;
+                }
+            }
+
+            return target;
+        }
+    }
+
     export class JsTypeCommander {
         readonly type = "JsTypeCommander";
 
@@ -1917,65 +1979,112 @@ export module x_44813_util {
         }
     }
 
-    class limitingIterator implements MapIntoOptions {
-        callbackfn: RecursiveMapCallbackFn;
-        totalMaxItems: number = 8192;
-        currentTotalItems: number = 0;
-        maxItemsInObject: number = 1024;
-        maxDepth: number = 32;
-        thisObj?: any;
-        private _util: JsTypeCommander;
+    export interface IImpactAndUrgencyCalcResult {
+        userImpact: number;
+        productivityImpact: number;
+        missionRelated: boolean;
+        vip: boolean;
+        impact: number;
+        urgency: number;
+    }
 
-        constructor(util: JsTypeCommander, callbackfn: RecursiveMapCallbackFn, options?: MapIntoOptions) {
-            this._util = util;
-            this.callbackfn = callbackfn;
-            if (typeof(options) == "object") {
-                this.totalMaxItems = this._util.toNumber(options.totalMaxItems, this.totalMaxItems);
-                this.maxItemsInObject = this._util.toNumber(options.maxItemsInObject, this.maxItemsInObject);
-                this.maxDepth = this._util.toNumber(options.maxDepth, this.maxDepth);
-                this.thisObj = options.thisObj;
+    export interface IPriorityLookupResult {
+        impact: number;
+        urgency: number;
+        priority: number;
+    }
+
+    export class IncidentHelper {
+        static lookupPriority(impact?: number|string|null, urgency?: number|string|null) {
+            let result: IPriorityLookupResult = <IPriorityLookupResult>{
+                impact: NaN, urgency: NaN
+            };
+            if (typeof(impact) == "number")
+                result.impact = impact;
+            else if (typeof(impact) == "string" && (impact = impact.trim()).length > 0)
+                result.impact = parseInt(impact);
+            if (isNaN(result.impact) || result.impact < 0)
+                result.impact = 0;
+            else if (result.impact > 3)
+                result.impact = 3;
+            if (typeof(urgency) == "number")
+                result.urgency = urgency;
+            else if (typeof(urgency) == "string" && (urgency = urgency.trim()).length > 0)
+                result.urgency = parseInt(urgency);
+            if (isNaN(result.urgency) || result.urgency < 0)
+                result.urgency = 0;
+            else if (result.urgency > 3)
+                result.urgency = 3;
+            let gr: GlideRecord = new GlideRecord('dl_u_priority');
+            gr.addQuery("active", true);
+            gr.addQuery("impact", result.impact);
+            gr.addQuery("urgency", result.urgency);
+            gr.query();
+            result.priority = Math.round(((result.impact + result.urgency - 2) / 4.0) * 3.0) + 1;
+            if (gr.next()) {
+                impact = gr.getValue('priority');
+                if (typeof(impact) != "number") {
+                    if (typeof(impact) == "string" && (impact = impact.trim()).length > 0)
+                        impact = parseInt(impact);
+                    else
+                        impact = NaN;
+                }
+                if (!isNaN(impact))
+                {
+                    if (impact < 0)
+                        result.priority = 0;
+                    else
+                        result.priority = (impact > 3) ? 3 : impact;
+                } else
+                    gs.debug("Could not get mapping for urgency=" + urgency + ",impact=" + impact + "=" + gr.priority + " => " + result.priority);
+                return result;
             }
+            gs.warn("Could not get mapping for urgency=" + urgency + ",impact=" + impact);
+            return result;
         }
 
-        iterateInto(maxDepth: number, current: AnyNilable, key: number|string|undefined, source: AnyNilable[]|IStringKeyedObject|undefined,
-                target: AnyNilable[]|IStringKeyedObject|undefined): AnyNilable {
-            if (maxDepth < 1 || this.totalMaxItems < 1)
-                return current;
-            target = (this._util.isNil(this.thisObj)) ? this.callbackfn(current, key, source, target) : this.callbackfn.call(this.thisObj, current, key, source, target);
-            if (!this._util.isNil(source)) {
-                this.currentTotalItems++;
-                if (!this._util.isObject(source))
-                    return target;
-            }
-            if (this.currentTotalItems >= this.totalMaxItems || !this._util.isObject(target))
-                return target;
+        static getUrgencyAndImpact(userImpact?: number|string|null, productivityImpact?: number|string|null, missionRelated?: boolean|number|string|null,
+                vip?: boolean|number|string|null): IImpactAndUrgencyCalcResult {
+            let result: IImpactAndUrgencyCalcResult = <IImpactAndUrgencyCalcResult>{
+                userImpact: NaN, productivityImpact: NaN, missionRelated: false, vip: false
+            };
+            if (typeof(userImpact) == "number")
+                result.userImpact = userImpact;
+            else if (typeof(userImpact) == "string" && (userImpact = userImpact.trim()).length > 0)
+                result.userImpact = parseInt(userImpact);
+            if (isNaN(result.userImpact) || result.userImpact < 0)
+                result.userImpact = 0;
+            else if (result.userImpact > 4)
+                result.userImpact = 4;
+            
+                if (typeof(productivityImpact) == "number")
+                result.productivityImpact = productivityImpact;
+            else if (typeof(productivityImpact) == "string" && (productivityImpact = productivityImpact.trim()).length > 0)
+                result.productivityImpact = parseInt(productivityImpact);
+            if (isNaN(result.productivityImpact) || result.productivityImpact > 4)
+                result.productivityImpact = 4;
+            else if (result.productivityImpact < 1)
+                result.productivityImpact = 1;
 
-            source = current;
-            if (this._util.isArray(target)) {
-                if (!this._util.isArray(current))
-                    return target;
-                for (var index = 0; index < current.length && index < this.maxItemsInObject; index++) {
-                    var t = this.iterateInto(maxDepth - 1, current[index], index, source, target);
-                    if (index < target.length)
-                        target[index] = t;
-                    else
-                        target.push(t);
-                    if (this.currentTotalItems >= this.totalMaxItems)
-                        break;
-                }
-            } else {
-                let count: number = 0;
-                for (var n in current) {
-                    count++;
-                    if (count > this.maxItemsInObject)
-                        break;
-                    target[n] = this.iterateInto(maxDepth - 1, current[n], n, source, target);
-                    if (this.currentTotalItems >= this.totalMaxItems)
-                        break;
-                }
-            }
+            if (typeof(missionRelated) == "boolean")
+                result.missionRelated = missionRelated;
+            else if (typeof(missionRelated) == "number")
+                result.missionRelated = !isNaN(missionRelated) && missionRelated !== 0;
+            else if (typeof(missionRelated) == "string" && (missionRelated = missionRelated.trim()).length > 0)
+                result.missionRelated = missionRelated.match(/^(0*(\.0*)?[1-9]|y(es)|t(rue))/i) !== null;
 
-            return target;
+            if (typeof(vip) == "boolean")
+                result.vip = vip;
+            else if (typeof(vip) == "number")
+                result.vip = !isNaN(vip) && vip !== 0;
+            else if (typeof(vip) == "string" && (vip = vip.trim()).length > 0)
+                result.vip = vip.match(/^(0*(\.0*)?[1-9]|y(es)|t(rue))/i) !== null;
+            
+            result.impact = Math.round((result.productivityImpact + ((result.userImpact > 0) ? result.userImpact : result.productivityImpact) +
+                ((result.vip) ? 1 : result.productivityImpact) +
+                ((result.missionRelated) ? 1 : result.productivityImpact)) / 5.33);
+            result.urgency = (result.vip) ? ((result.missionRelated) ? 1 : 2) : ((result.missionRelated) ? 2 : 3);
+            return result;
         }
     }
 }
