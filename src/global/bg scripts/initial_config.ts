@@ -14,7 +14,7 @@ export namespace global.bg_scripts.initial_config {
         dev: string,
         sb: string
     }
-
+    
     // Following is an array of properties that will be configured by this script.
     let sys_properties: ISysPropertyInfo[] = [
         { name: "glide.sys.default.tz", type: "timezone", description: "System timezone for all users unless overridden in the user's record", sys_package: "glidesoft",
@@ -24,35 +24,35 @@ export namespace global.bg_scripts.initial_config {
         { name: "glide.product.description", type: "string", description: "Page header caption", sys_package: "apps/system2",
             prod: "Enterprise Service Tool", uat: "Enterprise Service Tool", test: "Enterprise Service Tool", dev: "Enterprise Service Tool", sb: "Enterprise Service Tool" },
         { name: "css.base.color", type: "color", description: "Banner and list caption background color", sys_package: "apps/system2",
-            prod: "#985252", uat: "#526498", test: "#526498", dev: "#649852", sb: "#645298" },
+            prod: "#985252", uat: "#526498", test: "#767676", dev: "#649852", sb: "#645298" },
         { name: "css.banner.description.color", type: "color", description: "Banner text color", sys_package: "glidesoft",
-            prod: "#d58181", uat: "#8196d5", test: "#8196d5", dev: "#96d581", sb: "#96d581" },
+            prod: "#d58181", uat: "#8196d5", test: "#AAAAAA", dev: "#96d581", sb: "#96d581" },
         { name: "css.$navpage-header-bg", type: "color", description: "Header Background Color", sys_package: "com.glide.ui.ui16",
-            prod: "#5b1a1a", uat: "#1a2a5b", test: "#1a2a5b", dev: "#2a5b1a", sb: "#9681d5" },
+            prod: "#5b1a1a", uat: "#1a2a5b", test: "#303a46", dev: "#2a5b1a", sb: "#9681d5" },
         { name: "css.$navpage-header-color", type: "color", description: "Header Background Color", sys_package: "com.glide.ui.ui16",
-            prod: "#fafad2", uat: "#fafad2", test: "#fafad2", dev: "#fafad2", sb: "#fafad2" },
+            prod: "#fafad2", uat: "#fafad2", test: "#ffffff", dev: "#fafad2", sb: "#fafad2" },
         { name: "css.$navpage-header-divider-color", type: "color", description: "Header divider stripe color", sys_package: "global",
-            prod: "#822626", uat: "#263d82", test: "#263d82", dev: "#3d8226", sb: "#3d2682" },
+            prod: "#822626", uat: "#263d82", test: "#455464", dev: "#3d8226", sb: "#3d2682" },
         { name: "css.$navpage-nav-bg", type: "color", description: "Navigation Header/Footer", sys_package: "com.glide.ui.ui16",
-            prod: "#5b1a1a", uat: "#1a2a5b", test: "#1a2a5b", dev: "#2a5b1a", sb: "#9681d5" },
+            prod: "#5b1a1a", uat: "#1a2a5b", test: "#303A46", dev: "#2a5b1a", sb: "#9681d5" },
         { name: "css.$subnav-background-color", type: "color", description: "Navigation background expanded items", sys_package: "com.glide.ui.ui16",
             prod: "#592222", uat: "#223d59", test: "#223d59", dev: "#2f5922", sb: "#2f2259" },
         { name: "css.$navpage-nav-color-sub", type: "color", description: "Module text color for UI16<br/>Also affects unselected navigation tab icon and favorite icons color.", sys_package: "com.glide.ui.ui16",
-            prod: "#d7d7ac", uat: "#d7d7ac", test: "#d7d7ac", dev: "#dde1ee", sb: "#d7d7ac" },
+            prod: "#d7d7ac", uat: "#d7d7ac", test: "#bec1c6", dev: "#dde1ee", sb: "#d7d7ac" },
         { name: "css.$navpage-nav-selected-bg", type: "color", description: "Navigation selected tab background color", sys_package: "com.glide.ui.ui16",
-            prod: "#7e2a2a", uat: "#2a3f7e", test: "#2a3f7e", dev: "#3f7e2a", sb: "#3f2a7e" },
+            prod: "#7e2a2a", uat: "#2a3f7e", test: "#4B545F", dev: "#3f7e2a", sb: "#3f2a7e" },
         { name: "css.$nav-hr-color", type: "color", description: "Navigation separator color", sys_package: "com.glide.ui.ui16",
-            prod: "#7e2a2a", uat: "#2a3f7e", test: "#2a3f7e", dev: "#3f7e2a", sb: "#3f2a7e" },
+            prod: "#7e2a2a", uat: "#2a3f7e", test: "#303a46", dev: "#3f7e2a", sb: "#3f2a7e" },
         { name: "css.$navpage-nav-bg-sub", type: "color", description: "Background for navigator and sidebars", sys_package: "com.glide.ui.ui16",
-            prod: "#822626", uat: "#263d82", test: "#263d82", dev: "#3d8226", sb: "#3d2682" },
+            prod: "#822626", uat: "#263d82", test: "#455464", dev: "#3d8226", sb: "#3d2682" },
         { name: "css.$navpage-nav-unselected-color", type: "color", description: "Unselected navigation tab icon and favorite icons color", sys_package: "global",
-            prod: "#e0a3a3", uat: "#a3c2e0", test: "#a3c2e0", dev: "#b3e0a3", sb: "#b3a3e0" },
+            prod: "#e0a3a3", uat: "#a3c2e0", test: "#bec1c6", dev: "#b3e0a3", sb: "#b3a3e0" },
         { name: "css.$navpage-nav-selected-color", type: "color", description: "Currently selected Navigation tab icon color for UI16", sys_package: "",
-            prod: "#afeeee", uat: "#f08080", test: "#f08080", dev: "#f08080", sb: "#f08080" },
+            prod: "#afeeee", uat: "#f08080", test: "#ffffff", dev: "#f08080", sb: "#f08080" },
         { name: "css.$navpage-nav-border", type: "color", description: "Border color for UI16", sys_package: "com.glide.ui.ui16",
-            prod: "#eecdcd", uat: "#ced6ee", test: "#ced6ee", dev: "#d6eece", sb: "#d6ceee" },
+            prod: "#eecdcd", uat: "#ced6ee", test: "#ddd", dev: "#d6eece", sb: "#d6ceee" },
         { name: "css.$nav-highlight-main", type: "color", description: "Navigation highlight background color", sys_package: "com.glide.ui.ui16",
-            prod: "#493131", uat: "#2e3d4d", test: "#2e3d4d", dev: "#374931", sb: "#373149" }
+            prod: "#493131", uat: "#2e3d4d", test: "#3D4853", dev: "#374931", sb: "#373149" }
     ];
 
     function getStageProperty(index: number, stage: x_44813_util.SysPropertyDefinitions.SdlcStageType): string {
