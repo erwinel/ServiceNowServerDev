@@ -8,7 +8,7 @@ Dev Environment Setup
 
 This solution was developed using Visual Studio Code.
 
-The npm package manager (https://npmjs.com) and (VS Code extension eg2.vscode-npm-script) is required for building and package maintenance.
+The npm package manager (<https://npmjs.com>) and (VS Code extension eg2.vscode-npm-script) is required for building and package maintenance.
 
 Microsoft PowerShell 5.0 or better may be required for development.
 

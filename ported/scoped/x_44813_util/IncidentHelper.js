@@ -53,6 +53,15 @@ var IncidentHelper = Class.create();
         gs.warn("Could not get mapping for urgency=" + urgency + ",impact=" + impact);
         return result;
     };
+    /**
+     * Calculate urgency and impact from helper variables
+     *
+     * @param {number} userImpact - value from 0 to 4 to indicate number of users impacted (0: Unknown, 1: >100 people, 2: 50 to 100 people, 3: 10 to 49 people, 4: <10 people).
+     * @param {number} productivityImpact - value from 1 to 4 to indicate impact on user productivity (1: Complete work stoppage, 2: partial work stoppage, 3: hindered, 4: using workaround).
+     * @param {boolean} missionRelated - Set to true if incident impacts a mission-related task.
+     * @param {boolean} vip - Set to true if impacted user is VIP.
+     * @author Leonard T. Erwine (General Dynamics IT / Army Global) leonard.erwine@gdit.com
+     */
     IncidentHelper.getUrgencyAndImpact = function (userImpact, productivityImpact, missionRelated, vip) {
         var result = {
             userImpact: NaN, productivityImpact: NaN, missionRelated: false, vip: false

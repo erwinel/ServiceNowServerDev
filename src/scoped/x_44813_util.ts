@@ -1993,7 +1993,6 @@ export module x_44813_util {
         urgency: number;
         priority: number;
     }
-
     export class IncidentHelper {
         static lookupPriority(impact?: number|string|null, urgency?: number|string|null) {
             let result: IPriorityLookupResult = <IPriorityLookupResult>{
@@ -2043,6 +2042,15 @@ export module x_44813_util {
             return result;
         }
 
+        /**
+         * Calculate urgency and impact from helper variables
+         *
+         * @param {number} userImpact - value from 0 to 4 to indicate number of users impacted (0: Unknown, 1: >100 people, 2: 50 to 100 people, 3: 10 to 49 people, 4: <10 people).
+         * @param {number} productivityImpact - value from 1 to 4 to indicate impact on user productivity (1: Complete work stoppage, 2: partial work stoppage, 3: hindered, 4: using workaround).
+         * @param {boolean} missionRelated - Set to true if incident impacts a mission-related task.
+         * @param {boolean} vip - Set to true if impacted user is VIP.
+         * @author Leonard T. Erwine (General Dynamics IT / Army Global) leonard.erwine@gdit.com
+         */
         static getUrgencyAndImpact(userImpact?: number|string|null, productivityImpact?: number|string|null, missionRelated?: boolean|number|string|null,
                 vip?: boolean|number|string|null): IImpactAndUrgencyCalcResult {
             let result: IImpactAndUrgencyCalcResult = <IImpactAndUrgencyCalcResult>{
@@ -2057,7 +2065,7 @@ export module x_44813_util {
             else if (result.userImpact > 4)
                 result.userImpact = 4;
             
-                if (typeof(productivityImpact) == "number")
+            if (typeof(productivityImpact) == "number")
                 result.productivityImpact = productivityImpact;
             else if (typeof(productivityImpact) == "string" && (productivityImpact = productivityImpact.trim()).length > 0)
                 result.productivityImpact = parseInt(productivityImpact);
@@ -2086,5 +2094,64 @@ export module x_44813_util {
             result.urgency = (result.vip) ? ((result.missionRelated) ? 1 : 2) : ((result.missionRelated) ? 2 : 3);
             return result;
         }
+    }
+
+    interface INewIncidentRecordProducer {
+        incident_title?: any|null;
+        comments?: any|null;
+        userImpact?: any|null;
+        productivityImpact?: any|null;
+        missionRelated?: any|null;
+    }
+
+    function Test(current: GlideRecord, producer: INewIncidentRecordProducer)
+    {
+        let br = '<br/>';
+        let linkURL = '<a href="home.do">Homepage</a>';
+        let msgArgs = [br, linkURL];
+
+        let info = gs.getMessage("This incident was opened on your behalf{0}The IT department will contact you if they need any further information{0}You can track status from this {1} {0}", msgArgs);
+
+        gs.addInfoMessage(info);
+
+        current.contact_type = 'self-service';
+        current.caller_id = gs.getUserID();
+        let incident_title: string;
+        let comments: string;
+        let userImpact: number|string|null|undefined;
+        let productivityImpact: number|string|null|undefined;
+        let ugencyAndImpact: IImpactAndUrgencyCalcResult;
+        if (typeof(producer.incident_title) == "string")
+            incident_title = producer.comments;
+        else if (typeof(producer.incident_title) != 'undefined' && producer.incident_title !== null)
+            incident_title = producer.incident_title.toString();
+        else
+            incident_title = '';
+        if (typeof(producer.comments) == "string")
+            comments = producer.comments;
+        else if (typeof(producer.comments) != 'undefined' && producer.comments !== null)
+            comments = producer.comments.toString();
+        else
+            comments = '';
+        if (typeof(producer.userImpact) == "number" || typeof(producer.userImpact) == "string")
+            userImpact = producer.userImpact;
+        else if (typeof(producer.userImpact) != 'undefined' && producer.userImpact !== null)
+            userImpact = producer.userImpact.toString();
+        if (typeof(producer.productivityImpact) == "number" || typeof(producer.productivityImpact) == "string")
+            productivityImpact = producer.productivityImpact;
+        else if (typeof(producer.productivityImpact) != 'undefined' && producer.productivityImpact !== null)
+            productivityImpact = producer.productivityImpact.toString();
+        if (typeof(producer.missionRelated) == "number" || typeof(producer.missionRelated) == "string" || typeof(producer.missionRelated) == 'undefined' && producer.missionRelated === null)
+            ugencyAndImpact = IncidentHelper.getUrgencyAndImpact(userImpact, productivityImpact, producer.missionRelated);
+        else
+            ugencyAndImpact = IncidentHelper.getUrgencyAndImpact(userImpact, productivityImpact, producer.missionRelated.toString());
+
+        current.contact_type = 'self-service';
+        current.caller_id = gs.getUserID();
+        current.short_description = incident_title;
+        current.description = producer.comments;
+        /*
+        Request assistance with an issue you are having. An incident record will be created and managed through to successful resolution. You will also be notified of progress.
+        */
     }
 }
