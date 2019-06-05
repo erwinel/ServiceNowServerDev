@@ -4,7 +4,8 @@ export namespace global.bg_scripts.bulk_plugin_activation {
     // Array of IDs for plugins that should be activated.
     let pluginIds: string[] = [
         "com.glide.quiz_designer",
-        "com.glide.ui.list_v3",
+        "com.snc.cmdb.enterprise",
+        "com.glide.ui.list_v3_components",
         "com.glide.web_service_provider_v2",
         "com.glideapp.live_feed_v2",
         "com.glideapp.report_statreports",
@@ -21,6 +22,7 @@ export namespace global.bg_scripts.bulk_plugin_activation {
         "com.snc.required_form_fields",
         "com.snc.sc_catalog_manager",
         "com.snc.sdlc.agile.2.0",
+	    "com.snc.secops.splunk",
         "com.snc.service_portfolio.sla",
         "com.snc.sla.contract2",
         "com.snc.task_activity",

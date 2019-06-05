@@ -18,10 +18,11 @@
   },
   "homepage": "https://github.com/erwinel/ServiceNowServerDev#readme",
   "dependencies": {
-    "@types/node": "^10.12.30",
+    "@types/node": "^10.14.4",
+    "angular-route": "^1.7.8",
     "fs": "0.0.1-security",
     "js-tokens": "^4.0.0",
-    "jshint": "^2.10.1",
+    "jshint": "^2.10.2",
     "path": "^0.12.7"
   },
   "devDependencies": {
@@ -33,12 +34,12 @@
     "gulp": "^3.9.1",
     "gulp-changed": "^3.2.0",
     "gulp-jasmine": "^4.0.0",
-    "gulp-typescript": "^5.0.0",
+    "gulp-typescript": "^5.0.1",
     "gulp-util": "^3.0.8",
     "jasmine": "^3.3.1",
     "karma": "^2.0.5",
     "karma-jasmine": "^1.1.2",
-    "tslint": "^5.13.1",
+    "tslint": "^5.15.0",
     "typescript": "^2.9.2"
   },
   "serviceNowPublish": {

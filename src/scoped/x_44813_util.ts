@@ -1993,6 +1993,7 @@ export module x_44813_util {
         urgency: number;
         priority: number;
     }
+
     export class IncidentHelper {
         static lookupPriority(impact?: number|string|null, urgency?: number|string|null) {
             let result: IPriorityLookupResult = <IPriorityLookupResult>{
