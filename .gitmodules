@@ -1,0 +1,4 @@
+[submodule "ServiceNowTypings"]
+	path = ServiceNowTypings
+	url = https://github.com/erwinel/ServiceNowTypings
+	branch = master

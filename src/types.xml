@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TypeInfo>
+  <Class Name="java.lang.String" ScalarType="string">
+    <Class Name="GlideElement">
+      <Type Name="email" Label="email" />
+      <Type Name="auto_number" Label="Auto Number" UseOriginalValue="false" />
+      <Type Name="tree_path" Label="Tree Path" />
+      <Type Name="table_name" Label="Table Name" MaxLength="80" Visible="true" />
+      <Type Name="wide_text" Label="wide_text" />
+      <Type Name="multi_two_lines" Label="multi_two_lines" />
+      <Type Name="composite_field" Label="Composite Field" MaxLength="300" />
+      <Type Name="repeat_type" Label="Repeat Type" />
+      <Type Name="GUID" Label="Sys ID" MaxLength="32" />
+      <Type Name="decoration" Label="Decoration" MaxLength="255" />
+      <Class Name="com.snc.datastructure.GlideElementDataArray">
+        <Type Name="data_array" Label="Data Array" MaxLength="65535" />
+      </Class>
+      <Type Name="field_list" Label="Field List" />
+      <Type Name="formula" Label="Formula" />
+      <Type Name="tree_code" Label="Tree Code" />
+      <Type Name="glyphicon" Label="Glyph Icon (Bootstrap)" />
+      <Type Name="color_display" Label="Color Display" />
+      <Type Name="slushbucket" Label="Slush Bucket" MaxLength="4000" />
+      <Type Name="mid_config" Label="MID Server Configuration" />
+      <Type Name="phone_number" Label="Phone Number (Unused)" UseOriginalValue="false" />
+      <Type Name="approval_rules" Label="Approval Rules" MaxLength="4000" />
+      <Class Name="GlideElementEncrypted">
+        <Type Name="glide_encrypted" Label="Encrypted Text" MaxLength="65536" Visible="true" />
+      </Class>
+      <Type Name="color" Label="Color" Visible="true" />
+      <Class Name="com.glide.script.glide_elements.GlideElementPhoneNumber">
+        <Type Name="phone_number_e164" Label="Phone Number (E164)" UseOriginalValue="false" Visible="true" />
+      </Class>
+      <Type Name="email_script" Label="email_script" />
+      <Type Name="composite_name" Label="Composite Name" />
+      <Type Name="html_script" Label="HTML Script" />
+      <Type Name="reminder_field_name" Label="Reminder Field Name" />
+      <Type Name="sysevent_name" Label="sysevent_name" />
+      <Type Name="multi_small" Label="multi_small" />
+      <Type Name="html_template" Label="HTML Template" MaxLength="65000" />
+      <Type Name="json" Label="JSON" MaxLength="4000" />
+      <Type Name="records" Label="Records" MaxLength="1024" />
+      <Class Name="StringBoolean">
+        <Type Name="string_boolean" Label="string_boolean" />
+      </Class>
+      <Type Name="long" Label="Long Integer String" />
+      <Type Name="reference_name" Label="reference_name" />
+      <Type Name="condition_string" Label="Condition String" Visible="true" />
+      <Type Name="char" Label="Char" ScalarType="GUID" MaxLength="32" />
+      <Class Name="com.snc.apps.glide_elements.GlideElementSourceId" ScalarType="GUID">
+        <Type Name="source_id" Label="Source ID" />
+      </Class>
+      <Type Name="ip_address" Label="IP Address" />
+      <Type Name="image" Label="image" />
+      <Class Name="com.snc.apps.glide_elements.GlideElementSourceTable">
+        <Type Name="source_table" Label="Source Table" MaxLength="80" />
+      </Class>
+      <Class Name="GlideObject">
+        <Type Name="wms_job" Label="wms_job" />
+      </Class>
+      <Type Name="user_roles" Label="user_roles" MaxLength="255" />
+      <Type Name="ph_number" Label="ph_number" />
+      <Class Name="MaskCode">
+        <Type Name="mask_code" Label="mask_code" />
+      </Class>
+      <Type Name="sys_class_path" Label="System Class path" />
+      <Type Name="variable_template_value" Label="Variable template value" />
+      <Type Name="sysrule_field_name" Label="sysrule_field_name" />
+      <Type Name="properties" Label="CSS" MaxLength="4000" />
+      <Type Name="auto_increment" Label="Auto Increment" ScalarType="longint" />
+      <Type Name="bootstrap_color" Label="Bootstrap color" />
+      <Type Name="string" Label="String" Visible="true" />
+      <Type Name="related_tags" Label="Related Tags" />
+      <Type Name="longint" Label="Long" ScalarType="longint" Visible="true" />
+      <Type Name="int" Label="Integer String" />
+      <Type Name="catalog_preview" Label="Catalog Preview" />
+      <Type Name="field_name" Label="Field Name" MaxLength="80" Visible="true" />
+      <Type Name="choice" Label="Choice" Visible="true" />
+      <Class Name="FileAttachment">
+        <Type Name="file_attachment" Label="File Attachment" Visible="true" />
+      </Class>
+      <Type Name="radio" Label="Radio Button Choice" />
+      <Type Name="script_server" Label="script_server" MaxLength="4000" />
+      <Type Name="collection" Label="Collection" />
+      <Type Name="css" Label="CSS" MaxLength="4000" />
+      <Type Name="video" Label="Video" Visible="true" />
+      <Type Name="days_of_week" Label="Days of Week" />
+      <Type Name="index_name" Label="Index Name" />
+      <Type Name="simple_name_values" Label="Name-Value Pairs" MaxLength="4000" Visible="true" />
+      <Class Name="GlidePreciseTime">
+        <Type Name="glide_precise_time" Label="glide_precise_time" />
+      </Class>
+      <Type Name="external_names" Label="external_names" />
+      <Type Name="ip_addr" Label="IP Address (Validated IPV4, IPV6)" Visible="true" />
+      <Type Name="version" Label="Version" />
+    </Class>
+    <Class Name="GlideElementNameValue">
+      <Type Name="name_values" Label="Name/Values" />
+    </Class>
+    <Class Name="com.glide.vars.GlideElementGlideVar">
+      <Class Name="GlideElementGlideVar">
+        <Type Name="glide_var" Label="Glide Var" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementVariableConditions">
+      <Type Name="variable_conditions" Label="variable_conditions" UseOriginalValue="false" />
+    </Class>
+    <Class Name="com.glide.script.glide_elements.GlideElementDomainId" ScalarType="GUID">
+      <Class Name="GlideElementDomainId">
+        <Type Name="domain_id" Label="domain_id" MaxLength="32" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementCounter">
+      <Type Name="counter" Label="Counter" />
+    </Class>
+    <Class Name="Price" ScalarType="decimal">
+      <Class Name="GlideElementPrice">
+        <Type Name="price" Label="Price" MaxLength="20" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="Currency" ScalarType="decimal">
+      <Class Name="GlideElementCurrency">
+        <Type Name="currency" Label="Currency" MaxLength="20" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementTranslatedField">
+      <Class Name="GlideElementTranslatedField">
+        <Type Name="translated_field" Label="Translated Field" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementConditions">
+      <Type Name="conditions" Label="conditions" MaxLength="4000" UseOriginalValue="false" Visible="true" />
+    </Class>
+    <Class Name="com.snc.apps.glide_elements.GlideElementSourceName">
+      <Class Name="GlideElementSourceName">
+        <Type Name="source_name" Label="Source Name" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementScript">
+      <Type Name="xml" Label="XML" />
+      <Type Name="script" Label="script" MaxLength="4000" Visible="true" />
+      <Type Name="script_plain" Label="Script (Plain)" MaxLength="4000" Visible="true" />
+    </Class>
+    <Class Name="com.glide.script.glide_elements.GlideElementInternalType">
+      <Class Name="GlideElementInternalType">
+        <Type Name="internal_type" Label="Internal Type" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementTranslatedHTML">
+      <Type Name="translated_html" Label="Translated HTML" MaxLength="65536" Visible="true" />
+    </Class>
+    <Class Name="URL">
+      <Class Name="GlideElementURL">
+        <Type Name="url" Label="URL" MaxLength="1024" UseOriginalValue="false" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="Password2">
+      <Class Name="GlideElementPassword2">
+        <Type Name="password2" Label="Password (2 Way Encrypted)" MaxLength="255" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementWorkflowConditions">
+      <Type Name="workflow_conditions" Label="Workflow Conditions" UseOriginalValue="false" />
+      <Class Name="Conditions">
+        <Type Name="template_value" Label="Template Value" MaxLength="65000" UseOriginalValue="false" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementShortTableName">
+      <Type Name="short_table_name" Label="Short Table Name" MaxLength="40" />
+    </Class>
+    <Class Name="com.glide.glideobject.SysClassName">
+      <Class Name="GlideElementSysClassName">
+        <Type Name="sys_class_name" Label="sys_class_name" />
+      </Class>
+    </Class>
+    <Class Name="com.glide.script.glide_elements.GlideElementDocumentId" ScalarType="GUID">
+      <Class Name="GlideElementDocumentId">
+        <Type Name="document_id" Label="Document ID" MaxLength="32" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementTranslatedField">
+      <Class Name="GlideElementDocumentation">
+        <Type Name="documentation_field" Label="Documentation Field" MaxLength="80" />
+      </Class>
+    </Class>
+    <Class Name="UserImage">
+      <Class Name="GlideElementUserImage">
+        <Type Name="user_image" Label="Image" UseOriginalValue="false" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementAudio">
+      <Type Name="audio" Label="Audio" Visible="true" />
+    </Class>
+    <Class Name="GlideElementTranslatedText">
+      <Type Name="translated_text" Label="Translated Text" Visible="true" />
+    </Class>
+    <Class Name="com.glide.wiki.GlideElementWikiText">
+      <Class Name="GlideElementWikiText">
+        <Type Name="wiki_text" Label="Wiki" MaxLength="65536" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementCompressed">
+      <Type Name="compressed" Label="Compressed" />
+    </Class>
+    <Class Name="Password">
+      <Class Name="GlideElementPassword">
+        <Type Name="password" Label="password" Visible="true" />
+      </Class>
+    </Class>
+    <Class Name="GlideElementIcon">
+      <Type Name="icon" Label="Icon" MaxLength="100" Visible="true" />
+    </Class>
+    <Class Name="GlideElementShortFieldName">
+      <Type Name="short_field_name" Label="Short Field Name" MaxLength="40" />
+    </Class>
+    <Class Name="GlideElementFullUTF8">
+      <Type Name="string_full_utf8" Label="String (Full UTF-8)" MaxLength="255" Visible="true" />
+    </Class>
+  </Class>
+  <Class Name="java.lang.Boolean" ScalarType="boolean">
+    <Class Name="GlideElementBoolean">
+      <Type Name="boolean" Label="True/False" Visible="true" />
+    </Class>
+  </Class>
+  <Class Name="GlideElementNumeric" ScalarType="float">
+    <Type Name="metric_counter" Label="Metric Counter" UseOriginalValue="false" />
+    <Type Name="metric_derive" Label="Metric Derive" UseOriginalValue="false" />
+    <Type Name="metric_absolute" Label="Metric Absolute" UseOriginalValue="false" />
+    <Type Name="decimal" Label="Decimal" ScalarType="decimal" Visible="true" />
+    <Type Name="metric_gauge" Label="Metric Gauge" UseOriginalValue="false" />
+    <Type Name="float" Label="Floating Point Number" Visible="true" />
+    <Type Name="nl_task_int1" Label="nl_task_int1" ScalarType="integer" />
+    <Type Name="integer" Label="Integer" ScalarType="integer" Visible="true" />
+    <Class Name="IntegerTime" ScalarType="integer">
+      <Type Name="integer_time" Label="Integer Time" UseOriginalValue="false" />
+    </Class>
+    <Type Name="percent_complete" Label="Percent Complete" ScalarType="decimal" Visible="true" />
+    <Type Name="repeat_count" Label="Repeat Count" ScalarType="integer" UseOriginalValue="false" />
+    <Type Name="order_index" Label="Order Index" ScalarType="integer" UseOriginalValue="false" />
+  </Class>
+  <Class Name="GlideElementGlideObject" ScalarType="string">
+    <Class Name="com.glide.glideobject.Journal">
+      <Type Name="journal_list" Label="Journal List" UseOriginalValue="false" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.WeekOfMonth" ScalarType="integer">
+      <Type Name="week_of_month" Label="week_of_month" />
+    </Class>
+    <Class Name="com.glide.glideobject.Translated">
+      <Type Name="translated" Label="translated" />
+    </Class>
+    <Class Name="com.snc.datastructure.GlideElementDataStructure">
+      <Type Name="data_structure" Label="Data Structure" MaxLength="800" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDuration" ScalarType="datetime">
+      <Type Name="timer" Label="timer" />
+    </Class>
+    <Class Name="com.glide.glideobject.MonthOfYear" ScalarType="integer">
+      <Type Name="month_of_year" Label="month_of_year" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDueDate" ScalarType="datetime">
+      <Type Name="due_date" Label="Due Date" UseOriginalValue="false" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideActionList">
+      <Type Name="glide_action_list" Label="UI Action List" MaxLength="1024" UseOriginalValue="false" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDate" ScalarType="date">
+      <Type Name="glide_date" Label="Date" Visible="true" />
+    </Class>
+    <Class Name="GlideDate" ScalarType="date">
+      <Type Name="date" Label="Other Date" UseOriginalValue="false" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDateTime" ScalarType="datetime">
+      <Type Name="glide_date_time" Label="Date-time" Visible="true" />
+    </Class>
+    <Class Name="IntegerDate" ScalarType="integer">
+      <Type Name="integer_date" Label="Integer Date" UseOriginalValue="false" />
+    </Class>
+    <Class Name="com.glide.glideobject.DayOfWeek" ScalarType="integer">
+      <Type Name="day_of_week" Label="day_of_week" />
+    </Class>
+    <Class Name="com.glide.glideobject.Journal">
+      <Type Name="journal" Label="Journal" Visible="true" />
+    </Class>
+    <Type Name="time" Label="Basic Time" ScalarType="time" />
+    <Class Name="com.glide.glideobject.Journal">
+      <Type Name="journal_input" Label="Journal Input" UseOriginalValue="false" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideUserInput">
+      <Type Name="user_input" Label="user_input" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDuration" ScalarType="datetime">
+      <Type Name="glide_duration" Label="Duration" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideDateTime" ScalarType="datetime">
+      <Type Name="datetime" Label="Basic Date/Time" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideList">
+      <Type Name="glide_list" Label="List" MaxLength="1024" UseOriginalValue="false" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.ScheduleDateTime">
+      <Type Name="schedule_date_time" Label="Schedule Date/Time" UseOriginalValue="false" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideHTML">
+      <Type Name="html" Label="HTML" MaxLength="65536" Visible="true" />
+    </Class>
+    <Class Name="com.glide.glideobject.GlideTime" ScalarType="datetime">
+      <Type Name="glide_time" Label="Time" Visible="true" />
+    </Class>
+  </Class>
+  <Class Name="com.snc.datastructure.GlideElementDataObject" ScalarType="string">
+    <Class Name="GlideElementDataObject">
+      <Type Name="data_object" Label="Data Object" MaxLength="65535" />
+    </Class>
+  </Class>
+  <Class Name="GlideElementVariables" ScalarType="string">
+    <Type Name="variables" Label="Variables" />
+  </Class>
+  <Class Name="GlideElementReference" ScalarType="GUID">
+    <Type Name="reference" Label="Reference" Visible="true" />
+  </Class>
+  <Class Name="GlideElementReplicationPayload" ScalarType="string">
+    <Type Name="replication_payload" Label="Replication Payload" />
+  </Class>
+  <Class Name="com.snc.pa.dc.GlideElementBreakdownElement" ScalarType="GUID">
+    <Class Name="GlideElementBreakdownElement">
+      <Type Name="breakdown_element" Label="Breakdown Element" MaxLength="32" />
+    </Class>
+  </Class>
+  <Class Name="GlideElementWorkflow" ScalarType="string">
+    <Type Name="workflow" Label="workflow" MaxLength="80" Visible="true" />
+  </Class>
+</TypeInfo>
