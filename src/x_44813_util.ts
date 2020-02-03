@@ -1,4 +1,4 @@
-/// <reference path="../ServiceNowTypings/ServerScoped/base.d.ts" />
+/// <reference path="base.d.ts" />
 
 namespace x_44813_util {
     export interface IGroupReference {
@@ -294,6 +294,139 @@ namespace x_44813_util {
         };
         return taskHelperConstructor;
     })();
+
+    /**
+     * GlideElement values from the Task Overview table.
+     * @interface taskoverviewFields
+     * @extends {IGlideTableProperties}
+     */
+    declare interface taskoverviewFields extends IGlideTableProperties {
+        /**
+         * Group
+         * @type {$$rhino.Nilable<$$property.generic.Reference<sys_user_groupFields, sys_user_groupGlideRecord>>}
+         * @memberof taskoverviewFields
+         * @description Refers to sys_user_group (Group)
+         */
+        group: $$rhino.Nilable<$$property.generic.Reference<sys_user_groupFields, sys_user_groupGlideRecord>>;
+
+        /**
+         * Type
+         * @type {$$rhino.Nilable<$$property.Element>}
+         * @memberof taskoverviewFields
+         */
+        type: $$rhino.Nilable<$$property.Element>;
+
+        /**
+         * Critical Priority Open Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        critical_priority_open_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * High Priority Open Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        high_priority_open_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * Medium and Lower Priority Open Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        medium_and_lower_open_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * VIP Open Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        vip_open_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * Non-VIP Open Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        non_vip_open_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * Recently Closed Count
+         * @type {$$rhino.Nilable<$$property.Numeric>}
+         * @memberof taskoverviewFields
+         */
+        recently_closed_count: $$rhino.Nilable<$$property.Numeric>;
+
+        /**
+         * Latest Task by Update
+         * @type {$$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>}
+         * @memberof taskoverviewFields
+         * @description Refers to task (Task)
+         */
+        latest_task_by_update: $$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>;
+
+        /**
+         * Latest Updated On
+         * @type {$$rhino.Nilable<$$property.GlideObject>}
+         * @memberof taskoverviewFields
+         */
+        latest_updated_on: $$rhino.Nilable<$$property.GlideObject>;
+
+        /**
+         * Newest Task by Creation
+         * @type {$$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>}
+         * @memberof taskoverviewFields
+         * @description Refers to task (Task)
+         */
+        newest_task_by_creation: $$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>;
+
+        /**
+         * Newest Created On
+         * @type {$$rhino.Nilable<$$property.GlideObject>}
+         * @memberof taskoverviewFields
+         */
+        newest_created_on: $$rhino.Nilable<$$property.GlideObject>;
+
+        /**
+         * Oldest Task by Creation
+         * @type {$$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>}
+         * @memberof taskoverviewFields
+         * @description Refers to task (Task)
+         */
+        oldest_task_by_creation: $$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>;
+
+        /**
+         * Oldest Created On
+         * @type {$$rhino.Nilable<$$property.GlideObject>}
+         * @memberof taskoverviewFields
+         */
+        oldest_created_on: $$rhino.Nilable<$$property.GlideObject>;
+
+        /**
+         * Oldest Task by Update
+         * @type {$$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>}
+         * @memberof taskoverviewFields
+         * @description Refers to task (Task)
+         */
+        oldest_task_by_update: $$rhino.Nilable<$$property.generic.Reference<taskFields, taskGlideRecord>>;
+
+        /**
+         * Oldest Updated On
+         * @type {$$rhino.Nilable<$$property.GlideObject>}
+         * @memberof taskoverviewFields
+         */
+        oldest_updated_on: $$rhino.Nilable<$$property.GlideObject>;
+
+        /**
+         * Archived
+         * @type {$$rhino.Nilable<$$property.Boolean>}
+         * @memberof taskoverviewFields
+         */
+        archived: $$rhino.Nilable<$$property.Boolean>;
+
+    }
+    declare type taskoverviewGlideRecord = GlideRecord & taskoverviewFields;
 
     namespace business_rule {
         (function (dayOfWeek: number) {

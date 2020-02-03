@@ -36,10 +36,15 @@
     <Content Include="tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="base.d.ts" />
     <TypeScriptCompile Include="getTypeInfo.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="projectManagement.d.ts" />
     <TypeScriptCompile Include="x_44813_dev_ts_hlp.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="x_44813_usasoc_cst.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="x_44813_util.ts">

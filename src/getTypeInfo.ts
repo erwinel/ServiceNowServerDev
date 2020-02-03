@@ -1,4 +1,4 @@
-/// <reference path="../ServiceNowTypings/ServerScoped/base.d.ts" />
+/// <reference path="base.d.ts" />
 
 declare class GlideJSUtil {
     static isInstanceOf(object: any, typeName: string): boolean;
@@ -153,9 +153,9 @@ function getInheritance(element: GlideElement): string[] {
     if (GlideJSUtil.isInstanceOf(element, 'java.lang.StringBuilder')) inherits.push('java.lang.StringBuilder');
     try {
         if (element instanceof Packages.java.lang.StringBuffer) inherits.push('java.lang.StringBuffer');
-        if (element instanceof Packages.java.util.Map) inherits.push('java.util.Map');
-        if (element instanceof Packages.java.util.List) inherits.push('java.util.List');
-        if (element instanceof Packages.java.util.Set) inherits.push('java.util.Set');
+        //if (element instanceof Packages.java.util.Map) inherits.push('java.util.Map');
+        //if (element instanceof Packages.java.util.List) inherits.push('java.util.List');
+        //if (element instanceof Packages.java.util.Set) inherits.push('java.util.Set');
         if (element instanceof Packages.java.util.TimeZone) inherits.push('java.util.TimeZone');
         if (element instanceof Packages.java.lang.String) inherits.push('java.lang.String');
         if (element instanceof Packages.java.lang.Integer) inherits.push('java.lang.Integer');
