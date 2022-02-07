@@ -1,6 +1,6 @@
-/// <reference path="../../../typings/global/ServiceNowGlobalTypes.d.ts" />
+/// <reference path="../../../../typings/global/ServiceNowGlobalTypes.d.ts" />
 
-import { x_44813_util } from '../../../compiled/scoped/x_44813_util';
+import { x_44813_util } from '../../../../compiled/scoped/x_44813_util';
 
 export namespace global.bg_scripts.initial_config {
     interface ISysPropertyInfo {

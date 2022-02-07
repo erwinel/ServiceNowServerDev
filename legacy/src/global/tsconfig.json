@@ -4,9 +4,9 @@
         "outDir": "../../compiled/global/"
     },
     "files": [
-        "./bg scripts/bulk_plugin_activation.ts",
-        "./bg scripts/initial_config.ts",
+        "./fix scripts/bulk_plugin_activation.ts",
+        "./fix scripts/initial_config.ts",
         "./snippets/force_to_update_set.ts",
-        "../../typings/global/ServiceNowGlobalTypes.d.ts"
+        "../../../typings/global/ServiceNowGlobalTypes.d.ts"
     ]
 }

@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/global/ServiceNowGlobalTypes.d.ts" />
+/// <reference path="../../../../typings/global/ServiceNowGlobalTypes.d.ts" />
 
 export namespace global.bg_scripts.bulk_plugin_activation {
     // Array of IDs for plugins that should be activated.
